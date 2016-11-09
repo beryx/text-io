@@ -1,0 +1,18 @@
+language: java
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
+
+jdk:  
+  - oraclejdk8
+
+cache:
+  directories:
+    - $HOME/.gradle
+
+script:
+  - ./travis-build.sh

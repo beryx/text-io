@@ -1,0 +1,335 @@
+
+import org.apache.tools.ant.filters.ReplaceTokens
+import org.gradle.plugins.signing.Sign
+
+plugins {
+    id 'java'
+    id 'groovy'
+
+    id 'eclipse'
+    id 'idea'
+    id 'findbugs'
+    id 'signing'
+    id 'maven-publish'
+    id "com.github.ethankhall.semantic-versioning" version "1.1.0"
+    id "com.github.ben-manes.versions" version "0.13.0"
+    id "com.jfrog.bintray" version "1.7.2"
+    id "org.asciidoctor.convert" version "1.5.3"
+    id 'org.ajoberstar.github-pages' version '1.6.0-rc.1'
+    id "com.github.hierynomus.license" version "0.12.1"
+    id "net.saliman.properties" version "1.4.6"
+    id 'com.github.jk1.dependency-license-report' version '0.3.4'
+}
+
+project.version.with {
+    major = textIoVersionMajor as int
+    minor= textIoVersionMinor as int
+    patch = textIoVersionPatch as int
+    if (project.hasProperty('textIoVersionLabel')) {
+        preRelease = textIoVersionLabel
+    }
+    releaseBuild = Boolean.valueOf(textIoReleaseBuild)
+}
+ext.textIoVersion = project.version as String
+
+repositories {
+  jcenter()
+  mavenCentral()
+}
+
+def pomConfig = {
+    url "https://github.com/beryx/text-io"
+    developers {
+        developer {
+            id "siordache"
+            name "Serban Iordache"
+        }
+    }
+    scm {
+        connection "https://github.com/beryx/text-io.git"
+        developerConnection "https://github.com/beryx/text-io.git"
+        url "https://github.com/beryx/text-io"
+    }
+}
+
+
+
+
+tasks.withType(Javadoc) {
+    options.addStringOption('Xdoclint:all,-syntax,-missing', '-quiet')
+}
+
+
+
+
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+group = 'org.beryx'
+version = textIoVersion
+
+def defaultEncoding = 'UTF-8'
+[compileJava, compileTestJava]*.options*.encoding = defaultEncoding
+
+configurations {
+  provided
+  compile {transitive = true}
+}
+
+license {
+    header rootProject.file("license-header.txt")
+    skipExistingHeaders true
+    ignoreFailures false
+}
+
+signing {
+    sign configurations.archives
+}
+
+signArchives {
+  onlyIf { gradle.taskGraph.allTasks.findAll {task -> isPublishTask(task)} }
+}
+
+dependencies {
+
+  compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
+  runtime ('ch.qos.logback:logback-classic:1.1.7')
+  provided 'com.google.code.findbugs:findbugs-annotations:3.0.1'
+
+
+  testCompile "org.codehaus.groovy:groovy-all:2.4.7"
+  testCompile('org.spockframework:spock-core:1.1-groovy-2.4-rc-2') {
+      exclude module: 'groovy-all'
+  }
+  testCompile 'cglib:cglib-nodep:3.2.4'
+  testCompile 'org.objenesis:objenesis:2.4'
+  testCompile('com.athaydes:spock-reports:1.2.13') { transitive = false}
+
+
+  testCompile('ch.qos.logback:logback-classic:1.1.7')
+}
+
+sourceSets.main.compileClasspath += configurations.provided
+findbugs {
+    effort = "max"
+    excludeFilter = file("$rootProject.projectDir/findbugsExclude.xml")
+}
+jar {
+    manifest {
+        attributes 'Implementation-Title': "${project.archivesBaseName}",
+                'Implementation-Version': textIoVersion
+    }
+
+    from ("${projectDir}/src/main/java") {
+        include('**/*.fxml')
+        include('**/*.css')
+        include('**/*.png')
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: classes) {
+    classifier "javadoc"
+    from javadoc
+}
+artifacts {
+    (System.getenv("TRAVIS") == "true") ? archives(sourcesJar) : archives(sourcesJar, javadocJar)
+}
+
+publishing {
+    publications {
+        "text-io"(MavenPublication) {
+            from components.java
+            artifact sourcesJar { classifier "sources" }
+            artifact javadocJar { classifier "javadoc" }
+            groupId 'org.beryx'
+            artifactId project.name
+            version textIoVersion
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('name', "Module $project.name")
+                root.appendNode('description', "The $project.name artifact")
+                root.children().last() + pomConfig
+
+                // We cannot configure the licenses in pomConfig due to a name conflict with the 'license' extension defined by the com.github.hierynomus.license plugin
+                def licenseNode = root.appendNode('licenses').appendNode('license')
+                licenseNode.appendNode('name', 'The Apache Software License, Version 2.0')
+                licenseNode.appendNode('url', 'http://www.apache.org/licenses/LICENSE-2.0.txt')
+                licenseNode.appendNode('distribution', 'repo')
+            }
+        }
+    }
+}
+
+task "create-dirs" {
+    doLast {
+        sourceSets*.java.srcDirs*.each { it.mkdirs() }
+
+        sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+    }
+}
+
+eclipse {
+    classpath {
+        file {
+            whenMerged {
+                def jre = entries.find { it.path.contains 'org.eclipse.jdt.launching.JRE_CONTAINER' }
+                jre.accessRules.add(new org.gradle.plugins.ide.eclipse.model.AccessRule('0', 'javafx/**'))
+            }
+        }
+        plusConfigurations << configurations.provided
+    }
+    project {
+        file.beforeMerged { project ->
+            project.natures.clear()
+        }
+    }
+}
+
+idea {
+    module {
+        scopes.PROVIDED.plus += [configurations.provided]
+    }
+}
+
+def gitIgnore = file(".gitignore").readLines()
+def gitIgnoreDirs = gitIgnore*.trim().findAll { !it.startsWith("#") && it.endsWith("/") }
+asciidoctor {
+  sourceDir = file("doc")
+  sources {include 'index.adoc'}
+  logDocuments = true
+  attributes 'source-highlighter': 'coderay',
+             'coderay-linenums-mode': 'table',
+             icons: 'font',
+             imagesdir: 'img',
+             'data-uri': '',
+             linkattrs: true,
+             linkcss: true
+}
+
+githubPages {
+  repoUri = 'https://github.com/beryx/text-io.git'
+
+  credentials {
+    username = System.getenv('GH_PAGES_ACCESS_TOKEN')
+    password = ''
+  }
+
+  pages {
+    from file("${asciidoctor.outputDir.path}/html5")
+    from file('doc/CNAME')
+  }
+  pages {
+    def pgType = project.hasProperty('ghPageType') ? ghPageType : 'latest'
+    if(pgType == 'init') {
+      from file("ghpages")
+    } else {
+      from file("${asciidoctor.outputDir.path}/html5")
+    }
+    def docDir = Boolean.valueOf(textIoReleaseBuild) ? 'releases' : 'snapshots'
+    if(pgType == 'init') {
+      into "."
+    } else if(pgType == 'version') {
+      publishGhPages.enabled = (docDir != 'snapshots')
+      into "$docDir/$textIoVersion"
+    } else {
+      into "$docDir/latest"
+    }
+  }
+
+}
+
+
+
+
+
+
+configureJavadoc(javadoc)
+
+def configureJavadoc(task) {
+  configure(task) {
+      title "Java Text IO Documentation ($textIoVersion)"
+      destinationDir file("build/docs/javadoc")
+      if(project.configurations.hasProperty('provided')) {
+          classpath += project.configurations.provided
+      }
+      configure(options) {
+          links "http://docs.oracle.com/javase/8/docs/api/"
+      }
+  }
+}
+
+def readFromConsole(prompt) {
+    readFromConsole('', prompt)
+}
+def readFromConsole(header, prompt) {
+    readFromConsole(header, prompt, false)
+}
+def readPasswordFromConsole(prompt) {
+    readPasswordFromConsole(prompt, true)
+}
+def readPasswordFromConsole(header, prompt) {
+    readFromConsole(header, prompt, true)
+}
+def readFromConsole(header, prompt, isPassword) {
+    def console = System.console()
+    if (console) {
+        if(header) {
+            console.printf "\n\n# $header\n"
+        }
+        String value = null;
+        while(!value?.trim()) {
+            def val = console."read${isPassword ? 'Password' : 'Line'}"("> $prompt: ")
+            if(val) {
+                value = new String(val)
+            }
+        }
+        return value
+    } else {
+      throw new GradleException("Cannot get console. Try running gradle with the '--no-daemon' option")
+    }
+}
+
+def isPublishTask(task) {
+  task.name.startsWith('publish') && (task.name != 'publishGhPages')
+}
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if (gradle.taskGraph.allTasks.findAll {task -> isPublishTask(task)}) {
+        def password = readPasswordFromConsole('Please enter your signing credentials', 'PGP Private Key Password')
+        allprojects { ext."signing.keyId" = signingKeyId }
+        allprojects { ext."signing.secretKeyRingFile" = signingSecretKeyRingFile }
+        allprojects { ext."signing.password" = password }
+    }
+}
+
+bintray {
+    user = project.hasProperty('bintrayUser') ? project.getProperty('bintrayUser') : "unknownUser"
+    key =  project.hasProperty('bintrayKey') ? project.getProperty('bintrayKey') : "unknownKey"
+    publications = ['text-io']
+    pkg {
+        repo = 'maven'
+        name = 'text-io'
+        userOrg = 'beryx'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/beryx/text-io.git'
+
+        version {
+                name = textIoVersion
+                desc = "Java Text IO $textIoVersion"
+                released  = new Date().format("yyyy-MM-dd'T'HH:mm:ss.SSSZZ")
+                vcsTag = textIoVersion
+                gpg {
+                    sign = true
+                }
+        }
+    }
+}
