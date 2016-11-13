@@ -212,6 +212,8 @@ asciidoctor {
 
 githubPages {
   repoUri = 'https://github.com/beryx/text-io.git'
+  def pgType = project.hasProperty('ghPageType') ? ghPageType : 'latest'
+  workingPath = "${project.buildDir}/ghpages-$pgType"
 
   credentials {
     username = System.getenv('GH_PAGES_ACCESS_TOKEN')
@@ -219,7 +221,6 @@ githubPages {
   }
 
   pages {
-    def pgType = project.hasProperty('ghPageType') ? ghPageType : 'latest'
     if(pgType == 'init') {
       from file("ghpages")
     } else {
