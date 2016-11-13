@@ -210,10 +210,8 @@ asciidoctor {
              linkcss: true
 }
 
-tasks["prepareGhPages"].outputs.upToDateWhen { false }
-
 githubPages {
-  repoUri = 'https://github.com/sandboxx/test-travis-asciidoc-gh-pages.git'
+  repoUri = 'https://github.com/beryx/text-io.git'
 
   credentials {
     username = System.getenv('GH_PAGES_ACCESS_TOKEN')
