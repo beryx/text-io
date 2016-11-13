@@ -1,9 +1,9 @@
 [[getting_started]]
 = Getting Started
 
-CAUTION: You need Java 8 or newer in order to use {project-name}.
+CAUTION: You need Java 8 or newer in order to use Text-IO.
 
-{project-name} is available in Maven Central and JCenter.
+Text-IO is available in Maven Central and JCenter.
 
 [subs="attributes",options="nowrap",title="Maven"]
 ----
