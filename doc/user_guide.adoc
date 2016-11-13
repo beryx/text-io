@@ -49,7 +49,7 @@ The following concrete implementations are available:
 - link:javadoc/org/beryx/textio/GenericInputReader.html[GenericInputReader] - A reader for values of a given type, for which a parser is passed as constructor argument.
 - link:javadoc/org/beryx/textio/IntInputReader.html[IntInputReader] - A reader for int values. Allows configuring the minimum and maximum permitted values.
 - link:javadoc/org/beryx/textio/LongInputReader.html[LongInputReader] - A reader for long values. Allows configuring the minimum and maximum permitted values.
-- link:javadoc/org/beryx/textio/StringInputReader.html[StringInputReader] - A reader for string values. Allows configuring the minimum and maximum permitted length.
+- link:javadoc/org/beryx/textio/StringInputReader.html[StringInputReader] - A reader for string values. Allows configuring the minimum and maximum permitted length, as well as a regex pattern.
 
 *Reading values*
 

@@ -392,7 +392,8 @@ class TextIoSpec extends Specification {
         when:
         terminal.inputs.addAll(["[44, 46, 47, 53]", "5", "2"])
         def seq = textIO.<int[]>newGenericInputReader(null)
-                .withPossibleValues([42, 43, 45, 51, 52], [43, 44, 47, 48, 55, 62], [44, 46, 47, 53])
+                .withPossibleValues([42, 43, 45, 51, 52] as int[], [43, 44, 47, 48, 55, 62] as int[], [44, 46, 47, 53] as int[])
+                .withValueFormatter{Arrays.toString(it)}
                 .read("Choose your sequence")
 
         then:
@@ -414,6 +415,41 @@ class TextIoSpec extends Specification {
               2: [43, 44, 47, 48, 55, 62]
               3: [44, 46, 47, 53]
             Enter your choice: 2
+        '''.stripAll()
+        terminal.readCalls == 3
+        seq == [43, 44, 47, 48, 55, 62]
+    }
+
+
+    def "should read an int[] with numbered possible values and default value"() {
+        when:
+        terminal.inputs.addAll(["[44, 46, 47, 53]", "5", ""])
+        def seq = textIO.<int[]>newGenericInputReader(null)
+                .withDefaultValue([43, 44, 47, 48, 55, 62] as int[])
+                .withPossibleValues([42, 43, 45, 51, 52] as int[], [43, 44, 47, 48, 55, 62] as int[], [44, 46, 47, 53] as int[])
+                .withEqualsFunc{a1,a2 -> Arrays.equals(a1,a2)}
+                .withValueFormatter{Arrays.toString(it)}
+                .read("Choose your sequence")
+
+        then:
+        terminal.output == '''
+            Choose your sequence:
+              1: [42, 43, 45, 51, 52]
+            * 2: [43, 44, 47, 48, 55, 62]
+              3: [44, 46, 47, 53]
+            Enter your choice: [44, 46, 47, 53]
+            Invalid value. Enter a value between 1 and 3.
+            Choose your sequence:
+              1: [42, 43, 45, 51, 52]
+            * 2: [43, 44, 47, 48, 55, 62]
+              3: [44, 46, 47, 53]
+            Enter your choice: 5
+            Invalid value. Enter a value between 1 and 3.
+            Choose your sequence:
+              1: [42, 43, 45, 51, 52]
+            * 2: [43, 44, 47, 48, 55, 62]
+              3: [44, 46, 47, 53]
+            Enter your choice:
         '''.stripAll()
         terminal.readCalls == 3
         seq == [43, 44, 47, 48, 55, 62]

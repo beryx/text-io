@@ -15,10 +15,8 @@
  */
 package org.beryx.textio;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -100,6 +98,9 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     /** The formatter used when displaying values of type T. Default: use {@link String#valueOf(Object)} */
     protected Function<T, String> valueFormatter = val -> String.valueOf(val);
 
+    /** The function used to check whether two values are equal. Default: {@link Objects#equals(Object, Object)} */
+    protected BiFunction<T, T, Boolean> equalsFunc = Objects::equals;
+
     /**
      * Parses the input string
      * @param s the input string
@@ -154,6 +155,11 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
 
     public B withValueFormatter(Function<T, String> valueFormatter) {
         this.valueFormatter = valueFormatter;
+        return (B)this;
+    }
+
+    public B withEqualsFunc(BiFunction<T, T, Boolean> equalsFunc) {
+        this.equalsFunc = equalsFunc;
         return (B)this;
     }
 
@@ -219,7 +225,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
                 ParseResult<T> result = parse(sVal);
                 List<String> errMessages = result.getErrorMessages();
                 if(errMessages == null) {
-                    if(possibleValues == null || possibleValues.contains(result.getValue())) {
+                    if(isPossibleValue(result.getValue())) {
                         return result.getValue();
                     }
                     textTerminal.print(getDefaultErrorMessage());
@@ -245,16 +251,22 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         }
     }
 
+    protected boolean isPossibleValue(T val) {
+        if(possibleValues == null) return true;
+        for(T pVal : possibleValues) {
+            if(equalsFunc.apply(pVal, val)) return true;
+        }
+        return false;
+    }
+
     /**
      * Checks if the reader is correctly configured.
      * This default implementation checks if the defaultValue is among the possibleValues.
      * @throws java.lang.IllegalArgumentException
      */
     public void checkConfiguration() throws java.lang.IllegalArgumentException {
-        if(possibleValues != null && defaultValue != null) {
-            if(!possibleValues.contains(defaultValue)) {
-                throw new IllegalArgumentException("Invalid default value: " + defaultValue + ". Allowed values: " + possibleValues);
-            }
+        if(defaultValue != null && !isPossibleValue(defaultValue)) {
+            throw new IllegalArgumentException("Invalid default value: " + defaultValue + ". Allowed values: " + possibleValues);
         }
     }
 
@@ -278,7 +290,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
             textTerminal.println(useColon ? ":" : "");
             for(int i = 0; i < options.size(); i++) {
                 T option = options.get(i);
-                boolean isDefault = (defaultValue != null) && defaultValue.equals(option);
+                boolean isDefault = (defaultValue != null) && equalsFunc.apply(defaultValue, option);
                 textTerminal.println((isDefault ? "* ": "  ")
                         + (numberedPossibleValues ? ((i + 1) + ": ") : "")
                         + valueFormatter.apply(option));
