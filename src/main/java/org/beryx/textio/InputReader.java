@@ -34,9 +34,21 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
          * Returns the list of error messages for the given string representation of the value
          * @param sVal the string representation of the value
          * @param propertyName the name of the property corresponding to this value. May be null.
-         * @return - the list of error messages or null in no error has been detected.
+         * @return - the list of error messages or null if no error has been detected.
          */
         List<String> getErrorMessage(String sVal, String propertyName);
+    }
+
+    /** Functional interface for checking value constraints */
+    @FunctionalInterface
+    public static interface ValueChecker<T> {
+        /**
+         * Returns the list of error messages due to constraint violations caused by <tt>val</tt>
+         * @param val the value for which constraint violations are checked
+         * @param propertyName the name of the property corresponding to this value. May be null.
+         * @return - the list of error messages or null if no error has been detected.
+         */
+        List<String> getErrorMessage(T val, String propertyName);
     }
 
     /**
@@ -83,7 +95,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     /** If true, the list of possible values will be numbered and the desired value will be selected by choosing the corresponding number. */
     protected boolean numberedPossibleValues = false;
 
-    /** The provider of error messages. If null, the {@link #getDefaultErrorMessage(String)} will be used. */
+    /** The provider of parse error messages. If null, the {@link #getDefaultErrorMessage(String)} will be used. */
     protected ErrorMessageProvider errorMessageProvider;
 
     /** The name of the property corresponding to the value to be read. May be null. */
@@ -95,8 +107,11 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     /** If true, the input will be trimmed. Default: true */
     protected boolean inputTrimming = true;
 
+    /** The list of value checkers used to detect constraint violations */
+    protected final List<ValueChecker<T>> valueCheckers = new ArrayList<>();
+
     /** The formatter used when displaying values of type T. Default: use {@link String#valueOf(Object)} */
-    protected Function<T, String> valueFormatter = val -> String.valueOf(val);
+    protected Function<T, String> valueFormatter = String::valueOf;
 
     /** The function used to check whether two values are equal. Default: {@link Objects#equals(Object, Object)} */
     protected BiFunction<T, T, Boolean> equalsFunc = Objects::equals;
@@ -168,6 +183,11 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return (B)this;
     }
 
+    public B withValueChecker(ValueChecker<T> valueChecker) {
+        this.valueCheckers.add(valueChecker);
+        return (B)this;
+    }
+
     /**
      * Returns a generic error message.
      */
@@ -191,8 +211,8 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      * If an <tt>errorMessageProvider</tt> exists, it will be used. Otherwise, {@link #getDefaultErrorMessage(String)} will be called.
      */
     public final List<String> getErrorMessage(String s) {
-        ErrorMessageProvider provider = (this.errorMessageProvider != null) ? this.errorMessageProvider : (sVal, pVal) -> getDefaultErrorMessage(sVal);
-        return provider.getErrorMessage(s, propertyName);
+        if(errorMessageProvider != null) return errorMessageProvider.getErrorMessage(s, propertyName);
+        return getDefaultErrorMessage(s);
     }
 
     /**
@@ -203,6 +223,22 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      */
     public T read(String... prompt) {
         return read(Arrays.asList(prompt));
+    }
+
+    protected ParseResult<T> parseAndCheck(String s) {
+        ParseResult<T> res = parse(s);
+        if(res.errorMessages == null) {
+            List<String> allErrors = new ArrayList<>();
+            for(ValueChecker<T> checker : valueCheckers) {
+                List<String> errors = checker.getErrorMessage(res.value, propertyName);
+                if(errors != null) allErrors.addAll(errors);
+            }
+            if(!allErrors.isEmpty()) {
+                allErrors.add(0, getDefaultErrorMessage());
+                res = new ParseResult<T>(res.value, allErrors);
+            }
+        }
+        return res;
     }
 
     /**
@@ -222,7 +258,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
                 if(defaultValue != null) return defaultValue;
             }
             if(possibleValues == null || !numberedPossibleValues) {
-                ParseResult<T> result = parse(sVal);
+                ParseResult<T> result = parseAndCheck(sVal);
                 List<String> errMessages = result.getErrorMessages();
                 if(errMessages == null) {
                     if(isPossibleValue(result.getValue())) {
@@ -266,7 +302,20 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      */
     public void checkConfiguration() throws java.lang.IllegalArgumentException {
         if(defaultValue != null && !isPossibleValue(defaultValue)) {
-            throw new IllegalArgumentException("Invalid default value: " + defaultValue + ". Allowed values: " + possibleValues);
+            throw new IllegalArgumentException("Invalid default value: " + valueFormatter.apply(defaultValue) + ". Allowed values: " + possibleValues);
+        }
+        for(ValueChecker<T> checker : valueCheckers) {
+            List<String> errors = null;
+            if(defaultValue != null) {
+                errors = checker.getErrorMessage(defaultValue, propertyName);
+                if(errors != null) throw new IllegalArgumentException("Invalid default value: " + valueFormatter.apply(defaultValue) + ".\n" + errors);
+            }
+            if(possibleValues != null) {
+                for(T val : possibleValues) {
+                    errors = checker.getErrorMessage(val, propertyName);
+                    if(errors != null) throw new IllegalArgumentException("Invalid entry in the list of possible values: " + valueFormatter.apply(val) + ".\n" + errors);
+                }
+            }
         }
     }
 

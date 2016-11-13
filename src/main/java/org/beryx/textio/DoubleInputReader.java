@@ -33,8 +33,7 @@ public class DoubleInputReader extends ComparableInputReader<Double, DoubleInput
     @Override
     public ParseResult<Double> parse(String s) {
         try {
-            Double val = Double.parseDouble(s);
-            return isInRange(val) ? new ParseResult<>(val) : new ParseResult<>(val, getErrorMessage(s));
+            return new ParseResult<>(Double.parseDouble(s));
         } catch (NumberFormatException e) {
             return new ParseResult<>(null, getErrorMessage(s));
         }

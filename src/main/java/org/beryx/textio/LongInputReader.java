@@ -33,8 +33,7 @@ public class LongInputReader extends ComparableInputReader<Long, LongInputReader
     @Override
     public ParseResult<Long> parse(String s) {
         try {
-            long val = Long.parseLong(s);
-            return isInRange(val) ? new ParseResult<>(val) : new ParseResult<>(val, getErrorMessage(s));
+            return new ParseResult<>(Long.parseLong(s));
         } catch (NumberFormatException e) {
             return new ParseResult<>(null, getErrorMessage(s));
         }

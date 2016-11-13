@@ -33,8 +33,7 @@ public class IntInputReader extends ComparableInputReader<Integer, IntInputReade
     @Override
     public ParseResult<Integer> parse(String s) {
         try {
-            Integer val = Integer.parseInt(s);
-            return isInRange(val) ? new ParseResult<>(val) : new ParseResult<>(val, getErrorMessage(s));
+            return new ParseResult<>(Integer.parseInt(s));
         } catch (NumberFormatException e) {
             return new ParseResult<>(null, getErrorMessage(s));
         }

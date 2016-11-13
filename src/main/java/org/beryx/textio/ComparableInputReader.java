@@ -15,6 +15,8 @@
  */
 package org.beryx.textio;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -30,6 +32,8 @@ public abstract class ComparableInputReader<T extends Comparable<T>, B extends C
 
     public ComparableInputReader(Supplier<TextTerminal> textTerminalSupplier) {
         super(textTerminalSupplier);
+        errorMessageProvider = (val, propName) -> Arrays.asList(getDefaultErrorMessage(), getStandardMinMaxErrorMessage());
+        valueCheckers.add((val, propName) -> getMinMaxErrorMessage(val));
     }
 
     /** Configures the minimum allowed value */
@@ -44,30 +48,23 @@ public abstract class ComparableInputReader<T extends Comparable<T>, B extends C
         return (B)this;
     }
 
-    @Override
-    protected List<String> getDefaultErrorMessage(String s) {
-        List<String> errList = super.getDefaultErrorMessage(s);
-        if(minVal != null && maxVal != null) {
-            errList.add("Expected " + typeNameWithIndefiniteArticle() + " value between " + minVal + " and " + maxVal + ".");
-        } else if(minVal != null) {
-            errList.add("Expected " + typeNameWithIndefiniteArticle() + " value greater than or equal to " + minVal + ".");
-        } else if(maxVal != null) {
-            errList.add("Expected " + typeNameWithIndefiniteArticle() + " value less than or equal to " + maxVal + ".");
-        } else {
-            errList.add("Expected " + typeNameWithIndefiniteArticle() + " value.");
-        }
-        return errList;
+    protected List<String> getMinMaxErrorMessage(T val) {
+        if(isInRange(val)) return null;
+        return Collections.singletonList(getStandardMinMaxErrorMessage());
     }
 
-    /** In addition to the checks performed by {@link InputReader#checkConfiguration()}, it checks if minVal &lt;= defaultVal &lt;= maxVal */
+    private String getStandardMinMaxErrorMessage() {
+        if(minVal != null && maxVal != null) return "Expected " + typeNameWithIndefiniteArticle() + " value between " + minVal + " and " + maxVal + ".";
+        if(minVal != null) return "Expected " + typeNameWithIndefiniteArticle() + " value greater than or equal to " + minVal + ".";
+        if(maxVal != null) return "Expected " + typeNameWithIndefiniteArticle() + " value less than or equal to " + maxVal + ".";
+        return "Expected " + typeNameWithIndefiniteArticle() + " value.";
+    }
+
+    /** In addition to the checks performed by {@link InputReader#checkConfiguration()}, it checks if minVal &lt;= maxVal */
     @Override
     public void checkConfiguration() throws IllegalArgumentException {
         super.checkConfiguration();
         if(minVal != null && maxVal != null && minVal.compareTo(maxVal) > 0) throw new IllegalArgumentException("minVal = " + minVal + ", maxVal = " + maxVal);
-        if(defaultValue != null) {
-            if(minVal != null && defaultValue.compareTo(minVal) < 0) throw new IllegalArgumentException("minVal = " + minVal + ", defaultValue = " + defaultValue);
-            if(maxVal != null && defaultValue.compareTo(maxVal) > 0) throw new IllegalArgumentException("maxVal = " + maxVal + ", defaultValue = " + defaultValue);
-        }
     }
 
     /** Returns true if minVal &lt;= val &lt;= maxVal */

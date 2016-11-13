@@ -15,6 +15,7 @@
  */
 package org.beryx.textio;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
@@ -33,6 +34,8 @@ public class StringInputReader extends InputReader<String, StringInputReader> {
     public StringInputReader(Supplier<TextTerminal> textTerminalSupplier) {
         super(textTerminalSupplier);
         this.numberedPossibleValues = true;
+        valueCheckers.add((val, propName) -> getLengthValidationErrors(val));
+        valueCheckers.add((val, propName) -> getPatternValidationErrors(val));
     }
 
     public StringInputReader withPattern(String regex) {
@@ -56,37 +59,27 @@ public class StringInputReader extends InputReader<String, StringInputReader> {
     }
 
     @Override
-    protected List<String> getDefaultErrorMessage(String s) {
-        List<String> errList = super.getDefaultErrorMessage(s);
-        String validationErr = getValidationError(s);
-        if(validationErr != null) errList.add(validationErr);
-        return errList;
+    public ParseResult<String> parse(String s) {
+        return new ParseResult<>(s);
     }
 
+    /** In addition to the checks performed by {@link InputReader#checkConfiguration()}, it checks if minVal &lt;= maxVal */
     @Override
     public void checkConfiguration() throws IllegalArgumentException {
         super.checkConfiguration();
         if(minLength > 0 && maxLength > 0 && minLength > maxLength) throw new IllegalArgumentException("minLength = " + minLength + ", maxLength = " + maxLength);
-        if(defaultValue != null) {
-            if(minLength > 0 && minLength > defaultValue.length()) throw new IllegalArgumentException("minLength = " + minLength + ", defaultValue = " + defaultValue);
-            if(maxLength > 0 && maxLength < defaultValue.length()) throw new IllegalArgumentException("maxLength = " + maxLength + ", defaultValue = " + defaultValue);
-        }
     }
 
-    @Override
-    public ParseResult<String> parse(String s) {
-        if(getValidationError(s) == null) return new ParseResult<>(s);
-        return new ParseResult<>(s, getErrorMessage(s));
+    protected List<String> getLengthValidationErrors(String s) {
+        int len = (s == null) ? 0 : s.length();
+        IntFunction<String> chr = l -> l + " character" + ((l > 1) ? "s." : ".");
+        if(minLength > 0 && minLength > len) return Collections.singletonList("Expected a string with at least " + chr.apply(minLength));
+        if(maxLength > 0 && maxLength < len) return Collections.singletonList("Expected a string with at most " + chr.apply(maxLength));
+        return null;
     }
 
-    private String getValidationError(String s) {
-        if(possibleValues == null) {
-            int len = (s == null) ? 0 : s.length();
-            IntFunction<String> chr = l -> l + " character" + ((l > 1) ? "s." : ".");
-            if(minLength > 0 && minLength > len) return "Expected a string with at least " + chr.apply(minLength);
-            if(maxLength > 0 && maxLength < len) return "Expected a string with at most " + chr.apply(maxLength);
-            if((pattern != null) && !pattern.matcher(s).matches()) return "Expected format: " + pattern.pattern();
-        }
+    protected List<String> getPatternValidationErrors(String s) {
+        if((pattern != null) && !pattern.matcher(s).matches()) return Collections.singletonList("Expected format: " + pattern.pattern());
         return null;
     }
 }
