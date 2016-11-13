@@ -15,12 +15,13 @@
  */
 package org.beryx.textio;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
+/**
+ * A reader for boolean values.
+ * Allows configuring which string value should be interpreted as <i>true</i> and which as <i>false</i>.
+ */
 public class BooleanInputReader extends InputReader<Boolean, BooleanInputReader> {
     public BooleanInputReader(Supplier<TextTerminal> textTerminalSupplier) {
         super(textTerminalSupplier);
@@ -28,12 +29,14 @@ public class BooleanInputReader extends InputReader<Boolean, BooleanInputReader>
     private String trueInput = "true";
     private String falseInput = "false";
 
+    /** Configures the string value that corresponds to <i>true</i>. */
     public BooleanInputReader withTrueInput(String trueInput) {
         if(trueInput == null || trueInput.trim().isEmpty()) throw new IllegalArgumentException("trueInput is empty");
         this.trueInput = trueInput;
         return this;
     }
 
+    /** Configures the string value that corresponds to <i>false</i>. */
     public BooleanInputReader withFalseInput(String falseInput) {
         if(falseInput == null || falseInput.trim().isEmpty()) throw new IllegalArgumentException("falseInput is empty");
         this.falseInput = falseInput;

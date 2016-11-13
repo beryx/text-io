@@ -1,4 +1,93 @@
 [[user_guide]]
 = User Guide
 
-TBD
+NOTE: The JavaDoc is available link:javadoc/[here].
+
+== Text Terminals
+
+A text terminal is an abstraction layer used by the Text-IO library in order to provide device independence.
+Text terminals must implement the
+link:javadoc/org/beryx/textio/TextTerminal.html[TextTerminal]
+interface, which requires to allow at least:
+
+- reading a one-line text.
+- writing a one-line text.
+- writing a line separator.
+
+The following concrete implementations are provided by the Text-IO library:
+
+- link:javadoc/org/beryx/textio/console/ConsoleTextTerminal.html[ConsoleTextTerminal], which is backed by a
+http://docs.oracle.com/javase/8/docs/api/java/io/Console.html[java.io.Console].
+- link:javadoc/org/beryx/textio/swing/SwingTextTerminal.html[SwingTextTerminal], which uses a
+http://docs.oracle.com/javase/8/docs/api/javax/swing/JTextArea.html[JTextArea] inside a
+http://docs.oracle.com/javase/8/docs/api/javax/swing/JFrame.html[JFrame].
+- link:javadoc/org/beryx/textio/system/SystemTextTerminal.html[SystemTextTerminal], which uses
+http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#out[System.out],
+http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#in[System.in] and
+http://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html[Scanner].
+It is not capable to mask input strings, therefore not recommended when reading sensitive data.
+
+== Input Readers
+
+Input readers are able to read values of a specific type.
+They are subclasses of link:javadoc/org/beryx/textio/InputReader.html[InputReader],
+which offers (via methods with names of the form _withXXX()_) a fluent interface for configuring various settings such as:
+
+- link:javadoc/org/beryx/textio/InputReader.html#withInputMasking-boolean-[input masking] - useful when reading sensitive data such as passwords.
+- link:javadoc/org/beryx/textio/InputReader.html#withDefaultValue-T-[defaultValue] - the value to be used if the user pressed Enter.
+- link:javadoc/org/beryx/textio/InputReader.html#withPossibleValues-java.util.List-[possible values] - necessary if the value to be read must be chosen from a list of allowed values.
+- link:javadoc/org/beryx/textio/InputReader.html#withErrorMessageProvider-org.beryx.textio.InputReader.ErrorMessageProvider-[error messages] - used to provide custom error messages.
+- link:javadoc/org/beryx/textio/InputReader.html#withPropertyName-java.lang.String-[property name] - if configured, the name of the property to be read will appear in error messages.
+
+See the link:javadoc/org/beryx/textio/InputReader.html[javadoc] for more configuration methods.
+
+The following concrete implementations are available:
+
+- link:javadoc/org/beryx/textio/BooleanInputReader.html[BooleanInputReader] - A reader for boolean values. Allows configuring which string value should be interpreted as _true_ and which as _false_.
+- link:javadoc/org/beryx/textio/DoubleInputReader.html[DoubleInputReader] - A reader for double values. Allows configuring the minimum and maximum permitted values.
+- link:javadoc/org/beryx/textio/EnumInputReader.html[EnumInputReader] - A reader for enum values. It allows selecting one of the constants defined by the given enum type.
+- link:javadoc/org/beryx/textio/GenericInputReader.html[GenericInputReader] - A reader for values of a given type, for which a parser is passed as constructor argument.
+- link:javadoc/org/beryx/textio/IntInputReader.html[IntInputReader] - A reader for int values. Allows configuring the minimum and maximum permitted values.
+- link:javadoc/org/beryx/textio/LongInputReader.html[LongInputReader] - A reader for long values. Allows configuring the minimum and maximum permitted values.
+- link:javadoc/org/beryx/textio/StringInputReader.html[StringInputReader] - A reader for string values. Allows configuring the minimum and maximum permitted values.
+
+*Reading values*
+
+After configuring an input reader, you can use
+link:javadoc/org/beryx/textio/InputReader.html#read-java.lang.String.%2e.-[ read(String... prompt)]
+or
+link:javadoc/org/beryx/textio/InputReader.html#read-java.util.List-[read(List<String> prompt)]
+to read a value.
+These methods repeatedly prompt the user to enter a value, until a valid input string is provided.
+
+== TextIO
+
+The link:javadoc/org/beryx/textio/TextIO.html[TextIO] class provides factory methods for creating input readers.
+These methods have names of the form `newXXXInputReader()`, such as
+link:javadoc/org/beryx/textio/TextIO.html#newIntInputReader--[newIntInputReader()].
+
+All InputReaders created by the same TextIO instance share the same link:javadoc/org/beryx/textio/TextTerminal.html[TextTerminal],
+which can be retrieved by calling the
+link:javadoc/org/beryx/textio/TextIO.html#getTextTerminal--[getTextTerminal()] method.
+
+== TextIoFactory
+
+Although you can create yourself a link:javadoc/org/beryx/textio/TextIO.html[TextIO] instance by passing the desired
+link:javadoc/org/beryx/textio/TextTerminal.html[TextTerminal] as constructor argument, it is preferable to use the
+link:javadoc/org/beryx/textio/TextIoFactory.html[TextIoFactory] for this task.
+
+The TextIoFactory takes the following steps in order to choose the TextTerminal associated with the TextIO instance to be created:
+
+1. If the system property `org.beryx.textio.TextTerminal` is defined, then it is
+taken to be the fully-qualified name of a concrete TextTerminal class.
+The class is loaded and instantiated. If this process fails, then the next step is executed.
+2. A http://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html[ServiceLoader]
+loads the configured link:javadoc/org/beryx/textio/TextTerminalProvider.html[TextTerminalProviders]
+and searches for the first one capable to provide a TextTerminal instance.
+If none is found, then the next step is executed.
+3. A default implementation is provided as follows:
+
+- If http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--[System.console()] is not null, a
+link:javadoc/org/beryx/textio/console/ConsoleTextTerminal.html[ConsoleTextTerminal] is provided.
+- If the system is not headless, a link:javadoc/org/beryx/textio/swing/SwingTextTerminal.html[SwingTextTerminal] is provided.
+- Otherwise, a link:javadoc/org/beryx/textio/system/SystemTextTerminal.html[SystemTextTerminal] is provided.

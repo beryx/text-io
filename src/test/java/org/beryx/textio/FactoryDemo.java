@@ -19,32 +19,30 @@ import java.time.Month;
 
 public class FactoryDemo {
     public static void main(String[] args) {
-        TextIO textIO = TextIoFactory.get();
+//        System.setProperty(TextIoFactory.TEXT_TERMINAL_CLASS_PROPERTY, "org.beryx.textio.system.SystemTextTerminal");
+        TextIO textIO = TextIoFactory.getTextIO();
 
-        String firstName = textIO.newStringInputReader()
-                .withPropertyName("firstName")
-                .read("First name");
+        String user = textIO.newStringInputReader()
+                .withDefaultValue("admin")
+                .read("Username");
 
-        String lastName = textIO.newStringInputReader()
-                .withAllowEmpty(true)
-                .withPropertyName("lastName")
-                .read("Last name");
+        String password = textIO.newStringInputReader()
+                .withMinLength(6)
+                .withInputMasking(true)
+                .read("Password");
 
         int age = textIO.newIntInputReader()
-                .withPropertyName("age")
                 .withMinVal(13)
                 .read("Age");
 
         Month month = textIO.newEnumInputReader(Month.class)
-                .withPropertyName("month")
                 .read("What month were you born in?");
 
         TextTerminal terminal = textIO.getTextTerminal();
-        terminal.println("\nHello " + firstName + (lastName.isEmpty() ? "" : (" " +  lastName)) + ".");
-        if(lastName.isEmpty()) terminal.println("You have only one name. Just like Madonna.");
-        terminal.println("You are " + age + " years old and you were born in " + month + ".");
+        terminal.println("\nUser " + user + " is " + age + " years old, was born in " + month +
+                " and has the password " + password + ".");
 
-        textIO.newStringInputReader().withAllowEmpty(true).read("\nPress enter terminate...");
+        textIO.newStringInputReader().withMinLength(0).read("\nPress enter to terminate...");
         textIO.dispose();
     }
 }

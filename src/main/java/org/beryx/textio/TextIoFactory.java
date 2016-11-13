@@ -15,12 +15,94 @@
  */
 package org.beryx.textio;
 
-import org.beryx.textio.console.ConsoleTextTerminal;
-import org.beryx.textio.swing.SwingTextTerminal;
+import org.beryx.textio.console.ConsoleTextTerminalProvider;
+import org.beryx.textio.swing.SwingTextTerminalProvider;
+import org.beryx.textio.system.SystemTextTerminalProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
+import java.util.ServiceLoader;
+
+/**
+ * Provides {@link TextTerminal} and {@link TextIO} implementations.
+ * <br>The concrete {@link TextTerminal} implementation is obtained as follows:
+ * <ol>
+ *     <li>If the system property {@value #TEXT_TERMINAL_CLASS_PROPERTY} is defined, then it is
+ *         taken to be the fully-qualified name of a concrete {@link TextTerminal} class.
+ *         The class is loaded and instantiated. If this process fails, then the next step is executed.</li>
+ *     <li>a {@link ServiceLoader} loads the configured {@link TextTerminalProvider}s and searches for the
+ *         first one capable to provide a {@link TextTerminal} instance.
+ *         If none is found, then the next step is executed.</li>
+ *     <li>A default implementation is provided as follows:
+ *          <ul>
+ *              <li>If {@link System#console()} is not null, a {@link org.beryx.textio.console.ConsoleTextTerminal} is provided.</li>
+ *              <li>If the system is not headless, a {@link org.beryx.textio.swing.SwingTextTerminal} is provided.</li>
+ *              <li>Otherwise, a {@link org.beryx.textio.system.SystemTextTerminal} is provided</li>
+ *          </ul>
+ *     </li>
+ * </ol>
+ */
 public class TextIoFactory {
-    public static TextIO get() {
-        TextTerminal terminal = (System.console() != null) ? new ConsoleTextTerminal(System.console()) : new SwingTextTerminal();
-        return new TextIO(terminal);
+    private static final Logger logger =  LoggerFactory.getLogger(TextIoFactory.class);
+
+    public static final String TEXT_TERMINAL_CLASS_PROPERTY = "org.beryx.textio.TextTerminal";
+
+    private static class Holder {
+        static Holder INSTANCE = new Holder();
+
+        final TextTerminal terminal;
+        final TextIO textIO;
+
+        private Holder() {
+            TextTerminal t = getTerminalFromProperty();
+            if(t == null) {
+                t = getTerminalFromService();
+            }
+            if(t == null) {
+                t = getDefaultTerminal();
+            }
+            this.terminal = t;
+            this.textIO = new TextIO(t);
+        }
+
+        private TextTerminal getTerminalFromProperty() {
+            String clsName = System.getProperty(TEXT_TERMINAL_CLASS_PROPERTY, "").trim();
+            if(clsName.isEmpty()) return null;
+            try {
+                Class<?> cls = Class.forName(clsName);
+                return (TextTerminal) cls.newInstance();
+            } catch(Exception e) {
+                logger.warn("Unable to create a TextTerminal of type " + clsName);
+                return null;
+            }
+        }
+
+        private TextTerminal getTerminalFromService() {
+            ServiceLoader<TextTerminalProvider> svcLoader = ServiceLoader.load(TextTerminalProvider.class);
+            Iterator<TextTerminalProvider> it = svcLoader.iterator();
+            while(it.hasNext()) {
+                TextTerminal t = it.next().getTextTerminal();
+                if(t != null) return t;
+            }
+            return null;
+        }
+
+        private TextTerminal getDefaultTerminal() {
+            TextTerminal terminal = new ConsoleTextTerminalProvider().getTextTerminal();
+            if(terminal != null) return terminal;
+            terminal = new SwingTextTerminalProvider().getTextTerminal();
+            if(terminal != null) return terminal;
+            terminal = new SystemTextTerminalProvider().getTextTerminal();
+            return terminal;
+        }
+    }
+
+    public static TextTerminal getTextTerminal() {
+        return Holder.INSTANCE.terminal;
+    }
+
+    public static TextIO getTextIO() {
+        return Holder.INSTANCE.textIO;
     }
 }

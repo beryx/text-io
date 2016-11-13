@@ -216,7 +216,7 @@ asciidoctor {
 }
 
 githubPages {
-  repoUri = 'https://github.com/beryx/text-io.git'
+  repoUri = 'https://github.com/sandboxx/test-travis-asciidoc-gh-pages.git'
 
   credentials {
     username = System.getenv('GH_PAGES_ACCESS_TOKEN')
@@ -224,15 +224,12 @@ githubPages {
   }
 
   pages {
-    from file("${asciidoctor.outputDir.path}/html5")
-    from file('doc/CNAME')
-  }
-  pages {
     def pgType = project.hasProperty('ghPageType') ? ghPageType : 'latest'
     if(pgType == 'init') {
       from file("ghpages")
     } else {
       from file("${asciidoctor.outputDir.path}/html5")
+      from file("build/docs")
     }
     def docDir = Boolean.valueOf(textIoReleaseBuild) ? 'releases' : 'snapshots'
     if(pgType == 'init') {
@@ -244,13 +241,7 @@ githubPages {
       into "$docDir/latest"
     }
   }
-
 }
-
-
-
-
-
 
 configureJavadoc(javadoc)
 

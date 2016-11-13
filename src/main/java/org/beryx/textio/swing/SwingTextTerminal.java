@@ -23,8 +23,10 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.util.Scanner;
 
+/**
+ * A {@link TextTerminal} implemented using a {@link JTextArea} inside a {@link JFrame}.
+ */
 public class SwingTextTerminal implements TextTerminal {
 
     private final JFrame frame;
@@ -87,7 +89,6 @@ public class SwingTextTerminal implements TextTerminal {
                             textChanger.changeText(text);
                             unmaskedContent = doc.getText(0, doc.getLength());
                         }
-                        System.out.println("unmaskedContent: " + unmaskedContent + "\n----------------------\n");
                     } catch (Exception e) {
                         if(e instanceof BadLocationException) throw (BadLocationException)e;
                         else throw new BadLocationException(e.toString(), offset);
@@ -117,7 +118,6 @@ public class SwingTextTerminal implements TextTerminal {
     public SwingTextTerminal() {
         frame = new JFrame("Text Terminal");
         textArea = new JTextArea(30, 80);
-        frame.setResizable(false);
         textArea.setLineWrap(true);
 
         textArea.setBackground(Color.black);

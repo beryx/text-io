@@ -19,6 +19,12 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Supplier;
 
+/**
+ * A reader for enum values.
+ * It initializes {@link #possibleValues} with the constants returned by the <tt>values()</tt> method.
+ * It is not allowed to call {@link #withPossibleValues(List)} or {@link #withPossibleValues(Enum[])} for this reader.
+ * By default, it uses a numbered list for displaying the possible values.
+ */
 public class EnumInputReader<T extends Enum<T>> extends InputReader<T, EnumInputReader<T>> {
     private final Map<String, T> enumValues = new LinkedHashMap<String, T>();
 
@@ -35,11 +41,13 @@ public class EnumInputReader<T extends Enum<T>> extends InputReader<T, EnumInput
         this.numberedPossibleValues = true;
     }
 
+    /** Always throws UnsupportedOperationException. */
     @Override
     public EnumInputReader<T> withPossibleValues(T... possibleValues) {
         throw new UnsupportedOperationException();
     }
 
+    /** Always throws UnsupportedOperationException. */
     @Override
     public EnumInputReader<T> withPossibleValues(List<T> possibleValues) {
         throw new UnsupportedOperationException();

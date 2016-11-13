@@ -13,46 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.beryx.textio.console;
+package org.beryx.textio.system;
 
 import org.beryx.textio.TextTerminal;
 
-import java.io.Console;
+import java.io.PrintStream;
+import java.util.Scanner;
 
 /**
- * A {@link TextTerminal} backed by a {@link Console}.
+ * A {@link TextTerminal} implemented using {@link System#out}, {@link System#in} and {@link Scanner}.
+ * It is not capable to mask input strings, therefore not recommended when reading sensitive data.
  */
-public class ConsoleTextTerminal implements TextTerminal {
-    private final Console console;
-
-    public ConsoleTextTerminal() {
-        this(System.console());
-    }
-
-    public ConsoleTextTerminal(Console console) {
-        if(console == null) throw new IllegalArgumentException("console is null");
-        this.console = console;
-    }
+public class SystemTextTerminal implements TextTerminal {
+    private final Scanner scanner = new Scanner(System.in);
+    private final PrintStream out = System.out;
 
     @Override
     public String read(boolean masking) {
-        if(masking) {
-            char[] chars = console.readPassword();
-            return (chars == null) ? null : new String(chars);
-        } else {
-            return console.readLine();
-        }
+        return scanner.nextLine();
     }
 
     @Override
     public void rawPrint(String message) {
-        console.printf(message);
-        console.flush();
+        out.print(message);
+        out.flush();
     }
 
     @Override
     public void println() {
-        console.printf("\n");
-        console.flush();
+        out.println();
+        out.flush();
     }
 }

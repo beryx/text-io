@@ -17,6 +17,9 @@ package org.beryx.textio;
 
 import java.util.function.Supplier;
 
+/**
+ * A reader for double values.
+ */
 public class DoubleInputReader extends ComparableInputReader<Double, DoubleInputReader> {
     public DoubleInputReader(Supplier<TextTerminal> textTerminalSupplier) {
         super(textTerminalSupplier);

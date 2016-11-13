@@ -18,6 +18,10 @@ package org.beryx.textio;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * A factory for creating {@link InputReader}s.
+ * All InputReaders created by the same TextIO instance share the same {@link TextTerminal}.
+ */
 public class TextIO {
     private final TextTerminal textTerminal;
     private final Supplier<TextTerminal> textTerminalSupplier;

@@ -15,23 +15,9 @@
  */
 package org.beryx.textio;
 
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 /**
- * A reader for values of a type T, for which a parser is passed as constructor argument.
+ * TextTerminal Service Provider Interface
  */
-public class GenericInputReader<T> extends InputReader<T, GenericInputReader<T>> {
-    protected final Function<String, ParseResult<T>> parser;
-
-    public GenericInputReader(Supplier<TextTerminal> textTerminalSupplier, Function<String, ParseResult<T>> parser) {
-        super(textTerminalSupplier);
-        this.parser = parser;
-        this.numberedPossibleValues = true;
-    }
-
-    @Override
-    public ParseResult<T> parse(String s) {
-        return parser.apply(s);
-    }
+public interface TextTerminalProvider {
+    TextTerminal getTextTerminal();
 }

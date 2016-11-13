@@ -1,4 +1,4 @@
-= {project-name}
+= Text IO
 :author: Serban Iordache
 :revnumber: {project-version}
 :toc: left

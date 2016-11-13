@@ -18,6 +18,10 @@ package org.beryx.textio;
 import java.util.List;
 import java.util.function.Supplier;
 
+/**
+ * A reader for values of y type that implements {@link Comparable}.
+ * Allows configuring the minimum and maximum permitted values.
+ */
 public abstract class ComparableInputReader<T extends Comparable<T>, B extends ComparableInputReader<T, B>> extends InputReader<T, B> {
     protected T minVal;
     protected T maxVal;
@@ -28,11 +32,13 @@ public abstract class ComparableInputReader<T extends Comparable<T>, B extends C
         super(textTerminalSupplier);
     }
 
+    /** Configures the minimum allowed value */
     public B withMinVal(T minVal) {
         this.minVal = minVal;
         return (B)this;
     }
 
+    /** Configures the maximum allowed value */
     public B withMaxVal(T maxVal) {
         this.maxVal = maxVal;
         return (B)this;
@@ -53,6 +59,7 @@ public abstract class ComparableInputReader<T extends Comparable<T>, B extends C
         return errList;
     }
 
+    /** In addition to the checks performed by {@link InputReader#checkConfiguration()}, it checks if minVal &lt;= defaultVal &lt;= maxVal */
     @Override
     public void checkConfiguration() throws IllegalArgumentException {
         super.checkConfiguration();
@@ -63,6 +70,7 @@ public abstract class ComparableInputReader<T extends Comparable<T>, B extends C
         }
     }
 
+    /** Returns true if minVal &lt;= val &lt;= maxVal */
     public boolean isInRange(T val) {
         return (minVal == null || minVal.compareTo(val) <= 0) && (maxVal == null || maxVal.compareTo(val) >= 0);
     }
