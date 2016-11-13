@@ -53,14 +53,9 @@ def pomConfig = {
 }
 
 
-
-
 tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:all,-syntax,-missing', '-quiet')
 }
-
-
-
 
 
 repositories {
@@ -214,6 +209,8 @@ asciidoctor {
              linkattrs: true,
              linkcss: true
 }
+
+tasks["prepareGhPages"].outputs.upToDateWhen { false }
 
 githubPages {
   repoUri = 'https://github.com/sandboxx/test-travis-asciidoc-gh-pages.git'

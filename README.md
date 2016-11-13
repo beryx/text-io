@@ -47,4 +47,8 @@ terminal.println("\nUser " + user + " is " + age + " years old, " +
 
 Click on the image below to see the output of the above example in a Swing-based terminal.
 
-<a href="https://github.com/beryx/textio/raw/master/doc/img/swing-terminal-animated.gif"><img src="https://github.com/beryx/textio/raw/master/doc/img/swing-terminal-thumb.gif"></a>
+<a href="https://github.com/beryx/text-io/raw/master/doc/img/swing-terminal-animated.gif"><img src="https://github.com/beryx/text-io/raw/master/doc/img/swing-terminal-thumb.gif"></a>
+
+Before starting to use the library, read the **[documentation](http://text-io.beryx.org)** and the **[javadoc](http://text-io.beryx.org/releases/latest/javadoc)**.
+
+Text-IO is available in [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.beryx%22%20AND%20a%3A%22text-io%22) and [JCenter](https://bintray.com/beryx/maven/text-io).
