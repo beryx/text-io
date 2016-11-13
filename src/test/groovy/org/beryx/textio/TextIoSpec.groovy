@@ -260,6 +260,107 @@ class TextIoSpec extends Specification {
         name == 'Jane'
     }
 
+
+    def "should read a char without possible values and with no default value"() {
+        when:
+        terminal.inputs.addAll(["", "XY", "Z"])
+        def chr = textIO.newCharInputReader()
+                .read("Enter the first letter of your name")
+
+        then:
+        terminal.output == '''
+            Enter the first letter of your name:
+            Invalid value.
+            Expected a single character value.
+            Enter the first letter of your name: XY
+            Invalid value.
+            Expected a single character value.
+            Enter the first letter of your name: Z
+        '''.stripAll()
+        terminal.readCalls == 3
+        chr == 'Z'
+    }
+
+    def "should read a char with default value and non-numbered possible values"() {
+        when:
+        terminal.inputs.addAll(["AB", "E", ""])
+        def groupId = textIO.newCharInputReader()
+                .withPossibleValues('A', 'B', 'C', 'D')
+                .withDefaultValue('C')
+                .read("Group ID")
+
+        then:
+        terminal.output == '''
+            Group ID:
+              A
+              B
+            * C
+              D
+            Enter your choice: AB
+            Invalid value.
+            Expected a single character value.
+            Group ID:
+              A
+              B
+            * C
+              D
+            Enter your choice: E
+            Invalid value. You must enter one of the displayed values.
+            Group ID:
+              A
+              B
+            * C
+              D
+            Enter your choice:
+        '''.stripAll()
+        terminal.readCalls == 3
+        groupId == 'C'
+    }
+
+
+    def "should read a char with numbered possible values"() {
+        when:
+        terminal.inputs.addAll(["AB", "E", "C", "3"])
+        def groupId = textIO.newCharInputReader()
+                .withPossibleValues('A', 'B', 'C', 'D')
+                .withNumberedPossibleValues(true)
+                .read("Group ID")
+
+        then:
+        terminal.output == '''
+            Group ID:
+              1: A
+              2: B
+              3: C
+              4: D
+            Enter your choice: AB
+            Invalid value. Enter a value between 1 and 4.
+            Group ID:
+              1: A
+              2: B
+              3: C
+              4: D
+            Enter your choice: E
+            Invalid value. Enter a value between 1 and 4.
+            Group ID:
+              1: A
+              2: B
+              3: C
+              4: D
+            Enter your choice: C
+            Invalid value. Enter a value between 1 and 4.
+            Group ID:
+              1: A
+              2: B
+              3: C
+              4: D
+            Enter your choice: 3
+        '''.stripAll()
+        terminal.readCalls == 4
+        groupId == 'C'
+    }
+
+
     def "should read an int with possible values"() {
         when:
         terminal.inputs.addAll(["abc", "12321", "15551"])

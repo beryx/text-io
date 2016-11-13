@@ -36,7 +36,8 @@ which offers (via methods with names of the form _withXXX()_) a fluent interface
 - link:javadoc/org/beryx/textio/InputReader.html#withInputMasking-boolean-[input masking] - useful when reading sensitive data such as passwords.
 - link:javadoc/org/beryx/textio/InputReader.html#withDefaultValue-T-[defaultValue] - the value to be used if the user pressed Enter.
 - link:javadoc/org/beryx/textio/InputReader.html#withPossibleValues-java.util.List-[possible values] - necessary if the value to be read must be chosen from a list of allowed values.
-- link:javadoc/org/beryx/textio/InputReader.html#withErrorMessageProvider-org.beryx.textio.InputReader.ErrorMessageProvider-[error messages] - used to provide custom error messages.
+- link:javadoc/org/beryx/textio/InputReader.html#withParseErrorMessagesProvider-org.beryx.textio.InputReader.ErrorMessagesProvider-[parse error messages] - used to provide custom parse error messages.
+- link:javadoc/org/beryx/textio/InputReader.html#withValueChecker-org.beryx.textio.InputReader.ValueChecker-[value checkers] - used to check for constraint violations.
 - link:javadoc/org/beryx/textio/InputReader.html#withPropertyName-java.lang.String-[property name] - if configured, the name of the property to be read will appear in error messages.
 
 See the link:javadoc/org/beryx/textio/InputReader.html[javadoc] for more configuration methods.
@@ -44,11 +45,15 @@ See the link:javadoc/org/beryx/textio/InputReader.html[javadoc] for more configu
 The following concrete implementations are available:
 
 - link:javadoc/org/beryx/textio/BooleanInputReader.html[BooleanInputReader] - A reader for boolean values. Allows configuring which string value should be interpreted as _true_ and which as _false_.
+- link:javadoc/org/beryx/textio/ByteInputReader.html[ByteInputReader] - A reader for byte values. Allows configuring the minimum and maximum permitted values.
+- link:javadoc/org/beryx/textio/CharInputReader.html[CharInputReader] - A reader for char values. Allows configuring the minimum and maximum permitted values.
 - link:javadoc/org/beryx/textio/DoubleInputReader.html[DoubleInputReader] - A reader for double values. Allows configuring the minimum and maximum permitted values.
 - link:javadoc/org/beryx/textio/EnumInputReader.html[EnumInputReader] - A reader for enum values. It allows selecting one of the constants defined by the given enum type.
+- link:javadoc/org/beryx/textio/FloatInputReader.html[FloatInputReader] - A reader for float values. Allows configuring the minimum and maximum permitted values.
 - link:javadoc/org/beryx/textio/GenericInputReader.html[GenericInputReader] - A reader for values of a given type, for which a parser is passed as constructor argument.
 - link:javadoc/org/beryx/textio/IntInputReader.html[IntInputReader] - A reader for int values. Allows configuring the minimum and maximum permitted values.
 - link:javadoc/org/beryx/textio/LongInputReader.html[LongInputReader] - A reader for long values. Allows configuring the minimum and maximum permitted values.
+- link:javadoc/org/beryx/textio/ShortInputReader.html[ShortInputReader] - A reader for short values. Allows configuring the minimum and maximum permitted values.
 - link:javadoc/org/beryx/textio/StringInputReader.html[StringInputReader] - A reader for string values. Allows configuring the minimum and maximum permitted length, as well as a regex pattern.
 
 *Reading values*

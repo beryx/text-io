@@ -43,8 +43,20 @@ public class TextIO {
         return new BooleanInputReader(textTerminalSupplier);
     }
 
+    public ByteInputReader newByteInputReader() {
+        return new ByteInputReader(textTerminalSupplier);
+    }
+
+    public CharInputReader newCharInputReader() {
+        return new CharInputReader(textTerminalSupplier);
+    }
+
     public DoubleInputReader newDoubleInputReader() {
         return new DoubleInputReader(textTerminalSupplier);
+    }
+
+    public FloatInputReader newFloatInputReader() {
+        return new FloatInputReader(textTerminalSupplier);
     }
 
     public IntInputReader newIntInputReader() {
@@ -53,6 +65,10 @@ public class TextIO {
 
     public LongInputReader newLongInputReader() {
         return new LongInputReader(textTerminalSupplier);
+    }
+
+    public ShortInputReader newShortInputReader() {
+        return new ShortInputReader(textTerminalSupplier);
     }
 
     public StringInputReader newStringInputReader() {
