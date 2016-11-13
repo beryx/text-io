@@ -35,7 +35,7 @@ public class DoubleInputReader extends ComparableInputReader<Double, DoubleInput
         try {
             return new ParseResult<>(Double.parseDouble(s));
         } catch (NumberFormatException e) {
-            return new ParseResult<>(null, getErrorMessage(s));
+            return new ParseResult<>(null, getErrorMessages(s));
         }
     }
 }

@@ -35,7 +35,7 @@ public class IntInputReader extends ComparableInputReader<Integer, IntInputReade
         try {
             return new ParseResult<>(Integer.parseInt(s));
         } catch (NumberFormatException e) {
-            return new ParseResult<>(null, getErrorMessage(s));
+            return new ParseResult<>(null, getErrorMessages(s));
         }
     }
 }

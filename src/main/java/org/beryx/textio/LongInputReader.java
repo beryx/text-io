@@ -35,7 +35,7 @@ public class LongInputReader extends ComparableInputReader<Long, LongInputReader
         try {
             return new ParseResult<>(Long.parseLong(s));
         } catch (NumberFormatException e) {
-            return new ParseResult<>(null, getErrorMessage(s));
+            return new ParseResult<>(null, getErrorMessages(s));
         }
     }
 }

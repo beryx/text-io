@@ -57,6 +57,6 @@ public class EnumInputReader<T extends Enum<T>> extends InputReader<T, EnumInput
     public ParseResult<T> parse(String s) {
         T value = enumValues.get(s);
         if(value != null) return new ParseResult<>(value);
-        return new ParseResult<T>(null, getErrorMessage(s));
+        return new ParseResult<T>(null, getErrorMessages(s));
     }
 }

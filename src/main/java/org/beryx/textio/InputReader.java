@@ -29,14 +29,14 @@ import java.util.function.Supplier;
 public abstract class InputReader<T, B extends InputReader<T, B>> {
     /** Functional interface for providing error messages */
     @FunctionalInterface
-    public static interface ErrorMessageProvider {
+    public static interface ErrorMessagesProvider {
         /**
          * Returns the list of error messages for the given string representation of the value
          * @param sVal the string representation of the value
          * @param propertyName the name of the property corresponding to this value. May be null.
          * @return - the list of error messages or null if no error has been detected.
          */
-        List<String> getErrorMessage(String sVal, String propertyName);
+        List<String> getErrorMessages(String sVal, String propertyName);
     }
 
     /** Functional interface for checking value constraints */
@@ -48,7 +48,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
          * @param propertyName the name of the property corresponding to this value. May be null.
          * @return - the list of error messages or null if no error has been detected.
          */
-        List<String> getErrorMessage(T val, String propertyName);
+        List<String> getErrorMessages(T val, String propertyName);
     }
 
     /**
@@ -95,8 +95,8 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     /** If true, the list of possible values will be numbered and the desired value will be selected by choosing the corresponding number. */
     protected boolean numberedPossibleValues = false;
 
-    /** The provider of parse error messages. If null, the {@link #getDefaultErrorMessage(String)} will be used. */
-    protected ErrorMessageProvider errorMessageProvider;
+    /** The provider of parse error messages. If null, the {@link #getDefaultErrorMessages(String)} will be used. */
+    protected ErrorMessagesProvider parseErrorMessagesProvider;
 
     /** The name of the property corresponding to the value to be read. May be null. */
     protected String propertyName;
@@ -178,19 +178,18 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return (B)this;
     }
 
-    public B withErrorMessageProvider(ErrorMessageProvider errorMessageProvider) {
-        this.errorMessageProvider = errorMessageProvider;
+    public B withErrorMessagesProvider(ErrorMessagesProvider parseErrorMessagesProvider) {
+        this.parseErrorMessagesProvider = parseErrorMessagesProvider;
         return (B)this;
     }
 
+    /** Adds the valueChecker passed as argument. May be called multiple times. */
     public B withValueChecker(ValueChecker<T> valueChecker) {
         this.valueCheckers.add(valueChecker);
         return (B)this;
     }
 
-    /**
-     * Returns a generic error message.
-     */
+    /** Returns a generic error message. */
     protected String getDefaultErrorMessage() {
         StringBuilder errBuilder = new StringBuilder("Invalid value");
         if(propertyName != null) errBuilder.append(" for '" + propertyName + "'");
@@ -199,20 +198,41 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     }
 
     /**
-     * If no <tt>errorMessageProvider</tt> exists, this method is used to provide the list of error messages for the input string <tt>s</tt>.
+     * If no {@link #parseErrorMessagesProvider} exists, this method is used to provide the list of error messages for the input string <tt>s</tt>.
      * It should return a non-empty list of messages.
      */
-    protected List<String> getDefaultErrorMessage(String s) {
+    protected List<String> getDefaultErrorMessages(String s) {
         return new ArrayList<>(Collections.singleton(getDefaultErrorMessage()));
     }
 
     /**
      * Provides the list of error messages for the input string <tt>s</tt>.
-     * If an <tt>errorMessageProvider</tt> exists, it will be used. Otherwise, {@link #getDefaultErrorMessage(String)} will be called.
+     * If a {@link #parseErrorMessagesProvider} exists, it will be used. Otherwise, {@link #getDefaultErrorMessages(String)} will be called.
      */
-    public final List<String> getErrorMessage(String s) {
-        if(errorMessageProvider != null) return errorMessageProvider.getErrorMessage(s, propertyName);
-        return getDefaultErrorMessage(s);
+    public final List<String> getErrorMessages(String s) {
+        if(parseErrorMessagesProvider != null) return parseErrorMessagesProvider.getErrorMessages(s, propertyName);
+        return getDefaultErrorMessages(s);
+    }
+
+    /**
+     * Parses the input string and runs all value checkers in order to find constraint violations.
+     * @param s the input string
+     * @return a {@link ParseResult} that holds the parsed value and/or the error messages, if errors occurred.
+     */
+    protected ParseResult<T> parseAndCheck(String s) {
+        ParseResult<T> res = parse(s);
+        if(res.errorMessages == null) {
+            List<String> allErrors = new ArrayList<>();
+            for(ValueChecker<T> checker : valueCheckers) {
+                List<String> errors = checker.getErrorMessages(res.value, propertyName);
+                if(errors != null) allErrors.addAll(errors);
+            }
+            if(!allErrors.isEmpty()) {
+                allErrors.add(0, getDefaultErrorMessage());
+                res = new ParseResult<T>(res.value, allErrors);
+            }
+        }
+        return res;
     }
 
     /**
@@ -223,22 +243,6 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      */
     public T read(String... prompt) {
         return read(Arrays.asList(prompt));
-    }
-
-    protected ParseResult<T> parseAndCheck(String s) {
-        ParseResult<T> res = parse(s);
-        if(res.errorMessages == null) {
-            List<String> allErrors = new ArrayList<>();
-            for(ValueChecker<T> checker : valueCheckers) {
-                List<String> errors = checker.getErrorMessage(res.value, propertyName);
-                if(errors != null) allErrors.addAll(errors);
-            }
-            if(!allErrors.isEmpty()) {
-                allErrors.add(0, getDefaultErrorMessage());
-                res = new ParseResult<T>(res.value, allErrors);
-            }
-        }
-        return res;
     }
 
     /**
@@ -307,12 +311,12 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         for(ValueChecker<T> checker : valueCheckers) {
             List<String> errors = null;
             if(defaultValue != null) {
-                errors = checker.getErrorMessage(defaultValue, propertyName);
+                errors = checker.getErrorMessages(defaultValue, propertyName);
                 if(errors != null) throw new IllegalArgumentException("Invalid default value: " + valueFormatter.apply(defaultValue) + ".\n" + errors);
             }
             if(possibleValues != null) {
                 for(T val : possibleValues) {
-                    errors = checker.getErrorMessage(val, propertyName);
+                    errors = checker.getErrorMessages(val, propertyName);
                     if(errors != null) throw new IllegalArgumentException("Invalid entry in the list of possible values: " + valueFormatter.apply(val) + ".\n" + errors);
                 }
             }

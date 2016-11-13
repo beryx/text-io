@@ -44,8 +44,8 @@ public class BooleanInputReader extends InputReader<Boolean, BooleanInputReader>
     }
 
     @Override
-    protected List<String> getDefaultErrorMessage(String s) {
-        List<String> errList = super.getDefaultErrorMessage(s);
+    protected List<String> getDefaultErrorMessages(String s) {
+        List<String> errList = super.getDefaultErrorMessages(s);
         errList.add("Expected: " + trueInput + " / " + falseInput);
         return errList;
     }
@@ -54,6 +54,6 @@ public class BooleanInputReader extends InputReader<Boolean, BooleanInputReader>
     public ParseResult<Boolean> parse(String s) {
         if(trueInput.equalsIgnoreCase(s)) return new ParseResult<>(true);
         if(falseInput.equalsIgnoreCase(s)) return new ParseResult<>(false);
-        return new ParseResult<>(null, getErrorMessage(s));
+        return new ParseResult<>(null, getErrorMessages(s));
     }
 }
