@@ -178,7 +178,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return (B)this;
     }
 
-    public B withErrorMessagesProvider(ErrorMessagesProvider parseErrorMessagesProvider) {
+    public B withParseErrorMessagesProvider(ErrorMessagesProvider parseErrorMessagesProvider) {
         this.parseErrorMessagesProvider = parseErrorMessagesProvider;
         return (B)this;
     }
