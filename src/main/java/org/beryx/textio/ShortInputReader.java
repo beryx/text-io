@@ -31,7 +31,7 @@ public class ShortInputReader extends ComparableInputReader<Short, ShortInputRea
     }
 
     @Override
-    public ParseResult<Short> parse(String s) {
+    protected ParseResult<Short> parse(String s) {
         try {
             return new ParseResult<>(Short.parseShort(s));
         } catch (NumberFormatException e) {

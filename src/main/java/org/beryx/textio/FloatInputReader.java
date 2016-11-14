@@ -31,7 +31,7 @@ public class FloatInputReader extends ComparableInputReader<Float, FloatInputRea
     }
 
     @Override
-    public ParseResult<Float> parse(String s) {
+    protected ParseResult<Float> parse(String s) {
         try {
             return new ParseResult<>(Float.parseFloat(s));
         } catch (NumberFormatException e) {

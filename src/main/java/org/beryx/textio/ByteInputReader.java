@@ -31,7 +31,7 @@ public class ByteInputReader extends ComparableInputReader<Byte, ByteInputReader
     }
 
     @Override
-    public ParseResult<Byte> parse(String s) {
+    protected ParseResult<Byte> parse(String s) {
         try {
             return new ParseResult<>(Byte.parseByte(s));
         } catch (NumberFormatException e) {

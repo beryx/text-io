@@ -51,7 +51,7 @@ public class BooleanInputReader extends InputReader<Boolean, BooleanInputReader>
     }
 
     @Override
-    public ParseResult<Boolean> parse(String s) {
+    protected ParseResult<Boolean> parse(String s) {
         if(trueInput.equalsIgnoreCase(s)) return new ParseResult<>(true);
         if(falseInput.equalsIgnoreCase(s)) return new ParseResult<>(false);
         return new ParseResult<>(null, getErrorMessages(s));

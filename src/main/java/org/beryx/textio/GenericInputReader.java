@@ -31,7 +31,7 @@ public class GenericInputReader<T> extends InputReader<T, GenericInputReader<T>>
     }
 
     @Override
-    public ParseResult<T> parse(String s) {
+    protected ParseResult<T> parse(String s) {
         return parser.apply(s);
     }
 }

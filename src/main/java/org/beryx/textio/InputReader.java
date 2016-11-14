@@ -121,7 +121,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      * @param s the input string
      * @return a {@link ParseResult} that holds the parsed value and/or the error messages, if errors occurred.
      */
-    public abstract ParseResult<T> parse(String s);
+    protected abstract ParseResult<T> parse(String s);
 
     public InputReader(Supplier<TextTerminal> textTerminalSupplier) {
         this.textTerminalSupplier = textTerminalSupplier;
@@ -209,7 +209,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      * Provides the list of error messages for the input string <tt>s</tt>.
      * If a {@link #parseErrorMessagesProvider} exists, it will be used. Otherwise, {@link #getDefaultErrorMessages(String)} will be called.
      */
-    public final List<String> getErrorMessages(String s) {
+    protected final List<String> getErrorMessages(String s) {
         if(parseErrorMessagesProvider != null) return parseErrorMessagesProvider.getErrorMessages(s, propertyName);
         return getDefaultErrorMessages(s);
     }
@@ -304,7 +304,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      * This default implementation checks if the defaultValue is among the possibleValues.
      * @throws java.lang.IllegalArgumentException
      */
-    public void checkConfiguration() throws java.lang.IllegalArgumentException {
+    protected void checkConfiguration() throws java.lang.IllegalArgumentException {
         if(defaultValue != null && !isPossibleValue(defaultValue)) {
             throw new IllegalArgumentException("Invalid default value: " + valueFormatter.apply(defaultValue) + ". Allowed values: " + possibleValues);
         }

@@ -31,7 +31,7 @@ public class DoubleInputReader extends ComparableInputReader<Double, DoubleInput
     }
 
     @Override
-    public ParseResult<Double> parse(String s) {
+    protected ParseResult<Double> parse(String s) {
         try {
             return new ParseResult<>(Double.parseDouble(s));
         } catch (NumberFormatException e) {

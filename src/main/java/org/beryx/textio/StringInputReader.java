@@ -59,13 +59,13 @@ public class StringInputReader extends InputReader<String, StringInputReader> {
     }
 
     @Override
-    public ParseResult<String> parse(String s) {
+    protected ParseResult<String> parse(String s) {
         return new ParseResult<>(s);
     }
 
     /** In addition to the checks performed by {@link InputReader#checkConfiguration()}, it checks if minVal &lt;= maxVal */
     @Override
-    public void checkConfiguration() throws IllegalArgumentException {
+    protected void checkConfiguration() throws IllegalArgumentException {
         super.checkConfiguration();
         if(minLength > 0 && maxLength > 0 && minLength > maxLength) throw new IllegalArgumentException("minLength = " + minLength + ", maxLength = " + maxLength);
     }

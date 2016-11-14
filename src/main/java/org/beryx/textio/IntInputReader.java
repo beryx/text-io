@@ -31,7 +31,7 @@ public class IntInputReader extends ComparableInputReader<Integer, IntInputReade
     }
 
     @Override
-    public ParseResult<Integer> parse(String s) {
+    protected ParseResult<Integer> parse(String s) {
         try {
             return new ParseResult<>(Integer.parseInt(s));
         } catch (NumberFormatException e) {

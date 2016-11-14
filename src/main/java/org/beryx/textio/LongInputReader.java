@@ -31,7 +31,7 @@ public class LongInputReader extends ComparableInputReader<Long, LongInputReader
     }
 
     @Override
-    public ParseResult<Long> parse(String s) {
+    protected ParseResult<Long> parse(String s) {
         try {
             return new ParseResult<>(Long.parseLong(s));
         } catch (NumberFormatException e) {

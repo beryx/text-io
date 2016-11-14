@@ -31,7 +31,7 @@ public class CharInputReader extends ComparableInputReader<Character, CharInputR
     }
 
     @Override
-    public ParseResult<Character> parse(String s) {
+    protected ParseResult<Character> parse(String s) {
         if(s == null || s.length() != 1) return new ParseResult<>(null, getErrorMessages(s));
         return new ParseResult<>(s.charAt(0));
     }
