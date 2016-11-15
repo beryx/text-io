@@ -32,7 +32,7 @@ public abstract class ComparableInputReader<T extends Comparable<T>, B extends C
 
     public ComparableInputReader(Supplier<TextTerminal> textTerminalSupplier) {
         super(textTerminalSupplier);
-        parseErrorMessagesProvider = (val, propName) -> Arrays.asList(getDefaultErrorMessage(), getStandardMinMaxErrorMessage());
+        parseErrorMessagesProvider = (val, propName) -> Arrays.asList(getDefaultErrorMessage(val), getStandardMinMaxErrorMessage());
         valueCheckers.add((val, propName) -> getMinMaxErrorMessage(val));
     }
 

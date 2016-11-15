@@ -4,7 +4,7 @@
 ## Text-IO ##
 
 
-Text-IO is a Java library for creating text-based user interfaces.
+Text-IO is a library for creating Java console applications.
 It can be used in applications that need to read interactive input from the user.
 
 **Features**

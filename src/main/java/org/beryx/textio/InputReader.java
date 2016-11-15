@@ -110,11 +110,16 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     /** The list of value checkers used to detect constraint violations */
     protected final List<ValueChecker<T>> valueCheckers = new ArrayList<>();
 
+    /** The list of value checkers used to detect constraint violations for a list of values */
+    protected final List<ValueChecker<List<T>>> valueListCheckers = new ArrayList<>();
+
     /** The formatter used when displaying values of type T. Default: use {@link String#valueOf(Object)} */
     protected Function<T, String> valueFormatter = String::valueOf;
 
     /** The function used to check whether two values are equal. Default: {@link Objects#equals(Object, Object)} */
     protected BiFunction<T, T, Boolean> equalsFunc = Objects::equals;
+
+    private boolean valueListMode = false;
 
     /**
      * Parses the input string
@@ -189,10 +194,29 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return (B)this;
     }
 
+    /** Adds the valueListChecker passed as argument. May be called multiple times. */
+    public B withValueListChecker(ValueChecker<List<T>> valueListChecker) {
+        this.valueListCheckers.add(valueListChecker);
+        return (B)this;
+    }
+
+    /**
+     * @return true, if currently reading a list of values via {@link #readList(List)}
+     */
+    public boolean isValueListMode() {
+        return valueListMode;
+    }
+
     /** Returns a generic error message. */
-    protected String getDefaultErrorMessage() {
+    protected String getDefaultErrorMessage(String sVal) {
         StringBuilder errBuilder = new StringBuilder("Invalid value");
-        if(propertyName != null) errBuilder.append(" for '" + propertyName + "'");
+        if(valueListMode) {
+            errBuilder.append(" in the comma-separated list");
+            if(propertyName != null) errBuilder.append(" of '" + propertyName + "'");
+            if(sVal != null && !sVal.isEmpty()) errBuilder.append(": " + sVal);
+        } else {
+            if(propertyName != null) errBuilder.append(" for '" + propertyName + "'");
+        }
         errBuilder.append('.');
         return errBuilder.toString();
     }
@@ -202,7 +226,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      * It should return a non-empty list of messages.
      */
     protected List<String> getDefaultErrorMessages(String s) {
-        return new ArrayList<>(Collections.singleton(getDefaultErrorMessage()));
+        return new ArrayList<>(Collections.singleton(getDefaultErrorMessage(s)));
     }
 
     /**
@@ -228,7 +252,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
                 if(errors != null) allErrors.addAll(errors);
             }
             if(!allErrors.isEmpty()) {
-                allErrors.add(0, getDefaultErrorMessage());
+                allErrors.add(0, getDefaultErrorMessage(s));
                 res = new ParseResult<T>(res.value, allErrors);
             }
         }
@@ -252,43 +276,95 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      * @return the value of type T parsed from the input string
      */
     public T read(List<String> prompt) {
+        valueListMode = false;
         checkConfiguration();
         TextTerminal textTerminal = textTerminalSupplier.get();
         while(true) {
-            printPrompt(prompt, textTerminal, possibleValues);
+            printPrompt(prompt, textTerminal);
             String sVal = textTerminal.read(inputMasking);
             if(sVal != null && inputTrimming) sVal = sVal.trim();
             if(sVal == null || sVal.isEmpty()) {
                 if(defaultValue != null) return defaultValue;
             }
-            if(possibleValues == null || !numberedPossibleValues) {
-                ParseResult<T> result = parseAndCheck(sVal);
-                List<String> errMessages = result.getErrorMessages();
-                if(errMessages == null) {
-                    if(isPossibleValue(result.getValue())) {
-                        return result.getValue();
-                    }
-                    textTerminal.print(getDefaultErrorMessage());
-                    textTerminal.println(" You must enter one of the displayed values.");
-                    textTerminal.println( );
-                } else {
-                    textTerminal.println(errMessages);
-                    textTerminal.println();
-                }
-            } else {
-                try {
-                    int optIndex = Integer.parseInt(sVal);
-                    if(optIndex > 0 && optIndex <= possibleValues.size()) {
-                        return possibleValues.get(optIndex - 1);
-                    }
-                } catch (NumberFormatException e) {
-                    // Continue the execution. The next statement will print the error message.
-                }
-                textTerminal.print(getDefaultErrorMessage());
-                textTerminal.println(" Enter a value between 1 and " + possibleValues.size() + ".");
-                textTerminal.println();
-            }
+            T value = getValueFromStringOrIndex(sVal, textTerminal);
+            if (value != null) return value;
         }
+    }
+
+    public List<T> readList(String... prompt) {
+        return readList(Arrays.asList(prompt));
+    }
+
+    public List<T> readList(List<String> prompt) {
+        valueListMode = true;
+        checkConfiguration();
+        TextTerminal textTerminal = textTerminalSupplier.get();
+        mainLoop:
+        while(true) {
+            printPrompt(prompt, textTerminal);
+            String sInput = textTerminal.read(inputMasking);
+            String[] sValues = (sInput == null) ? new String[0] : sInput.split(",");
+            if(inputTrimming) {
+                for(int i=0; i<sValues.length; i++) sValues[i] = sValues[i].trim();
+            }
+            if(sValues.length == 1 && sValues[0].isEmpty()) sValues = new String[0];
+            if(sValues.length == 0 && defaultValue != null) return Collections.singletonList(defaultValue);
+            List<T> values = new ArrayList<T>();
+            for(String sVal : sValues) {
+                T value = getValueFromStringOrIndex(sVal, textTerminal);
+                if(value == null) continue mainLoop;
+                values.add(value);
+            }
+            List<String> allErrors = new ArrayList<>();
+            for(ValueChecker<List<T>> checker : valueListCheckers) {
+                List<String> errors = checker.getErrorMessages(values, propertyName);
+                if(errors != null) allErrors.addAll(errors);
+            }
+            if(!allErrors.isEmpty()) {
+                allErrors.add(0, getDefaultErrorMessage(null));
+                textTerminal.println(allErrors);
+                textTerminal.println();
+                continue;
+            }
+            return values;
+        }
+    }
+
+    private T getValueFromStringOrIndex(String sVal, TextTerminal textTerminal) {
+        if(possibleValues == null || !numberedPossibleValues) return getValueFromString(sVal, textTerminal);
+        else return getValueFromIndex(sVal, textTerminal);
+    }
+
+    private T getValueFromString(String sVal, TextTerminal textTerminal) {
+        ParseResult<T> result = parseAndCheck(sVal);
+        List<String> errMessages = result.getErrorMessages();
+        if(errMessages == null) {
+            if(isPossibleValue(result.getValue())) {
+                return result.getValue();
+            }
+            textTerminal.print(getDefaultErrorMessage(sVal));
+            textTerminal.println(" You must enter one of the displayed values.");
+            textTerminal.println( );
+        } else {
+            textTerminal.println(errMessages);
+            textTerminal.println();
+        }
+        return null;
+    }
+
+    private T getValueFromIndex(String sVal, TextTerminal textTerminal) {
+        try {
+            int optIndex = Integer.parseInt(sVal);
+            if(optIndex > 0 && optIndex <= possibleValues.size()) {
+                return possibleValues.get(optIndex - 1);
+            }
+        } catch (NumberFormatException e) {
+            // Continue the execution. The next statement will print the error message.
+        }
+        textTerminal.print(getDefaultErrorMessage(sVal));
+        textTerminal.println(" Enter a value between 1 and " + possibleValues.size() + ".");
+        textTerminal.println();
+        return null;
     }
 
     protected boolean isPossibleValue(T val) {
@@ -327,28 +403,43 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      * Displays a prompt inviting the user to enter a value.
      * @param prompt the list of prompt messages. May be null.
      * @param textTerminal the text terminal to which the messages are sent.
-     * @param options the list of options from which the user can choose a value. May be null.
      */
-    protected void printPrompt(List<String> prompt, TextTerminal textTerminal, List<T> options) {
+    protected void printPrompt(List<String> prompt, TextTerminal textTerminal) {
         textTerminal.print(prompt);
         boolean useColon = false;
         if(prompt != null && !prompt.isEmpty()) {
             String lastLine = prompt.get(prompt.size() - 1);
             useColon = !lastLine.isEmpty() && Character.isJavaIdentifierPart(lastLine.charAt(lastLine.length() - 1));
         }
-        if(options == null) {
+        if(possibleValues == null) {
             if(defaultValue != null) textTerminal.print(" [" + defaultValue + "]");
             textTerminal.print(useColon ? ": " : " ");
         } else {
             textTerminal.println(useColon ? ":" : "");
-            for(int i = 0; i < options.size(); i++) {
-                T option = options.get(i);
+            for(int i = 0; i < possibleValues.size(); i++) {
+                T option = possibleValues.get(i);
                 boolean isDefault = (defaultValue != null) && equalsFunc.apply(defaultValue, option);
                 textTerminal.println((isDefault ? "* ": "  ")
                         + (numberedPossibleValues ? ((i + 1) + ": ") : "")
                         + valueFormatter.apply(option));
             }
-            textTerminal.print("Enter your choice: ");
+            textTerminal.print(valueListMode ? "Enter your choices as comma-separated values: " : "Enter your choice: ");
         }
+    }
+
+    public static <T> ValueChecker<List<T>> nonEmptyListChecker() {
+        return (list, propName) -> {
+            if(list == null || list.isEmpty()) return Collections.singletonList("Expected at least one element.");
+            else return null;
+        };
+    }
+
+    public static <T> ValueChecker<List<T>> noDuplicatesChecker() {
+        return (list, propName) -> {
+            if(list == null || list.size() < 2) return null;
+            Set<T> valueSet = new HashSet<T>(list);
+            if(valueSet.size() < list.size()) return Collections.singletonList("Duplicate values are not allowed.");
+            return null;
+        };
     }
 }

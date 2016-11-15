@@ -62,8 +62,12 @@ After configuring an input reader, you can use
 link:javadoc/org/beryx/textio/InputReader.html#read-java.lang.String.%2e.-[ read(String... prompt)]
 or
 link:javadoc/org/beryx/textio/InputReader.html#read-java.util.List-[read(List<String> prompt)]
-to read a value.
-These methods repeatedly prompt the user to enter a value, until a valid input string is provided.
+to read a single value and
+link:javadoc/org/beryx/textio/InputReader.html#readList-java.lang.String.%2e.-[ readList(String... prompt)]
+or
+link:javadoc/org/beryx/textio/InputReader.html#readList-java.util.List-[readList(List<String> prompt)]
+to read a comma-separated list of values.
+These methods repeatedly prompt the user to enter a value or a comma-separated list of values, until a valid input is provided.
 
 == TextIO
 
