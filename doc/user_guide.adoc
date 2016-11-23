@@ -10,7 +10,7 @@ Text terminals must implement the
 link:javadoc/org/beryx/textio/TextTerminal.html[TextTerminal]
 interface, which requires to allow at least:
 
-- reading a one-line text.
+- reading a one-line text, optionally masking the input.
 - writing a one-line text.
 - writing a line separator.
 
