@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.3">
+<meta name="author" content="Serban Iordache">
+<title>Text IO</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+<!-- Histats.com  START  (aync)-->
+<script type="text/javascript">var _Hasync= _Hasync|| [];
+_Hasync.push(['Histats.start', '1,3473102,4,0,0,0,00010000']);
+_Hasync.push(['Histats.fasi', '1']);
+_Hasync.push(['Histats.track_hits', '']);
+(function() {
+var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async = true;
+hs.src = ('//s10.histats.com/js15_as.js');
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+})();</script>
+<noscript><a href="/" target="_blank"><img  src="//sstatic1.histats.com/0.gif?3473102&101" alt="free html hit counter" border="0"></a></noscript>
+<!-- Histats.com  END  -->
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>Text IO</h1>
+<div class="details">
+<span id="author" class="author">Serban Iordache</span><br>
+<span id="revnumber">version 1.3.0</span>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#getting_started">Getting Started</a></li>
+<li><a href="#user_guide">User Guide</a>
+<ul class="sectlevel2">
+<li><a href="#_text_terminals">Text Terminals</a></li>
+<li><a href="#_input_readers">Input Readers</a></li>
+<li><a href="#_textio">TextIO</a></li>
+<li><a href="#_textiofactory">TextIoFactory</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The source code is available on <a href="https://github.com/beryx/text-io">GitHub</a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Text-IO is a library for creating Java console applications.
+It can be used in applications that need to read interactive input from the user.</p>
+</div>
+<div class="paragraph">
+<p><strong>Features</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>supports reading values with various data types.</p>
+</li>
+<li>
+<p>allows masking the input when reading sensitive data.</p>
+</li>
+<li>
+<p>allows selecting a value from a list.</p>
+</li>
+<li>
+<p>allows to specify constraints on the input values (format patterns, value ranges, length constraints etc.).</p>
+</li>
+<li>
+<p>provides different terminal implementations and offers a Service Provider Interface (SPI) for configuring additional text terminals.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>By default, Text-IO tries to use text terminals backed by <a href="http://docs.oracle.com/javase/8/docs/api/java/io/Console.html">java.io.Console</a>.
+If no console device is present (which may happen, for example, when running the application in your IDE),
+a Swing-based terminal is used instead.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">TextIO textIO = TextIoFactory.getTextIO();
+
+<span class="predefined-type">String</span> user = textIO.newStringInputReader()
+        .withDefaultValue(<span class="string"><span class="delimiter">&quot;</span><span class="content">admin</span><span class="delimiter">&quot;</span></span>)
+        .read(<span class="string"><span class="delimiter">&quot;</span><span class="content">Username</span><span class="delimiter">&quot;</span></span>);
+
+<span class="predefined-type">String</span> password = textIO.newStringInputReader()
+        .withMinLength(<span class="integer">6</span>)
+        .withInputMasking(<span class="predefined-constant">true</span>)
+        .read(<span class="string"><span class="delimiter">&quot;</span><span class="content">Password</span><span class="delimiter">&quot;</span></span>);
+
+<span class="type">int</span> age = textIO.newIntInputReader()
+        .withMinVal(<span class="integer">13</span>)
+        .read(<span class="string"><span class="delimiter">&quot;</span><span class="content">Age</span><span class="delimiter">&quot;</span></span>);
+
+Month month = textIO.newEnumInputReader(Month.class)
+        .read(<span class="string"><span class="delimiter">&quot;</span><span class="content">What month were you born in?</span><span class="delimiter">&quot;</span></span>);
+
+TextTerminal terminal = textIO.getTextTerminal();
+terminal.println(<span class="string"><span class="delimiter">&quot;</span><span class="char">\n</span><span class="content">User </span><span class="delimiter">&quot;</span></span> + user + <span class="string"><span class="delimiter">&quot;</span><span class="content"> is </span><span class="delimiter">&quot;</span></span> + age + <span class="string"><span class="delimiter">&quot;</span><span class="content"> years old, </span><span class="delimiter">&quot;</span></span> +
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">was born in </span><span class="delimiter">&quot;</span></span> + month + <span class="string"><span class="delimiter">&quot;</span><span class="content"> and has the password </span><span class="delimiter">&quot;</span></span> + password + <span class="string"><span class="delimiter">&quot;</span><span class="content">.</span><span class="delimiter">&quot;</span></span>);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Click on the image below to see the output of the above example in a Swing-based terminal.</p>
+</div>
+<div class="imageblock thumb">
+<div class="content">
+<a class="image" href="https://github.com/beryx/text-io/raw/master/doc/img/swing-terminal-animated.gif"><img src="data:image/gif;base64,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" alt="swing terminal thumb"></a>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="getting_started">Getting Started</h2>
+<div class="sectionbody">
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+You need Java 8 or newer in order to use Text-IO.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Text-IO is available in Maven Central and JCenter.</p>
+</div>
+<div class="listingblock">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="nowrap">&lt;dependency&gt;
+    &lt;groupId&gt;org.beryx&lt;/groupId&gt;
+    &lt;artifactId&gt;text-io&lt;/artifactId&gt;
+    &lt;version&gt;1.3.0&lt;/version&gt;
+&lt;/dependency&gt;</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="nowrap">compile 'org.beryx:text-io:1.3.0'</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="user_guide">User Guide</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The JavaDoc is available <a href="javadoc/">here</a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_text_terminals">Text Terminals</h3>
+<div class="paragraph">
+<p>A text terminal is an abstraction layer used by the Text-IO library in order to provide device independence.
+Text terminals must implement the
+<a href="javadoc/org/beryx/textio/TextTerminal.html">TextTerminal</a>
+interface, which requires to allow at least:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>reading a one-line text, optionally masking the input.</p>
+</li>
+<li>
+<p>writing a one-line text.</p>
+</li>
+<li>
+<p>writing a line separator.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The following concrete implementations are provided by the Text-IO library:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="javadoc/org/beryx/textio/console/ConsoleTextTerminal.html">ConsoleTextTerminal</a>, which is backed by a
+<a href="http://docs.oracle.com/javase/8/docs/api/java/io/Console.html">java.io.Console</a>.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/swing/SwingTextTerminal.html">SwingTextTerminal</a>, which uses a
+<a href="http://docs.oracle.com/javase/8/docs/api/javax/swing/JTextArea.html">JTextArea</a> inside a
+<a href="http://docs.oracle.com/javase/8/docs/api/javax/swing/JFrame.html">JFrame</a>.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/system/SystemTextTerminal.html">SystemTextTerminal</a>, which uses
+<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#out">System.out</a>,
+<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#in">System.in</a> and
+<a href="http://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html">Scanner</a>.
+It is not capable to mask input strings, therefore not recommended when reading sensitive data.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_input_readers">Input Readers</h3>
+<div class="paragraph">
+<p>Input readers are able to read values of a specific type.
+They are subclasses of <a href="javadoc/org/beryx/textio/InputReader.html">InputReader</a>,
+which offers (via methods with names of the form <em>withXXX()</em>) a fluent interface for configuring various settings such as:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="javadoc/org/beryx/textio/InputReader.html#withInputMasking-boolean-">input masking</a> - useful when reading sensitive data such as passwords.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/InputReader.html#withDefaultValue-T-">defaultValue</a> - the value to be used if the user pressed Enter.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/InputReader.html#withPossibleValues-java.util.List-">possible values</a> - necessary if the value to be read must be chosen from a list of allowed values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/InputReader.html#withParseErrorMessagesProvider-org.beryx.textio.InputReader.ErrorMessagesProvider-">parse error messages</a> - used to provide custom parse error messages.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/InputReader.html#withValueChecker-org.beryx.textio.InputReader.ValueChecker-">value checkers</a> - used to check for constraint violations.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/InputReader.html#withPropertyName-java.lang.String-">property name</a> - if configured, the name of the property to be read will appear in error messages.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>See the <a href="javadoc/org/beryx/textio/InputReader.html">javadoc</a> for more configuration methods.</p>
+</div>
+<div class="paragraph">
+<p>The following concrete implementations are available:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="javadoc/org/beryx/textio/BooleanInputReader.html">BooleanInputReader</a> - A reader for boolean values. Allows configuring which string value should be interpreted as <em>true</em> and which as <em>false</em>.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/ByteInputReader.html">ByteInputReader</a> - A reader for byte values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/CharInputReader.html">CharInputReader</a> - A reader for char values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/DoubleInputReader.html">DoubleInputReader</a> - A reader for double values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/EnumInputReader.html">EnumInputReader</a> - A reader for enum values. It allows selecting one of the constants defined by the given enum type.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/FloatInputReader.html">FloatInputReader</a> - A reader for float values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/GenericInputReader.html">GenericInputReader</a> - A reader for values of a given type, for which a parser is passed as constructor argument.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/IntInputReader.html">IntInputReader</a> - A reader for int values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/LongInputReader.html">LongInputReader</a> - A reader for long values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/ShortInputReader.html">ShortInputReader</a> - A reader for short values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/StringInputReader.html">StringInputReader</a> - A reader for string values. Allows configuring the minimum and maximum permitted length, as well as a regex pattern.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Reading values</strong></p>
+</div>
+<div class="paragraph">
+<p>After configuring an input reader, you can use
+<a href="javadoc/org/beryx/textio/InputReader.html#read-java.lang.String.%2e.-"> read(String&#8230;&#8203; prompt)</a>
+or
+<a href="javadoc/org/beryx/textio/InputReader.html#read-java.util.List-">read(List&lt;String&gt; prompt)</a>
+to read a single value and
+<a href="javadoc/org/beryx/textio/InputReader.html#readList-java.lang.String.%2e.-"> readList(String&#8230;&#8203; prompt)</a>
+or
+<a href="javadoc/org/beryx/textio/InputReader.html#readList-java.util.List-">readList(List&lt;String&gt; prompt)</a>
+to read a comma-separated list of values.
+These methods repeatedly prompt the user to enter a value or a comma-separated list of values, until a valid input is provided.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_textio">TextIO</h3>
+<div class="paragraph">
+<p>The <a href="javadoc/org/beryx/textio/TextIO.html">TextIO</a> class provides factory methods for creating input readers.
+These methods have names of the form <code>newXXXInputReader()</code>, such as
+<a href="javadoc/org/beryx/textio/TextIO.html#newIntInputReader--">newIntInputReader()</a>.</p>
+</div>
+<div class="paragraph">
+<p>All InputReaders created by the same TextIO instance share the same <a href="javadoc/org/beryx/textio/TextTerminal.html">TextTerminal</a>,
+which can be retrieved by calling the
+<a href="javadoc/org/beryx/textio/TextIO.html#getTextTerminal--">getTextTerminal()</a> method.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_textiofactory">TextIoFactory</h3>
+<div class="paragraph">
+<p>Although you can create yourself a <a href="javadoc/org/beryx/textio/TextIO.html">TextIO</a> instance by passing the desired
+<a href="javadoc/org/beryx/textio/TextTerminal.html">TextTerminal</a> as constructor argument, it is preferable to use the
+<a href="javadoc/org/beryx/textio/TextIoFactory.html">TextIoFactory</a> for this task.</p>
+</div>
+<div class="paragraph">
+<p>The TextIoFactory takes the following steps in order to choose the TextTerminal associated with the TextIO instance to be created:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>If the system property <code>org.beryx.textio.TextTerminal</code> is defined, then it is
+taken to be the fully-qualified name of a concrete TextTerminal class.
+The class is loaded and instantiated. If this process fails, then the next step is executed.</p>
+</li>
+<li>
+<p>A <a href="http://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html">ServiceLoader</a>
+loads the configured <a href="javadoc/org/beryx/textio/TextTerminalProvider.html">TextTerminalProviders</a>
+and searches for the first one capable to provide a TextTerminal instance.
+If none is found, then the next step is executed.</p>
+</li>
+<li>
+<p>A default implementation is provided as follows:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>If <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--">System.console()</a> is not null, a
+<a href="javadoc/org/beryx/textio/console/ConsoleTextTerminal.html">ConsoleTextTerminal</a> is provided.</p>
+</li>
+<li>
+<p>If the system is not headless, a <a href="javadoc/org/beryx/textio/swing/SwingTextTerminal.html">SwingTextTerminal</a> is provided.</p>
+</li>
+<li>
+<p>Otherwise, a <a href="javadoc/org/beryx/textio/system/SystemTextTerminal.html">SystemTextTerminal</a> is provided.</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 1.3.0<br>
+</div>
+</div>
+</body>
+</html>
