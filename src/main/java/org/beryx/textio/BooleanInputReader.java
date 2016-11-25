@@ -24,8 +24,8 @@ import java.util.function.Supplier;
  * Allows configuring which string value should be interpreted as <i>true</i> and which as <i>false</i>.
  */
 public class BooleanInputReader extends InputReader<Boolean, BooleanInputReader> {
-    private String trueInput = "true";
-    private String falseInput = "false";
+    private String trueInput = "Y";
+    private String falseInput = "N";
 
     public BooleanInputReader(Supplier<TextTerminal> textTerminalSupplier) {
         super(textTerminalSupplier);
