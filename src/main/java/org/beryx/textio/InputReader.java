@@ -107,6 +107,12 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     /** If true, the input will be trimmed. Default: true */
     protected boolean inputTrimming = true;
 
+    /**
+     * If true, the input reader is allowed to tweak the prompter, for example by including the default value or appending a colon at the end.
+     * Default: true
+     */
+    protected boolean promptAdjustments = true;
+
     /** The list of value checkers used to detect constraint violations */
     protected final List<ValueChecker<T>> valueCheckers = new ArrayList<>();
 
@@ -165,6 +171,11 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
 
     public B withInputTrimming(boolean inputTrimming) {
         this.inputTrimming = inputTrimming;
+        return (B)this;
+    }
+
+    public B withPromptAdjustments(boolean promptAdjustment) {
+        this.promptAdjustments = promptAdjustment;
         return (B)this;
     }
 
@@ -407,13 +418,13 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     protected void printPrompt(List<String> prompt, TextTerminal textTerminal) {
         textTerminal.print(prompt);
         boolean useColon = false;
-        if(prompt != null && !prompt.isEmpty()) {
+        if(promptAdjustments && prompt != null && !prompt.isEmpty()) {
             String lastLine = prompt.get(prompt.size() - 1);
-            useColon = !lastLine.isEmpty() && Character.isJavaIdentifierPart(lastLine.charAt(lastLine.length() - 1));
+            useColon = shouldappendColon(lastLine);
         }
         if(possibleValues == null) {
-            if(defaultValue != null) textTerminal.print(" [" + defaultValue + "]");
-            textTerminal.print(useColon ? ": " : " ");
+            if(promptAdjustments && defaultValue != null) textTerminal.print(" [" + valueFormatter.apply(defaultValue) + "]: ");
+            else textTerminal.print(useColon ? ": " : " ");
         } else {
             textTerminal.println(useColon ? ":" : "");
             for(int i = 0; i < possibleValues.size(); i++) {
@@ -425,6 +436,12 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
             }
             textTerminal.print(valueListMode ? "Enter your choices as comma-separated values: " : "Enter your choice: ");
         }
+    }
+
+    private static boolean shouldappendColon(String s) {
+        if(s == null || s.isEmpty()) return false;
+        char lastChar = s.charAt(s.length() - 1);
+        return "()[]{}.,;:?!".indexOf(lastChar) > 0 || Character.isJavaIdentifierPart(lastChar);
     }
 
     public static <T> ValueChecker<List<T>> nonEmptyListChecker() {

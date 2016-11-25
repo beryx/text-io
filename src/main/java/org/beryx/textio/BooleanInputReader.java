@@ -15,6 +15,7 @@
  */
 package org.beryx.textio;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -23,11 +24,13 @@ import java.util.function.Supplier;
  * Allows configuring which string value should be interpreted as <i>true</i> and which as <i>false</i>.
  */
 public class BooleanInputReader extends InputReader<Boolean, BooleanInputReader> {
-    public BooleanInputReader(Supplier<TextTerminal> textTerminalSupplier) {
-        super(textTerminalSupplier);
-    }
     private String trueInput = "true";
     private String falseInput = "false";
+
+    public BooleanInputReader(Supplier<TextTerminal> textTerminalSupplier) {
+        super(textTerminalSupplier);
+        this.valueFormatter = bVal -> bVal ? trueInput : falseInput;
+    }
 
     /** Configures the string value that corresponds to <i>true</i>. */
     public BooleanInputReader withTrueInput(String trueInput) {
@@ -55,5 +58,17 @@ public class BooleanInputReader extends InputReader<Boolean, BooleanInputReader>
         if(trueInput.equalsIgnoreCase(s)) return new ParseResult<>(true);
         if(falseInput.equalsIgnoreCase(s)) return new ParseResult<>(false);
         return new ParseResult<>(null, getErrorMessages(s));
+    }
+
+    @Override
+    protected void printPrompt(List<String> prompt, TextTerminal textTerminal) {
+        List<String> boolPrompt = prompt;
+        if(promptAdjustments && prompt != null && !prompt.isEmpty()) {
+            String lastLine = prompt.get(prompt.size() - 1) + " (" + trueInput + "/" + falseInput + ")";
+            boolPrompt = new ArrayList<>(prompt);
+            boolPrompt.set(boolPrompt.size() - 1, lastLine);
+        }
+
+        super.printPrompt(boolPrompt, textTerminal);
     }
 }

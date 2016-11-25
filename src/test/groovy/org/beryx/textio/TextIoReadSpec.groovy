@@ -110,28 +110,54 @@ class TextIoReadSpec extends Specification {
                 .withTrueInput("enabled")
                 .withFalseInput("disabled")
                 .withPropertyName("auto-connect")
-                .read("Auto-connect feature. Type enabled or disabled")
+                .read("Auto-connect feature")
 
         then:
         terminal.output == '''
-            Auto-connect feature. Type enabled or disabled: maybe
+            Auto-connect feature (enabled/disabled): maybe
             Invalid value for 'auto-connect'.
             Expected: enabled / disabled
-            Auto-connect feature. Type enabled or disabled: yep
+            Auto-connect feature (enabled/disabled): yep
             Invalid value for 'auto-connect'.
             Expected: enabled / disabled
-            Auto-connect feature. Type enabled or disabled:
+            Auto-connect feature (enabled/disabled):
             Invalid value for 'auto-connect'.
             Expected: enabled / disabled
-            Auto-connect feature. Type enabled or disabled: false
+            Auto-connect feature (enabled/disabled): false
             Invalid value for 'auto-connect'.
             Expected: enabled / disabled
-            Auto-connect feature. Type enabled or disabled: disabled
+            Auto-connect feature (enabled/disabled): disabled
         '''.stripAll()
         terminal.readCalls == 5
         enabled == false
     }
 
+    def "should read a boolean with default value"() {
+        when:
+        terminal.inputs.addAll(["maybe", "yep", "false", ""])
+        def enabled = textIO.newBooleanInputReader()
+                .withTrueInput("enabled")
+                .withFalseInput("disabled")
+                .withDefaultValue(false)
+                .withPropertyName("auto-connect")
+                .read("Auto-connect feature")
+
+        then:
+        terminal.output == '''
+            Auto-connect feature (enabled/disabled) [disabled]: maybe
+            Invalid value for 'auto-connect'.
+            Expected: enabled / disabled
+            Auto-connect feature (enabled/disabled) [disabled]: yep
+            Invalid value for 'auto-connect'.
+            Expected: enabled / disabled
+            Auto-connect feature (enabled/disabled) [disabled]: false
+            Invalid value for 'auto-connect'.
+            Expected: enabled / disabled
+            Auto-connect feature (enabled/disabled) [disabled]:
+        '''.stripAll()
+        terminal.readCalls == 4
+        enabled == false
+    }
 
     def "should read a string with possible values and no default value"() {
         when:
