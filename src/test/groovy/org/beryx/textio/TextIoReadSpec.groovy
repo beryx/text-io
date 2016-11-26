@@ -16,19 +16,13 @@
 package org.beryx.textio
 
 import org.beryx.textio.InputReader.ParseResult
-import spock.lang.Specification
 import spock.lang.Unroll
 
-import java.awt.Point
+import java.awt.*
 import java.time.DayOfWeek
 
 @Unroll
-class TextIoReadSpec extends Specification {
-    static { String.metaClass.stripAll = {-> TestUtil.stripAll(delegate)} }
-
-    def terminal = new MockTerminal()
-    def textIO = new TextIO(terminal)
-
+class TextIoReadSpec extends TextIoSpec {
     def "should read a long with range and default value"() {
         when:
         terminal.inputs.addAll(["aaa", "3", "17", ""])

@@ -42,7 +42,7 @@ class MockTerminal implements TextTerminal {
     }
 
     String getOutput() {
-        TestUtil.stripAll(outputBuilder.toString())
+        TextIoSpec.stripAll(outputBuilder.toString())
     }
 
     int getReadCalls() {

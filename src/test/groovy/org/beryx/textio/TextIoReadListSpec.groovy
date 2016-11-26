@@ -15,18 +15,12 @@
  */
 package org.beryx.textio
 
-import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Month
 
 @Unroll
-class TextIoReadListSpec extends Specification {
-    static { String.metaClass.stripAll = {-> TestUtil.stripAll(delegate)} }
-
-    def terminal = new MockTerminal()
-    def textIO = new TextIO(terminal)
-
+class TextIoReadListSpec extends TextIoSpec {
     def "should read a list of int values with range"() {
         when:
         terminal.inputs.addAll(["", "10, aaa", "10, 3, 8", "5, 10, 20"])
