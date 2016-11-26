@@ -153,11 +153,11 @@ class TextIoReadSpec extends TextIoSpec {
         enabled == false
     }
 
-    def "should read a string with possible values and no default value"() {
+    def "should read a string with numbered possible values and no default value"() {
         when:
         terminal.inputs.addAll(["Jack", "7", "", "3"])
         def name = textIO.newStringInputReader()
-                .withPossibleValues("Jack", "Emma", "Jane", "Bill", "Laura")
+                .withNumberedPossibleValues("Jack", "Emma", "Jane", "Bill", "Laura")
                 .withPropertyName("opponent")
                 .read("Choose your opponent")
 
@@ -200,12 +200,12 @@ class TextIoReadSpec extends TextIoSpec {
     }
 
 
-    def "should read a string with possible values and default value"() {
+    def "should read a string with numbered possible values and default value"() {
         when:
         terminal.inputs.addAll(["Jack", "7", ""])
         def name = textIO.newStringInputReader()
                 .withDefaultValue("Emma")
-                .withPossibleValues("Jack", "Emma", "Jane", "Bill", "Laura")
+                .withNumberedPossibleValues("Jack", "Emma", "Jane", "Bill", "Laura")
                 .withPropertyName("opponent")
                 .read("Choose your opponent")
 
@@ -246,7 +246,6 @@ class TextIoReadSpec extends TextIoSpec {
         def name = textIO.newStringInputReader()
                 .withDefaultValue("Emma")
                 .withPossibleValues("Jack", "Emma", "Jane", "Bill", "Laura")
-                .withNumberedPossibleValues(false)
                 .withPropertyName("opponent")
                 .read("Choose your opponent")
 
@@ -259,7 +258,7 @@ class TextIoReadSpec extends TextIoSpec {
               Bill
               Laura
             Enter your choice: 1
-            Invalid value for 'opponent'. You must enter one of the displayed values.
+            Invalid value for 'opponent'. Please enter one of the displayed values.
             Choose your opponent:
               Jack
             * Emma
@@ -267,7 +266,7 @@ class TextIoReadSpec extends TextIoSpec {
               Bill
               Laura
             Enter your choice: Billy
-            Invalid value for 'opponent'. You must enter one of the displayed values.
+            Invalid value for 'opponent'. Please enter one of the displayed values.
             Choose your opponent:
               Jack
             * Emma
@@ -278,6 +277,52 @@ class TextIoReadSpec extends TextIoSpec {
         '''.stripAll()
         terminal.readCalls == 3
         name == 'Jane'
+    }
+
+    def "should read a string with inline possible values and default value"() {
+        when:
+        terminal.inputs.addAll(["1", "Billy", "Jane"])
+        def name = textIO.newStringInputReader()
+                .withDefaultValue("Emma")
+                .withInlinePossibleValues("Jack", "Emma", "Jane", "Bill", "Laura")
+                .withPropertyName("opponent")
+                .read("Choose your opponent")
+
+        then:
+        terminal.output == '''
+            Choose your opponent (Jack, *Emma, Jane, Bill, Laura): 1
+            Invalid value for 'opponent'. Please enter one of: 'Jack', 'Emma', 'Jane', 'Bill', 'Laura'.
+            Choose your opponent (Jack, *Emma, Jane, Bill, Laura): Billy
+            Invalid value for 'opponent'. Please enter one of: 'Jack', 'Emma', 'Jane', 'Bill', 'Laura'.
+            Choose your opponent (Jack, *Emma, Jane, Bill, Laura): Jane
+        '''.stripAll()
+        terminal.readCalls == 3
+        name == 'Jane'
+    }
+
+    def "should read a string with inline possible values and no prompt adjustments"() {
+        when:
+        terminal.inputs.addAll(["q", "reject", "T"])
+        def option = textIO.newStringInputReader()
+                .withPromptAdjustments(false)
+                .withInlinePossibleValues("r", "t", "p")
+                .withIgnoreCase()
+                .read("Fingerprint: ca:fe:ba:be:ff:ee:dd:cc:bb:aa:99:88:77:66:55:44:33:22:11:00",
+                        "  (R)eject, accept (t)emporarily or accept (p)ermanently? ");
+
+        then:
+        terminal.output == '''
+            Fingerprint: ca:fe:ba:be:ff:ee:dd:cc:bb:aa:99:88:77:66:55:44:33:22:11:00
+              (R)eject, accept (t)emporarily or accept (p)ermanently? q
+            Invalid value. Please enter one of: 'r', 't', 'p'.
+            Fingerprint: ca:fe:ba:be:ff:ee:dd:cc:bb:aa:99:88:77:66:55:44:33:22:11:00
+              (R)eject, accept (t)emporarily or accept (p)ermanently? reject
+            Invalid value. Please enter one of: 'r', 't', 'p'.
+            Fingerprint: ca:fe:ba:be:ff:ee:dd:cc:bb:aa:99:88:77:66:55:44:33:22:11:00
+              (R)eject, accept (t)emporarily or accept (p)ermanently? T
+        '''.stripAll()
+        terminal.readCalls == 3
+        option == 't'
     }
 
 
@@ -325,7 +370,7 @@ class TextIoReadSpec extends TextIoSpec {
             * C
               D
             Enter your choice: E
-            Invalid value. You must enter one of the displayed values.
+            Invalid value. Please enter one of the displayed values.
             Group ID:
               A
               B
@@ -342,8 +387,7 @@ class TextIoReadSpec extends TextIoSpec {
         when:
         terminal.inputs.addAll(["AB", "E", "C", "3"])
         def groupId = textIO.newCharInputReader()
-                .withPossibleValues('A', 'B', 'C', 'D')
-                .withNumberedPossibleValues(true)
+                .withNumberedPossibleValues('A', 'B', 'C', 'D')
                 .read("Group ID")
 
         then:
@@ -406,7 +450,7 @@ class TextIoReadSpec extends TextIoSpec {
               72227
               79997
             Enter your choice: 12321
-            Invalid value. You must enter one of the displayed values.
+            Invalid value. Please enter one of the displayed values.
             Choose your favorite prime:
               13331
               15551
@@ -469,8 +513,8 @@ class TextIoReadSpec extends TextIoSpec {
         when:
         terminal.inputs.addAll(["1", "Tuesday", "TUESDAY"])
         def day = textIO.newEnumInputReader(DayOfWeek.class)
+                .withAllValues()
                 .withDefaultValue(DayOfWeek.FRIDAY)
-                .withNumberedPossibleValues(false)
                 .read("Choose the day of week")
 
         then:
@@ -513,7 +557,7 @@ class TextIoReadSpec extends TextIoSpec {
         when:
         terminal.inputs.addAll(["[44, 46, 47, 53]", "5", "2"])
         def seq = textIO.<int[]>newGenericInputReader(null)
-                .withPossibleValues([42, 43, 45, 51, 52] as int[], [43, 44, 47, 48, 55, 62] as int[], [44, 46, 47, 53] as int[])
+                .withNumberedPossibleValues([42, 43, 45, 51, 52] as int[], [43, 44, 47, 48, 55, 62] as int[], [44, 46, 47, 53] as int[])
                 .withValueFormatter{Arrays.toString(it)}
                 .read("Choose your sequence")
 
@@ -547,7 +591,7 @@ class TextIoReadSpec extends TextIoSpec {
         terminal.inputs.addAll(["[44, 46, 47, 53]", "5", ""])
         def seq = textIO.<int[]>newGenericInputReader(null)
                 .withDefaultValue([43, 44, 47, 48, 55, 62] as int[])
-                .withPossibleValues([42, 43, 45, 51, 52] as int[], [43, 44, 47, 48, 55, 62] as int[], [44, 46, 47, 53] as int[])
+                .withNumberedPossibleValues([42, 43, 45, 51, 52] as int[], [43, 44, 47, 48, 55, 62] as int[], [44, 46, 47, 53] as int[])
                 .withEqualsFunc{a1,a2 -> Arrays.equals(a1,a2)}
                 .withValueFormatter{Arrays.toString(it)}
                 .read("Choose your sequence")
@@ -582,7 +626,7 @@ class TextIoReadSpec extends TextIoSpec {
         terminal.inputs.addAll(["31:97", "5", "2"])
         def point = textIO.<Point>newGenericInputReader(null)
                 .withValueFormatter{Point p -> ((int)p.x + ":" + (int)p.y) as String}
-                .withPossibleValues(new Point(53, 28), new Point(31, 97), new Point(28, 66))
+                .withNumberedPossibleValues(new Point(53, 28), new Point(31, 97), new Point(28, 66))
                 .read("Choose your point")
 
         then:
@@ -626,7 +670,6 @@ class TextIoReadSpec extends TextIoSpec {
         def point = textIO.<Point>newGenericInputReader{parsePoint(it)}
                 .withValueFormatter{Point p -> ((int)p.x + ":" + (int)p.y) as String}
                 .withPossibleValues(new Point(53, 28), new Point(31, 97), new Point(28, 66))
-                .withNumberedPossibleValues(false)
                 .read("Choose your point")
 
         then:
@@ -642,7 +685,7 @@ class TextIoReadSpec extends TextIoSpec {
               31:97
               28:66
             Enter your choice: 25:45
-            Invalid value. You must enter one of the displayed values.
+            Invalid value. Please enter one of the displayed values.
             Choose your point:
               53:28
               31:97
@@ -654,7 +697,7 @@ class TextIoReadSpec extends TextIoSpec {
     }
 
 
-    def "should read a Point with no list of possible values"() {
+    def "should read a Point without a list of possible values"() {
         when:
         terminal.inputs.addAll(["2", "25:45:13", "31:97"])
         def point = textIO.<Point>newGenericInputReader{parsePoint(it)}

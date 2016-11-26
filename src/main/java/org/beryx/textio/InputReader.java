@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A reader for values of type T.
@@ -95,6 +97,9 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     /** If true, the list of possible values will be numbered and the desired value will be selected by choosing the corresponding number. */
     protected boolean numberedPossibleValues = false;
 
+    /** If true, the list of possible values will be displayed on a single line. */
+    protected boolean inlinePossibleValues = false;
+
     /** The provider of parse error messages. If null, the {@link #getDefaultErrorMessages(String)} will be used. */
     protected ErrorMessagesProvider parseErrorMessagesProvider;
 
@@ -156,11 +161,32 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
 
     public B withPossibleValues(List<T> possibleValues) {
         this.possibleValues = (possibleValues != null && possibleValues.isEmpty()) ? null : possibleValues;
+        this.numberedPossibleValues = false;
+        this.inlinePossibleValues = false;
         return (B)this;
     }
 
-    public B withNumberedPossibleValues(boolean numbered) {
-        this.numberedPossibleValues = numbered;
+    public B withNumberedPossibleValues(T... possibleValues) {
+        withPossibleValues(possibleValues);
+        this.numberedPossibleValues = true;
+        return (B)this;
+    }
+
+    public B withNumberedPossibleValues(List<T> possibleValues) {
+        withPossibleValues(possibleValues);
+        this.numberedPossibleValues = true;
+        return (B)this;
+    }
+
+    public B withInlinePossibleValues(T... possibleValues) {
+        withPossibleValues(possibleValues);
+        this.inlinePossibleValues = true;
+        return (B)this;
+    }
+
+    public B withInlinePossibleValues(List<T> possibleValues) {
+        withPossibleValues(possibleValues);
+        this.inlinePossibleValues = true;
         return (B)this;
     }
 
@@ -350,11 +376,17 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         ParseResult<T> result = parseAndCheck(sVal);
         List<String> errMessages = result.getErrorMessages();
         if(errMessages == null) {
-            if(isPossibleValue(result.getValue())) {
-                return result.getValue();
-            }
+            Optional<T> value = getPossibleValue(result.getValue());
+            if(value.isPresent()) return value.get();
             textTerminal.print(getDefaultErrorMessage(sVal));
-            textTerminal.println(" You must enter one of the displayed values.");
+            if(inlinePossibleValues) {
+                String options = possibleValues.stream()
+                        .map(val -> "'" + valueFormatter.apply(val) + "'")
+                        .collect(Collectors.joining(", "));
+                textTerminal.println(" Please enter one of: " + options + ".");
+            } else {
+                textTerminal.println(" Please enter one of the displayed values.");
+            }
             textTerminal.println( );
         } else {
             textTerminal.println(errMessages);
@@ -384,6 +416,14 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
             if(equalsFunc.apply(pVal, val)) return true;
         }
         return false;
+    }
+
+    protected Optional<T> getPossibleValue(T val) {
+        if(possibleValues == null) return Optional.of(val);
+        for(T pVal : possibleValues) {
+            if(equalsFunc.apply(pVal, val)) return Optional.of(pVal);
+        }
+        return Optional.empty();
     }
 
     /**
@@ -426,15 +466,26 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
             if(promptAdjustments && defaultValue != null) textTerminal.print(" [" + valueFormatter.apply(defaultValue) + "]: ");
             else textTerminal.print(useColon ? ": " : " ");
         } else if(promptAdjustments) {
-            textTerminal.println(useColon ? ":" : "");
-            for(int i = 0; i < possibleValues.size(); i++) {
-                T option = possibleValues.get(i);
-                boolean isDefault = (defaultValue != null) && equalsFunc.apply(defaultValue, option);
-                textTerminal.println((isDefault ? "* ": "  ")
-                        + (numberedPossibleValues ? ((i + 1) + ": ") : "")
-                        + valueFormatter.apply(option));
+            if(inlinePossibleValues) {
+                String sValues = IntStream.range(0, possibleValues.size())
+                        .mapToObj(i -> possibleValues.get(i))
+                        .map(option -> {
+                            boolean isDefault = (defaultValue != null) && equalsFunc.apply(defaultValue, option);
+                            return (isDefault ? "*": "") + valueFormatter.apply(option);
+                        })
+                        .collect(Collectors.joining(", ", " (", "): "));
+                textTerminal.print(sValues);
+            } else {
+                textTerminal.println(useColon ? ":" : "");
+                for(int i = 0; i < possibleValues.size(); i++) {
+                    T option = possibleValues.get(i);
+                    boolean isDefault = (defaultValue != null) && equalsFunc.apply(defaultValue, option);
+                    textTerminal.println((isDefault ? "* ": "  ")
+                            + (numberedPossibleValues ? ((i + 1) + ": ") : "")
+                            + valueFormatter.apply(option));
+                }
+                textTerminal.print(valueListMode ? "Enter your choices as comma-separated values: " : "Enter your choice: ");
             }
-            textTerminal.print(valueListMode ? "Enter your choices as comma-separated values: " : "Enter your choice: ");
         }
     }
 

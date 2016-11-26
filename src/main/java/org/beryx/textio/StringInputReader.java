@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
 /**
  * A reader for string values.
  * Allows configuring the minimum and maximum length, as well as a regex pattern.
- * By default, it uses a numbered list for displaying the possible values.
  */
 public class StringInputReader extends InputReader<String, StringInputReader> {
     private Pattern pattern;
@@ -33,7 +32,6 @@ public class StringInputReader extends InputReader<String, StringInputReader> {
 
     public StringInputReader(Supplier<TextTerminal> textTerminalSupplier) {
         super(textTerminalSupplier);
-        this.numberedPossibleValues = true;
         valueCheckers.add((val, propName) -> getLengthValidationErrors(val));
         valueCheckers.add((val, propName) -> getPatternValidationErrors(val));
     }
@@ -56,6 +54,10 @@ public class StringInputReader extends InputReader<String, StringInputReader> {
     public StringInputReader withMaxLength(int maxLength) {
         this.maxLength = maxLength;
         return this;
+    }
+
+    public StringInputReader withIgnoreCase() {
+        return withEqualsFunc((s1, s2) -> s1.equalsIgnoreCase(s2));
     }
 
     @Override

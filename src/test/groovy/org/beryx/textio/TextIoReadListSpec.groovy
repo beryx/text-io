@@ -86,7 +86,7 @@ class TextIoReadListSpec extends TextIoSpec {
               20
               50
             Enter your choices as comma-separated values: 10, 3, 8
-            Invalid value in the comma-separated list: 3. You must enter one of the displayed values.
+            Invalid value in the comma-separated list: 3. Please enter one of the displayed values.
             Accepted coins:
               1
               2

@@ -27,7 +27,6 @@ public class GenericInputReader<T> extends InputReader<T, GenericInputReader<T>>
     public GenericInputReader(Supplier<TextTerminal> textTerminalSupplier, Function<String, ParseResult<T>> parser) {
         super(textTerminalSupplier);
         this.parser = parser;
-        this.numberedPossibleValues = true;
     }
 
     @Override
