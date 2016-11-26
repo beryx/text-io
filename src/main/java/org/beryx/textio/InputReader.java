@@ -425,7 +425,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         if(possibleValues == null) {
             if(promptAdjustments && defaultValue != null) textTerminal.print(" [" + valueFormatter.apply(defaultValue) + "]: ");
             else textTerminal.print(useColon ? ": " : " ");
-        } else {
+        } else if(promptAdjustments) {
             textTerminal.println(useColon ? ":" : "");
             for(int i = 0; i < possibleValues.size(); i++) {
                 T option = possibleValues.get(i);
