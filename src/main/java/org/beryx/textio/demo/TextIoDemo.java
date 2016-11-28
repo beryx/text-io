@@ -13,13 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.beryx.textio;
+package org.beryx.textio.demo;
+
+import org.beryx.textio.TextIO;
+import org.beryx.textio.TextIoFactory;
+import org.beryx.textio.TextTerminal;
 
 import java.time.Month;
 
-public class FactoryDemo {
+/**
+ * Demo application illustrating the use of TextIO.
+ * <br>If an argument is provided, it will be used to set the value of the <tt>{@value TextIoFactory#TEXT_TERMINAL_CLASS_PROPERTY}</tt> system property.
+ * This means that the program will interpret the argument as the fully-qualified name of a concrete {@link TextTerminal} class and will try to create and use an instance of this class.
+ * <br>Example: run the program with the argument <tt>org.beryx.textio.demo.ColorTextTerminal</tt>.
+ */
+public class TextIoDemo {
     public static void main(String[] args) {
-//        System.setProperty(TextIoFactory.TEXT_TERMINAL_CLASS_PROPERTY, "org.beryx.textio.system.SystemTextTerminal");
+        if(args.length > 0) {
+            System.setProperty(TextIoFactory.TEXT_TERMINAL_CLASS_PROPERTY, args[0]);
+        }
         TextIO textIO = TextIoFactory.getTextIO();
 
         String user = textIO.newStringInputReader()

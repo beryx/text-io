@@ -492,7 +492,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     private static boolean shouldappendColon(String s) {
         if(s == null || s.isEmpty()) return false;
         char lastChar = s.charAt(s.length() - 1);
-        return "()[]{}.,;:?!".indexOf(lastChar) > 0 || Character.isJavaIdentifierPart(lastChar);
+        return "()[]{}".indexOf(lastChar) > 0 || Character.isJavaIdentifierPart(lastChar);
     }
 
     public static <T> ValueChecker<List<T>> nonEmptyListChecker() {

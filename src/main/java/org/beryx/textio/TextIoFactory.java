@@ -16,6 +16,7 @@
 package org.beryx.textio;
 
 import org.beryx.textio.console.ConsoleTextTerminalProvider;
+import org.beryx.textio.jline.JLineTextTerminalProvider;
 import org.beryx.textio.swing.SwingTextTerminalProvider;
 import org.beryx.textio.system.SystemTextTerminalProvider;
 import org.slf4j.Logger;
@@ -89,7 +90,9 @@ public class TextIoFactory {
         }
 
         private TextTerminal getDefaultTerminal() {
-            TextTerminal terminal = new ConsoleTextTerminalProvider().getTextTerminal();
+            TextTerminal terminal = new JLineTextTerminalProvider().getTextTerminal();
+            if(terminal != null) return terminal;
+            terminal = new ConsoleTextTerminalProvider().getTextTerminal();
             if(terminal != null) return terminal;
             terminal = new SwingTextTerminalProvider().getTextTerminal();
             if(terminal != null) return terminal;

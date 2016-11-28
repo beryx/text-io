@@ -3,6 +3,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 import org.gradle.plugins.signing.Sign
 
 plugins {
+    id 'application'
     id 'java'
     id 'groovy'
 
@@ -91,23 +92,24 @@ signArchives {
 }
 
 dependencies {
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
+    compile 'jline:jline:2.14.2'
+    runtime ('ch.qos.logback:logback-classic:1.1.7')
+    provided 'com.google.code.findbugs:findbugs-annotations:3.0.1'
 
-  compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
-  runtime ('ch.qos.logback:logback-classic:1.1.7')
-  provided 'com.google.code.findbugs:findbugs-annotations:3.0.1'
+    testCompile "org.codehaus.groovy:groovy-all:2.4.7"
+    testCompile('org.spockframework:spock-core:1.1-groovy-2.4-rc-2') {
+        exclude module: 'groovy-all'
+    }
+    testCompile 'cglib:cglib-nodep:3.2.4'
+    testCompile 'org.objenesis:objenesis:2.4'
+    testCompile('com.athaydes:spock-reports:1.2.13') { transitive = false}
 
-
-  testCompile "org.codehaus.groovy:groovy-all:2.4.7"
-  testCompile('org.spockframework:spock-core:1.1-groovy-2.4-rc-2') {
-      exclude module: 'groovy-all'
-  }
-  testCompile 'cglib:cglib-nodep:3.2.4'
-  testCompile 'org.objenesis:objenesis:2.4'
-  testCompile('com.athaydes:spock-reports:1.2.13') { transitive = false}
-
-
-  testCompile('ch.qos.logback:logback-classic:1.1.7')
+    testCompile('ch.qos.logback:logback-classic:1.1.7')
 }
+
+mainClassName = 'org.beryx.textio.demo.TextIoDemo'
+applicationName = "textio-demo"
 
 sourceSets.main.compileClasspath += configurations.provided
 findbugs {
