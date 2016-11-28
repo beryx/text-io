@@ -33,6 +33,16 @@ public class TextIoDemo {
             System.setProperty(TextIoFactory.TEXT_TERMINAL_CLASS_PROPERTY, args[0]);
         }
         TextIO textIO = TextIoFactory.getTextIO();
+        TextTerminal terminal = textIO.getTextTerminal();
+        if(args.length == 0) {
+            terminal.println("-------------------------------------------------------------------------");
+            terminal.println("Usage tip:");
+            terminal.println("  Provide as argument the fully-qualified name of a TextTerminal class.");
+            terminal.println("  Example: run with the argument org.beryx.textio.demo.ColorTextTerminal.");
+            terminal.println("-------------------------------------------------------------------------");
+            terminal.println();
+            terminal.println();
+        }
 
         String user = textIO.newStringInputReader()
                 .withDefaultValue("admin")
@@ -50,7 +60,6 @@ public class TextIoDemo {
         Month month = textIO.newEnumInputReader(Month.class)
                 .read("What month were you born in?");
 
-        TextTerminal terminal = textIO.getTextTerminal();
         terminal.println("\nUser " + user + " is " + age + " years old, was born in " + month +
                 " and has the password " + password + ".");
 

@@ -37,9 +37,10 @@ import java.util.ServiceLoader;
  *         If none is found, then the next step is executed.</li>
  *     <li>A default implementation is provided as follows:
  *          <ul>
- *              <li>If {@link System#console()} is not null, a {@link org.beryx.textio.console.ConsoleTextTerminal} is provided.</li>
- *              <li>If the system is not headless, a {@link org.beryx.textio.swing.SwingTextTerminal} is provided.</li>
- *              <li>Otherwise, a {@link org.beryx.textio.system.SystemTextTerminal} is provided</li>
+ *              <li>if {@link System#console()} is not null, and a JLine ConsoleReader can be created, then a {@link org.beryx.textio.jline.JLineTextTerminal} is provided.</li>
+ *              <li>else, if {@link System#console()} is not null, then a {@link org.beryx.textio.console.ConsoleTextTerminal} is provided.</li>
+ *              <li>else, if the system is not headless, then a {@link org.beryx.textio.swing.SwingTextTerminal} is provided.</li>
+ *              <li>else, a {@link org.beryx.textio.system.SystemTextTerminal} is provided</li>
  *          </ul>
  *     </li>
  * </ol>

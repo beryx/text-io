@@ -102,7 +102,15 @@ and searches for the first one capable to provide a TextTerminal instance.
 If none is found, then the next step is executed.
 3. A default implementation is provided as follows:
 
-- If http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--[System.console()] is not null, a
+- if http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--[System.console()] is not null,
+and a https://github.com/jline/jline2[JLine] ConsoleReader can be created, then a
+link:javadoc/org/beryx/textio/jline/JLineTextTerminal[JLineTextTerminal] is provided.
+- else, if http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--[System.console()] is not null, a
 link:javadoc/org/beryx/textio/console/ConsoleTextTerminal.html[ConsoleTextTerminal] is provided.
-- If the system is not headless, a link:javadoc/org/beryx/textio/swing/SwingTextTerminal.html[SwingTextTerminal] is provided.
-- Otherwise, a link:javadoc/org/beryx/textio/system/SystemTextTerminal.html[SystemTextTerminal] is provided.
+- else, if the system is not headless, a link:javadoc/org/beryx/textio/swing/SwingTextTerminal.html[SwingTextTerminal] is provided.
+- else, a link:javadoc/org/beryx/textio/system/SystemTextTerminal.html[SystemTextTerminal] is provided.
+
+TIP: Look at the source code of
+link:{blob-root}/src/main/java/org/beryx/textio/demo/TextIoDemo.java[TextIoDemo.java]
+and link:{blob-root}/src/main/java/org/beryx/textio/demo/ColorTextTerminal.java[ColorTextTerminal.java]
+for an example of defining and configuring a custom TextTerminal.
