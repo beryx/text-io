@@ -31,6 +31,7 @@ project.version.with {
     releaseBuild = Boolean.valueOf(textIoReleaseBuild)
 }
 ext.textIoVersion = project.version as String
+ext.textIoTag = Boolean.valueOf(textIoReleaseBuild) ? "v$ext.textIoVersion" : 'master'
 
 repositories {
   jcenter()
@@ -207,7 +208,8 @@ asciidoctor {
              imagesdir: 'img',
              'data-uri': '',
              linkattrs: true,
-             linkcss: true
+             linkcss: true,
+             'blob-root': "https://github.com/beryx/text-io/blob/$textIoTag"
 }
 
 githubPages {
