@@ -29,7 +29,7 @@ hs.src = ('//s10.histats.com/js15_as.js');
 <h1>Text IO</h1>
 <div class="details">
 <span id="author" class="author">Serban Iordache</span><br>
-<span id="revnumber">version 1.5.0</span>
+<span id="revnumber">version 1.6.0</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -122,8 +122,8 @@ Month month = textIO.newEnumInputReader(Month.class)
         .read(<span class="string"><span class="delimiter">&quot;</span><span class="content">What month were you born in?</span><span class="delimiter">&quot;</span></span>);
 
 TextTerminal terminal = textIO.getTextTerminal();
-terminal.println(<span class="string"><span class="delimiter">&quot;</span><span class="char">\n</span><span class="content">User </span><span class="delimiter">&quot;</span></span> + user + <span class="string"><span class="delimiter">&quot;</span><span class="content"> is </span><span class="delimiter">&quot;</span></span> + age + <span class="string"><span class="delimiter">&quot;</span><span class="content"> years old, </span><span class="delimiter">&quot;</span></span> +
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">was born in </span><span class="delimiter">&quot;</span></span> + month + <span class="string"><span class="delimiter">&quot;</span><span class="content"> and has the password </span><span class="delimiter">&quot;</span></span> + password + <span class="string"><span class="delimiter">&quot;</span><span class="content">.</span><span class="delimiter">&quot;</span></span>);</code></pre>
+terminal.printf(<span class="string"><span class="delimiter">&quot;</span><span class="char">\n</span><span class="content">User %s is %d years old, was born in %s and has the password %s.</span><span class="char">\n</span><span class="delimiter">&quot;</span></span>,
+        user, age, month, password);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -137,7 +137,7 @@ terminal.println(<span class="string"><span class="delimiter">&quot;</span><span
 <div class="sect2">
 <h3 id="_demo">Demo</h3>
 <div class="paragraph">
-<p>Download the <a href="https://github.com/beryx/text-io/releases/download/v1.5.0/textio-demo-1.5.0.zip">binary distribution</a> and unzip it into a directory of your choice.</p>
+<p>Download the <a href="https://github.com/beryx/text-io/releases/download/v1.6.0/textio-demo-1.6.0.zip">binary distribution</a> and unzip it into a directory of your choice.</p>
 </div>
 <div class="paragraph">
 <p>Make sure your JAVA_HOME environment variable correctly points to a JDK 8u40 or later.</p>
@@ -172,14 +172,14 @@ You need Java 8 or newer in order to use Text-IO.
 <pre class="nowrap">&lt;dependency&gt;
     &lt;groupId&gt;org.beryx&lt;/groupId&gt;
     &lt;artifactId&gt;text-io&lt;/artifactId&gt;
-    &lt;version&gt;1.5.0&lt;/version&gt;
+    &lt;version&gt;1.6.0&lt;/version&gt;
 &lt;/dependency&gt;</pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="title">Gradle</div>
 <div class="content">
-<pre class="nowrap">compile 'org.beryx:text-io:1.5.0'</pre>
+<pre class="nowrap">compile 'org.beryx:text-io:1.6.0'</pre>
 </div>
 </div>
 </div>
@@ -225,6 +225,10 @@ interface, which requires to allow at least:</p>
 </div>
 <div class="ulist">
 <ul>
+<li>
+<p><a href="javadoc/org/beryx/textio/jline/JLineTextTerminal.html">JLineTextTerminal</a>, which is backed by a
+<a href="https://github.com/jline/jline2">JLine</a> ReadConsole.</p>
+</li>
 <li>
 <p><a href="javadoc/org/beryx/textio/console/ConsoleTextTerminal.html">ConsoleTextTerminal</a>, which is backed by a
 <a href="http://docs.oracle.com/javase/8/docs/api/java/io/Console.html">java.io.Console</a>.</p>
@@ -339,8 +343,8 @@ These methods repeatedly prompt the user to enter a value or a comma-separated l
 </td>
 <td class="content">
 Look at the source code of
-<a href="https://github.com/beryx/text-io/blob/v1.5.0/src/test/groovy/org/beryx/textio/TextIoReadSpec.groovy">TextIoReadSpec.groovy</a>
-and <a href="https://github.com/beryx/text-io/blob/v1.5.0/src/test/groovy/org/beryx/textio/TextIoReadListSpec.groovy">TextIoReadListSpec.groovy</a>
+<a href="https://github.com/beryx/text-io/blob/v1.6.0/src/test/groovy/org/beryx/textio/TextIoReadSpec.groovy">TextIoReadSpec.groovy</a>
+and <a href="https://github.com/beryx/text-io/blob/v1.6.0/src/test/groovy/org/beryx/textio/TextIoReadListSpec.groovy">TextIoReadListSpec.groovy</a>
 for examples of using the input readers.
 </td>
 </tr>
@@ -390,14 +394,14 @@ If none is found, then the next step is executed.</p>
 <li>
 <p>if <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--">System.console()</a> is not null,
 and a <a href="https://github.com/jline/jline2">JLine</a> ConsoleReader can be created, then a
-<a href="javadoc/org/beryx/textio/jline/JLineTextTerminal">JLineTextTerminal</a> is provided.</p>
+<a href="javadoc/org/beryx/textio/jline/JLineTextTerminal">JLineTextTerminal</a> is provided;</p>
 </li>
 <li>
 <p>else, if <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--">System.console()</a> is not null, a
-<a href="javadoc/org/beryx/textio/console/ConsoleTextTerminal.html">ConsoleTextTerminal</a> is provided.</p>
+<a href="javadoc/org/beryx/textio/console/ConsoleTextTerminal.html">ConsoleTextTerminal</a> is provided;</p>
 </li>
 <li>
-<p>else, if the system is not headless, a <a href="javadoc/org/beryx/textio/swing/SwingTextTerminal.html">SwingTextTerminal</a> is provided.</p>
+<p>else, if the system is not headless, a <a href="javadoc/org/beryx/textio/swing/SwingTextTerminal.html">SwingTextTerminal</a> is provided;</p>
 </li>
 <li>
 <p>else, a <a href="javadoc/org/beryx/textio/system/SystemTextTerminal.html">SystemTextTerminal</a> is provided.</p>
@@ -415,8 +419,8 @@ and a <a href="https://github.com/jline/jline2">JLine</a> ConsoleReader can be c
 </td>
 <td class="content">
 Look at the source code of
-<a href="https://github.com/beryx/text-io/blob/v1.5.0/src/main/java/org/beryx/textio/demo/TextIoDemo.java">TextIoDemo.java</a>
-and <a href="https://github.com/beryx/text-io/blob/v1.5.0/src/main/java/org/beryx/textio/demo/ColorTextTerminal.java">ColorTextTerminal.java</a>
+<a href="https://github.com/beryx/text-io/blob/v1.6.0/src/main/java/org/beryx/textio/demo/TextIoDemo.java">TextIoDemo.java</a>
+and <a href="https://github.com/beryx/text-io/blob/v1.6.0/src/main/java/org/beryx/textio/demo/ColorTextTerminal.java">ColorTextTerminal.java</a>
 for an example of defining and configuring a custom TextTerminal.
 </td>
 </tr>
@@ -428,7 +432,7 @@ for an example of defining and configuring a custom TextTerminal.
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 1.5.0<br>
+Version 1.6.0<br>
 </div>
 </div>
 </body>
