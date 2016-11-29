@@ -42,7 +42,8 @@ Month month = textIO.newEnumInputReader(Month.class)
 
 TextTerminal terminal = textIO.getTextTerminal();
 terminal.printf("\nUser %s is %d years old, was born in %s and has the password %s.\n",
-        user, age, month, password);```
+        user, age, month, password);
+```
 
 Click on the image below to see the output of the above example in a Swing-based terminal.
 
