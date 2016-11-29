@@ -53,7 +53,7 @@ image::swing-terminal-thumb.gif[role="thumb" link="https://github.com/beryx/text
 
 == Demo
 
-Download the https://github.com/beryx/{project-name}/releases/download/v{project-version}/{project-name}-{project-version}.zip[binary distribution] and unzip it into a directory of your choice.
+Download the https://github.com/beryx/{project-name}/releases/download/v{project-version}/textio-demo-{project-version}.zip[binary distribution] and unzip it into a directory of your choice.
 
 Make sure your JAVA_HOME environment variable correctly points to a JDK 8u40 or later.
 
