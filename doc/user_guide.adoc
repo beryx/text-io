@@ -16,6 +16,8 @@ interface, which requires to allow at least:
 
 The following concrete implementations are provided by the Text-IO library:
 
+- link:javadoc/org/beryx/textio/jline/JLineTextTerminal.html[JLineTextTerminal], which is backed by a
+https://github.com/jline/jline2[JLine] ReadConsole.
 - link:javadoc/org/beryx/textio/console/ConsoleTextTerminal.html[ConsoleTextTerminal], which is backed by a
 http://docs.oracle.com/javase/8/docs/api/java/io/Console.html[java.io.Console].
 - link:javadoc/org/beryx/textio/swing/SwingTextTerminal.html[SwingTextTerminal], which uses a
@@ -104,10 +106,10 @@ If none is found, then the next step is executed.
 
 - if http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--[System.console()] is not null,
 and a https://github.com/jline/jline2[JLine] ConsoleReader can be created, then a
-link:javadoc/org/beryx/textio/jline/JLineTextTerminal[JLineTextTerminal] is provided.
+link:javadoc/org/beryx/textio/jline/JLineTextTerminal[JLineTextTerminal] is provided;
 - else, if http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--[System.console()] is not null, a
-link:javadoc/org/beryx/textio/console/ConsoleTextTerminal.html[ConsoleTextTerminal] is provided.
-- else, if the system is not headless, a link:javadoc/org/beryx/textio/swing/SwingTextTerminal.html[SwingTextTerminal] is provided.
+link:javadoc/org/beryx/textio/console/ConsoleTextTerminal.html[ConsoleTextTerminal] is provided;
+- else, if the system is not headless, a link:javadoc/org/beryx/textio/swing/SwingTextTerminal.html[SwingTextTerminal] is provided;
 - else, a link:javadoc/org/beryx/textio/system/SystemTextTerminal.html[SystemTextTerminal] is provided.
 
 TIP: Look at the source code of

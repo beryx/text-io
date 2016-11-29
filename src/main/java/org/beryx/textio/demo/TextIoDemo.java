@@ -60,8 +60,7 @@ public class TextIoDemo {
         Month month = textIO.newEnumInputReader(Month.class)
                 .read("What month were you born in?");
 
-        terminal.println("\nUser " + user + " is " + age + " years old, was born in " + month +
-                " and has the password " + password + ".");
+        terminal.printf("\nUser %s is %d years old, was born in %s and has the password %s.\n", user, age, month, password);
 
         textIO.newStringInputReader().withMinLength(0).read("\nPress enter to terminate...");
         textIO.dispose();

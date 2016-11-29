@@ -41,8 +41,8 @@ Month month = textIO.newEnumInputReader(Month.class)
         .read("What month were you born in?");
 
 TextTerminal terminal = textIO.getTextTerminal();
-terminal.println("\nUser " + user + " is " + age + " years old, " +
-        "was born in " + month + " and has the password " + password + ".");
+terminal.printf("\nUser %s is %d years old, was born in %s and has the password %s.\n",
+        user, age, month, password);
 ----
 
 Click on the image below to see the output of the above example in a Swing-based terminal.

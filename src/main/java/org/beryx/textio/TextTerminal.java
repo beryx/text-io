@@ -17,6 +17,7 @@ package org.beryx.textio;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -99,5 +100,13 @@ public interface TextTerminal {
     default void println(List<String> messages) {
         print(messages);
         println();
+    }
+
+    default void printf(String format, Object... args) {
+        print(String.format(format, args));
+    }
+
+    default void printf(Locale l, String format, Object... args) {
+        print(String.format(l, format, args));
     }
 }
