@@ -122,8 +122,8 @@ Month month = textIO.newEnumInputReader(Month.class)
         .read(<span class="string"><span class="delimiter">&quot;</span><span class="content">What month were you born in?</span><span class="delimiter">&quot;</span></span>);
 
 TextTerminal terminal = textIO.getTextTerminal();
-terminal.println(<span class="string"><span class="delimiter">&quot;</span><span class="char">\n</span><span class="content">User </span><span class="delimiter">&quot;</span></span> + user + <span class="string"><span class="delimiter">&quot;</span><span class="content"> is </span><span class="delimiter">&quot;</span></span> + age + <span class="string"><span class="delimiter">&quot;</span><span class="content"> years old, </span><span class="delimiter">&quot;</span></span> +
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">was born in </span><span class="delimiter">&quot;</span></span> + month + <span class="string"><span class="delimiter">&quot;</span><span class="content"> and has the password </span><span class="delimiter">&quot;</span></span> + password + <span class="string"><span class="delimiter">&quot;</span><span class="content">.</span><span class="delimiter">&quot;</span></span>);</code></pre>
+terminal.printf(<span class="string"><span class="delimiter">&quot;</span><span class="char">\n</span><span class="content">User %s is %d years old, was born in %s and has the password %s.</span><span class="char">\n</span><span class="delimiter">&quot;</span></span>,
+        user, age, month, password);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -225,6 +225,10 @@ interface, which requires to allow at least:</p>
 </div>
 <div class="ulist">
 <ul>
+<li>
+<p><a href="javadoc/org/beryx/textio/jline/JLineTextTerminal.html">JLineTextTerminal</a>, which is backed by a
+<a href="https://github.com/jline/jline2">JLine</a> ReadConsole.</p>
+</li>
 <li>
 <p><a href="javadoc/org/beryx/textio/console/ConsoleTextTerminal.html">ConsoleTextTerminal</a>, which is backed by a
 <a href="http://docs.oracle.com/javase/8/docs/api/java/io/Console.html">java.io.Console</a>.</p>
@@ -390,14 +394,14 @@ If none is found, then the next step is executed.</p>
 <li>
 <p>if <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--">System.console()</a> is not null,
 and a <a href="https://github.com/jline/jline2">JLine</a> ConsoleReader can be created, then a
-<a href="javadoc/org/beryx/textio/jline/JLineTextTerminal">JLineTextTerminal</a> is provided.</p>
+<a href="javadoc/org/beryx/textio/jline/JLineTextTerminal">JLineTextTerminal</a> is provided;</p>
 </li>
 <li>
 <p>else, if <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--">System.console()</a> is not null, a
-<a href="javadoc/org/beryx/textio/console/ConsoleTextTerminal.html">ConsoleTextTerminal</a> is provided.</p>
+<a href="javadoc/org/beryx/textio/console/ConsoleTextTerminal.html">ConsoleTextTerminal</a> is provided;</p>
 </li>
 <li>
-<p>else, if the system is not headless, a <a href="javadoc/org/beryx/textio/swing/SwingTextTerminal.html">SwingTextTerminal</a> is provided.</p>
+<p>else, if the system is not headless, a <a href="javadoc/org/beryx/textio/swing/SwingTextTerminal.html">SwingTextTerminal</a> is provided;</p>
 </li>
 <li>
 <p>else, a <a href="javadoc/org/beryx/textio/system/SystemTextTerminal.html">SystemTextTerminal</a> is provided.</p>
