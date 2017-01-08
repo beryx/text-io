@@ -4,3 +4,4 @@ org.beryx.textio.demo
 org.beryx.textio.jline
 org.beryx.textio.swing
 org.beryx.textio.system
+org.beryx.textio.web
