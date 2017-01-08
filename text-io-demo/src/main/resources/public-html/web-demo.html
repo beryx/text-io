@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebTextTerminal Demo</title>
+    <link rel="stylesheet" href="textterm.css">
+</head>
+</head>
+<body>
+<h1>WebTextTerminal Demo</h1>
+
+<div id="textterm">
+    <p class="hidden">
+        <span class="textterm-prompt"> </span>
+        <span contenteditable="true" class="textterm-input"> </span>
+    </p>
+</div>
+<h3 id="app-done"> </h3>
+
+<script src="textterm.js"></script>
+<script>
+    var textTerm = TextTerm.init(document.getElementById("textterm"));
+
+    textTerm.onDispose = function() {
+        document.getElementById("app-done").textContent = "Application done. You can now close this window.";
+    }
+</script>
+
+</body>
+</html>

@@ -1,11 +1,20 @@
 #!/bin/bash
 set -ev
-./gradlew --no-daemon --info --stacktrace build javadoc asciidoc
+./gradlew --no-daemon -i -s build javadoc asciidoc
+
 
 if [ "${TRAVIS_PULL_REQUEST}" == "false" -a "${TRAVIS_BRANCH}" == "master" ]; then
   if [ "`git ls-remote origin gh-pages`" == "" ]; then
-    ./gradlew --no-daemon --rerun-tasks --info --stacktrace publishGhPages -PghPageType=init
+    echo Start gitPublishPush with ghPageType=init
+    ./gradlew --no-daemon -i -s gitPublishPush --rerun-tasks -PghPageType=init
+    echo Finished gitPublishPush with ghPageType=init
   fi
-  ./gradlew --no-daemon --rerun-tasks --info --stacktrace publishGhPages -PghPageType=latest
-  ./gradlew --no-daemon --rerun-tasks --info --stacktrace publishGhPages -PghPageType=version
+    echo Start gitPublishPush with ghPageType=latest
+  ./gradlew --no-daemon -i -s gitPublishPush --rerun-tasks -PghPageType=latest
+    echo Finished gitPublishPush with ghPageType=version
+
+    echo Start gitPublishPush with ghPageType=version
+  ./gradlew --no-daemon -i -s gitPublishPush --rerun-tasks -PghPageType=version
+    echo Finished gitPublishPush with ghPageType=version
 fi
+

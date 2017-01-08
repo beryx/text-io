@@ -1,0 +1,28 @@
+#textterm {
+    font-family: 'courier', monospace;
+    height:      100%;
+    background: black;
+    color:      lightgreen;
+
+    margin:         40px;
+    margin-right:   40px;
+    padding:        20px;
+    word-wrap: break-word;
+}
+
+/**
+* The input span where the input happens.
+* Also applied to the previous inputs made in the current session.
+*/
+#textterm .textterm-input {
+    height:         1em;
+    min-width:      1em;
+    outline-color:  transparent;
+    border:         none;
+    display:        inline-block;
+}
+
+#textterm p {
+    margin:     0;
+    padding:    0;
+}
