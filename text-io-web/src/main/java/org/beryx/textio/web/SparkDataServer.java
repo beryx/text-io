@@ -83,7 +83,8 @@ public class SparkDataServer {
         post(pathForPostInput, (request, response) -> {
             String id = getId(request);
             DataApi dataApi = dataApiProvider.apply(id);
-            dataApi.postUserInput(request.body());
+            String input = new String(request.body().getBytes(), "UTF-8");
+            dataApi.postUserInput(input);
             return "OK";
         });
     }

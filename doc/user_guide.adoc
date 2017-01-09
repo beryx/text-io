@@ -117,7 +117,7 @@ link:javadoc/org/beryx/textio/console/ConsoleTextTerminal.html[ConsoleTextTermin
 - else, a link:javadoc/org/beryx/textio/system/SystemTextTerminal.html[SystemTextTerminal] is provided.
 
 TIP: Look at the source code of
-link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/Simple.java[SimpleApp.java]
+link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/SimpleApp.java[SimpleApp.java]
 for an example of using the default TextTerminal provided by TextIofactory,
 and link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/TextIoDemo.java[TextIoDemo.java]
 for examples of using custom TextTerminals.
