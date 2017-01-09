@@ -371,7 +371,7 @@ gradle.taskGraph.whenReady { taskGraph ->
 bintray {
     user = project.hasProperty('bintrayUser') ? project.getProperty('bintrayUser') : "unknownUser"
     key =  project.hasProperty('bintrayKey') ? project.getProperty('bintrayKey') : "unknownKey"
-    publications = subprojects.name
+    publications = ['text-io', 'text-io-web']
     pkg {
         repo = 'maven'
         name = 'text-io'
