@@ -1,4 +1,37 @@
-
-Copyright 2016 Text IO development team
+Copyright 2016-2017 Text IO development team
 
 This product includes software developed at The Apache Software Foundation (http://www.apache.org/).
+
+===========================================================================
+Apache License - v 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+===========================================================================
+The following components are provided under the Apache License - v 2.0. See project link for details.
+    com.google.code.gson:gson (https://github.com/google/gson)
+    com.sparkjava:spark-core (http://www.sparkjava.com)
+    org.apache.commons:commons-lang3 (http://commons.apache.org/proper/commons-lang/)
+    org.eclipse.jetty:* (http://www.eclipse.org/jetty)
+    org.eclipse.jetty.websocket:* (http://www.eclipse.org/jetty)
+
+
+===========================================================================
+Eclipse Public License - v 1.0 (http://www.eclipse.org/legal/epl-v10.html)
+===========================================================================
+The following components are provided under the Eclipse Public License - v 1.0. See project link for details.
+    ch.qos.logback:logback-classic (http://logback.qos.ch/)
+    ch.qos.logback:logback-core (http://logback.qos.ch/)
+
+
+===========================================================================
+The BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
+===========================================================================
+The following components are provided under the BSD 2-Clause License. See project link for details.
+    jline:jline (https://github.com/jline/jline2)
+
+===========================================================================
+The MIT License (http://www.opensource.org/licenses/mit-license.php)
+===========================================================================
+The following components are provided under the  MIT License. See project link for details.
+    org.slf4j:slf4j-api (http://www.slf4j.org)
+
+Portions of the javascript code in the text-io-web module have been adapted from
+https://github.com/AVGP/terminal.js, which is also provided under the  MIT License.

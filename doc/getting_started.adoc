@@ -9,12 +9,28 @@ Text-IO is available in Maven Central and JCenter.
 ----
 &lt;dependency&gt;
     &lt;groupId&gt;{project-group}&lt;/groupId&gt;
-    &lt;artifactId&gt;{project-name}&lt;/artifactId&gt;
+    &lt;artifactId&gt;text-io&lt;/artifactId&gt;
     &lt;version&gt;{project-version}&lt;/version&gt;
 &lt;/dependency&gt;
 ----
 
 [subs="attributes",options="nowrap",title="Gradle"]
 ----
-compile '{project-group}:{project-name}:{project-version}'
+compile '{project-group}:text-io:{project-version}'
+----
+
+In order to use the WebTextTerminal, you have to include the `text-io-web` artifact:
+
+[subs="attributes",options="nowrap",title="Maven"]
+----
+&lt;dependency&gt;
+    &lt;groupId&gt;{project-group}&lt;/groupId&gt;
+    &lt;artifactId&gt;text-io-web&lt;/artifactId&gt;
+    &lt;version&gt;{project-version}&lt;/version&gt;
+&lt;/dependency&gt;
+----
+
+[subs="attributes",options="nowrap",title="Gradle"]
+----
+compile '{project-group}:text-io-web:{project-version}'
 ----

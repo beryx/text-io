@@ -27,6 +27,11 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static org.beryx.textio.web.TextTerminalData.Action.*;
 
+/**
+ * A TextTerminal that allows accessing the application via a browser.
+ * It works only in conjunction with a web server supporting the {@link DataApi} (such as {@link SparkDataServer})
+ * and a web component that accesses this API (typically via textterm.js).
+ */
 public class WebTextTerminal implements TextTerminal, DataApi {
     private static final Logger logger =  LoggerFactory.getLogger(WebTextTerminal.class);
 

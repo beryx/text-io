@@ -25,6 +25,9 @@ import java.util.function.Function;
 
 import static spark.Spark.*;
 
+/**
+ * A SparkJava-based web server that allows clients to access the {@link DataApi}.
+ */
 public class SparkDataServer {
     private static final Logger logger =  LoggerFactory.getLogger(WebTextTerminal.class);
     public final String DEFAULT_PATH_FOR_GET_DATA = "/textTerminalData";

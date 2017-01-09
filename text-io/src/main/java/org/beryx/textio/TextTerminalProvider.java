@@ -18,6 +18,7 @@ package org.beryx.textio;
 /**
  * TextTerminal Service Provider Interface
  */
+@FunctionalInterface
 public interface TextTerminalProvider {
     TextTerminal getTextTerminal();
 }

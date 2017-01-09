@@ -18,6 +18,10 @@ package org.beryx.textio.web;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The data sent by the server to a polling web component.
+ * Includes a list of prompt messages and an action to be executed by the web component (NONE, READ, READ_MASKED, DISPOSE).
+ */
 public class TextTerminalData {
     public enum Action {NONE, READ, READ_MASKED, DISPOSE}
 

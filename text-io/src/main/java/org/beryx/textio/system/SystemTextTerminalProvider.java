@@ -25,4 +25,9 @@ public class SystemTextTerminalProvider implements TextTerminalProvider {
     public TextTerminal getTextTerminal() {
         return new SystemTextTerminal();
     }
+
+    @Override
+    public String toString() {
+        return "System terminal";
+    }
 }

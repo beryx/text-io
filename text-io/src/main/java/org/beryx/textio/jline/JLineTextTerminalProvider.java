@@ -34,4 +34,9 @@ public class JLineTextTerminalProvider implements TextTerminalProvider {
             return null;
         }
     }
+
+    @Override
+    public String toString() {
+        return "JLine terminal";
+    }
 }

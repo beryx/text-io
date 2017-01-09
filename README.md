@@ -49,6 +49,10 @@ Click on the image below to see the output of the above example in a Swing-based
 
 <a href="https://github.com/beryx/text-io/raw/master/doc/img/swing-terminal-animated.gif"><img src="https://github.com/beryx/text-io/raw/master/doc/img/swing-terminal-thumb.gif"></a>
 
+You can also use a web-based terminal, which allows you to access your application via a browser, as shown in the image below.
+
+<a href="https://github.com/beryx/text-io/raw/master/doc/img/web-terminal-animated.gif"><img src="https://github.com/beryx/text-io/raw/master/doc/img/web-terminal-thumb.gif"></a>
+
 Before starting to use the library, try the demo application included in the **[release](https://github.com/beryx/text-io/releases/latest)**
 and read the **[documentation](http://text-io.beryx.org)** and the **[javadoc](http://text-io.beryx.org/releases/latest/javadoc)**.
 

@@ -26,4 +26,9 @@ public class ConsoleTextTerminalProvider implements TextTerminalProvider {
         if(System.console() == null) return null;
         return new ConsoleTextTerminal(System.console());
     }
+
+    @Override
+    public String toString() {
+        return "Console terminal";
+    }
 }

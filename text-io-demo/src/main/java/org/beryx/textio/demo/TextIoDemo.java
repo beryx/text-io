@@ -18,51 +18,115 @@ package org.beryx.textio.demo;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.TextIoFactory;
 import org.beryx.textio.TextTerminal;
+import org.beryx.textio.TextTerminalProvider;
+import org.beryx.textio.console.ConsoleTextTerminalProvider;
+import org.beryx.textio.jline.AnsiTextTerminal;
+import org.beryx.textio.jline.JLineTextTerminalProvider;
+import org.beryx.textio.swing.SwingTextTerminalProvider;
+import org.beryx.textio.system.SystemTextTerminal;
+import org.beryx.textio.system.SystemTextTerminalProvider;
+import org.beryx.textio.web.WebTextTerminal;
+import spark.Service;
 
-import java.time.Month;
+import java.util.function.Supplier;
 
 /**
- * Demo application illustrating the use of TextIO.
- * <br>If an argument is provided, it will be used to set the value of the <tt>{@value TextIoFactory#TEXT_TERMINAL_CLASS_PROPERTY}</tt> system property.
- * This means that the program will interpret the argument as the fully-qualified name of a concrete {@link TextTerminal} class and will try to create and use an instance of this class.
- * <br>Example: run the program with the argument <tt>org.beryx.textio.demo.ColorTextTerminal</tt>.
+ * Demo application showing various TextTerminals.
  */
 public class TextIoDemo {
+    private static int webServerPort = -1;
+
+    private static class NamedProvider implements TextTerminalProvider {
+        final String name;
+        final Supplier<TextTerminal> supplier;
+
+        NamedProvider(String name, Supplier<TextTerminal> supplier) {
+            this.name = name;
+            this.supplier = supplier;
+        }
+
+        @Override
+        public TextTerminal getTextTerminal() {
+            return supplier.get();
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
+
     public static void main(String[] args) {
-        if(args.length > 0) {
-            System.setProperty(TextIoFactory.TEXT_TERMINAL_CLASS_PROPERTY, args[0]);
+        TextIO textIO = chooseTextIO();
+        if(textIO.getTextTerminal() instanceof WebTextTerminal) {
+            WebTextIoExecutor webTextIoExecutor = new WebTextIoExecutor().withPort(webServerPort);
+            webTextIoExecutor.execute(SimpleApp::execute);
+        } else {
+            SimpleApp.execute(textIO);
         }
-        TextIO textIO = TextIoFactory.getTextIO();
-        TextTerminal terminal = textIO.getTextTerminal();
-        if(args.length == 0) {
-            terminal.println("-------------------------------------------------------------------------");
-            terminal.println("Usage tip:");
-            terminal.println("  Provide as argument the fully-qualified name of a TextTerminal class.");
-            terminal.println("  Example: run with the argument org.beryx.textio.demo.ColorTextTerminal.");
-            terminal.println("-------------------------------------------------------------------------");
-            terminal.println();
-            terminal.println();
+    }
+
+    private static TextIO chooseTextIO() {
+        TextTerminal terminal = new SystemTextTerminal();
+        TextIO textIO = new TextIO(terminal);
+        while(true) {
+            TextTerminalProvider terminalProvider = textIO.<TextTerminalProvider>newGenericInputReader(null)
+                    .withNumberedPossibleValues(
+                            new NamedProvider("Default terminal (provided by TextIoFactory)", TextIoFactory::getTextTerminal),
+                            new SystemTextTerminalProvider(),
+                            new ConsoleTextTerminalProvider(),
+                            new JLineTextTerminalProvider(),
+                            new NamedProvider("ANSI terminal", () -> createAnsiTextTerminal(textIO)),
+                            new SwingTextTerminalProvider(),
+                            new NamedProvider("Web terminal", () -> createWebTextTerminal(textIO))
+                    )
+                    .read("Choose the terminal to be used for running the demo");
+
+            TextTerminal chosenTerminal = null;
+            String errMsg = null;
+            try {
+                chosenTerminal = terminalProvider.getTextTerminal();
+            } catch (Exception e) {
+                errMsg = e.getMessage();
+            }
+            if(chosenTerminal == null) {
+                terminal.printf("\nCannot create a %s%s\n\n", terminalProvider, ((errMsg != null) ? (": " + errMsg) : "."));
+                continue;
+            }
+            return new TextIO(chosenTerminal);
         }
+    }
 
-        String user = textIO.newStringInputReader()
-                .withDefaultValue("admin")
-                .read("Username");
+    private static AnsiTextTerminal createAnsiTextTerminal(TextIO textIO) {
+        boolean bold = textIO.newBooleanInputReader()
+                .withDefaultValue(false)
+                .read("Bold text?");
 
-        String password = textIO.newStringInputReader()
-                .withMinLength(6)
-                .withInputMasking(true)
-                .read("Password");
+        String[] colors = AnsiTextTerminal.ANSI_COLOR_MAP.keySet().toArray(new String[0]);
+        String color = textIO.newStringInputReader()
+                .withNumberedPossibleValues(colors)
+                .withDefaultValue("yellow")
+                .read("Text color");
 
-        int age = textIO.newIntInputReader()
-                .withMinVal(13)
-                .read("Age");
+        String bgColor = textIO.newStringInputReader()
+                .withNumberedPossibleValues(colors)
+                .withDefaultValue("blue")
+                .read("Background color");
 
-        Month month = textIO.newEnumInputReader(Month.class)
-                .read("What month were you born in?");
+        AnsiTextTerminal terminal = new AnsiTextTerminal();
+        terminal.withBold(bold);
+        terminal.withColor(color);
+        terminal.withBackgroundColor(bgColor);
+        return terminal;
+    }
 
-        terminal.printf("\nUser %s is %d years old, was born in %s and has the password %s.\n", user, age, month, password);
+    private static WebTextTerminal createWebTextTerminal(TextIO textIO) {
+        webServerPort = textIO.newIntInputReader()
+                .withDefaultValue(Service.SPARK_DEFAULT_PORT)
+                .read("Server port number");
 
-        textIO.newStringInputReader().withMinLength(0).read("\nPress enter to terminate...");
-        textIO.dispose();
+        // The returned WebTextTerminal is not actually used, but treated as a marker that triggers the creation of a WebTextIoExecutor.
+        // This WebTextIoExecutor will instantiate a new WebTextTerminal each time a client starts a new session.
+        return new WebTextTerminal();
     }
 }

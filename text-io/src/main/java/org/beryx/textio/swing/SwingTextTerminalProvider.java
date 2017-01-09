@@ -38,4 +38,9 @@ public class SwingTextTerminalProvider implements TextTerminalProvider {
             return true;
         }
     }
+
+    @Override
+    public String toString() {
+        return "Swing terminal";
+    }
 }
