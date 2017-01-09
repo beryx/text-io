@@ -291,7 +291,7 @@ project('text-io-demo') {
     }
     mainClassName = 'org.beryx.textio.demo.TextIoDemo'
 
-    applicationName = "textIo"
+    applicationName = "textio-demo"
 
     startScripts {
         defaultJvmOpts = ['-Dlogback.configurationFile=../logback.xml']
