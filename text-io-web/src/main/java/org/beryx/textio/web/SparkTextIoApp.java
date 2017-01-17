@@ -16,16 +16,24 @@
 package org.beryx.textio.web;
 
 import org.beryx.textio.TextIO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import spark.Session;
 
+import javax.servlet.http.HttpSessionBindingEvent;
+import javax.servlet.http.HttpSessionBindingListener;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
 public class SparkTextIoApp {
+    private static final Logger logger =  LoggerFactory.getLogger(SparkTextIoApp.class);
+
     private final Map<String, WebTextTerminal> dataApiMap = new HashMap<>();
 
     private final Consumer<TextIO> textIoRunner;
     private final SparkDataServer server;
+    private Integer maxInactiveSeconds = null;
 
     private Consumer<String> onDispose;
 
@@ -42,7 +50,11 @@ public class SparkTextIoApp {
         this.onDispose = onDispose;
     }
 
-    private final WebTextTerminal getDataApi(String sessionId) {
+    public void setMaxInactiveSeconds(Integer maxInactiveSeconds) {
+        this.maxInactiveSeconds = maxInactiveSeconds;
+    }
+
+    private final WebTextTerminal getDataApi(String sessionId, Session session) {
         synchronized (dataApiMap) {
             WebTextTerminal terminal = dataApiMap.get(sessionId);
             if(terminal == null) {
@@ -52,6 +64,11 @@ public class SparkTextIoApp {
                 }
                 dataApiMap.put(sessionId, terminal);
 
+                if(maxInactiveSeconds != null) {
+                    session.maxInactiveInterval(maxInactiveSeconds);
+                }
+                session.attribute("web-text-io-session-id", new SessionIdListener(sessionId));
+
                 TextIO textIO = new TextIO(terminal);
 
                 Thread thread = new Thread(() -> textIoRunner.accept(textIO));
@@ -59,6 +76,32 @@ public class SparkTextIoApp {
                 thread.start();
             }
             return terminal;
+        }
+    }
+
+    private class SessionIdListener implements HttpSessionBindingListener {
+        private final String sessionId;
+
+        SessionIdListener(String sessionId) {
+            this.sessionId = sessionId;
+        }
+
+        @Override
+        public void valueBound(HttpSessionBindingEvent event) {
+            // Nothing to do
+        }
+
+        @Override
+        public void valueUnbound(HttpSessionBindingEvent event) {
+            WebTextTerminal removed;
+            synchronized (dataApiMap) {
+                removed = dataApiMap.remove(sessionId);
+            }
+            if(removed == null) {
+                logger.warn("Unbinding sessionId {}: not found in dataApiMap", sessionId);
+            } else {
+                logger.trace("Unbinding sessionId {}: removed from dataApiMap", sessionId);
+            }
         }
     }
 }

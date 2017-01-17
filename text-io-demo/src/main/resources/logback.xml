@@ -13,4 +13,7 @@
   <logger name="org.beryx.textio" level="trace" additivity="false">
     <appender-ref ref="STDOUT" />
   </logger>
+  <logger name="spark" level="trace" additivity="false">
+    <appender-ref ref="STDOUT" />
+  </logger>
 </configuration>

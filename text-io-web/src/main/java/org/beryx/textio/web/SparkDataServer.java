@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Session;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import static spark.Spark.*;
 
@@ -30,17 +30,23 @@ import static spark.Spark.*;
  */
 public class SparkDataServer {
     private static final Logger logger =  LoggerFactory.getLogger(WebTextTerminal.class);
-    public final String DEFAULT_PATH_FOR_GET_DATA = "/textTerminalData";
-    public final String DEFAULT_PATH_FOR_POST_INPUT  = "/textTerminalInput";
+    public static final String DEFAULT_PATH_FOR_GET_DATA = "/textTerminalData";
+    public static final String DEFAULT_PATH_FOR_POST_INPUT  = "/textTerminalInput";
 
-    private final Function<String, DataApi> dataApiProvider;
+    static {
+        exception(Exception.class, (exception, request, response) -> {
+            logger.error("Spark failure", exception);
+        });
+    }
+
+    private final BiFunction<String, Session, DataApi> dataApiProvider;
 
     private String pathForGetData = DEFAULT_PATH_FOR_GET_DATA;
     private String pathForPostInput = DEFAULT_PATH_FOR_POST_INPUT;
 
     private final Gson gson = new Gson();
 
-    public SparkDataServer(Function<String, DataApi> dataApiProvider) {
+    public SparkDataServer(BiFunction<String, Session, DataApi> dataApiProvider) {
         this.dataApiProvider = dataApiProvider;
     }
 
@@ -73,17 +79,26 @@ public class SparkDataServer {
         return id;
     }
 
+    protected DataApi getDataApi(Request request) {
+        String id = getId(request);
+        return dataApiProvider.apply(id, request.session());
+    }
+
     public void init() {
         get(pathForGetData, "application/json", (request, response) -> {
-            String id = getId(request);
-            DataApi dataApi = dataApiProvider.apply(id);
-            return gson.toJson(dataApi.getTextTerminalData());
+            logger.trace("Received GET");
+            DataApi dataApi = getDataApi(request);
+            logger.trace("Retrieving terminal data...");
+            TextTerminalData data = dataApi.getTextTerminalData();
+            logger.trace("Retrieved terminal data: {}", data);
+            return gson.toJson(data);
         });
 
         post(pathForPostInput, (request, response) -> {
-            String id = getId(request);
-            DataApi dataApi = dataApiProvider.apply(id);
+            logger.trace("Received POST");
+            DataApi dataApi = getDataApi(request);
             String input = new String(request.body().getBytes(), "UTF-8");
+            logger.trace("Posting input...");
             dataApi.postUserInput(input);
             return "OK";
         });

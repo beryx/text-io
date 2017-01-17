@@ -77,6 +77,7 @@ public class WebTextTerminal implements TextTerminal, DataApi {
         try {
             while(true) {
                 try {
+                    logger.trace("read(): waiting for input...");
                     inputAvailable.await();
                     if(input != null) {
                         String result = input;
@@ -98,10 +99,15 @@ public class WebTextTerminal implements TextTerminal, DataApi {
     }
 
     protected void setAction(TextTerminalData.Action action) {
-        if(action == NONE || action == null) throw new IllegalArgumentException("Not a proper action: " + action);
+        if(action == NONE || action == null) {
+            logger.error("Not a proper action: " + action);
+            return;
+        }
         dataLock.lock();
         try {
-            if(data.getAction() != NONE) throw new IllegalStateException("data.getAction() is not NONE");
+            if(data.getAction() != NONE) {
+                logger.warn("data.getAction() is not NONE");
+            }
             data.setAction(action);
             dataNotEmpty.signalAll();
             dataHasAction.signalAll();
@@ -116,6 +122,7 @@ public class WebTextTerminal implements TextTerminal, DataApi {
         try {
             String escapedMessage = StringEscapeUtils.escapeHtml4(message).replaceAll("\n", "<br>");
             data.getMessages().add(escapedMessage);
+            logger.trace("rawPrint(): signalling data: {}", escapedMessage);
             dataNotEmpty.signalAll();
             if(data.hasAction()) {
                 dataHasAction.signalAll();
@@ -142,6 +149,7 @@ public class WebTextTerminal implements TextTerminal, DataApi {
             }
             TextTerminalData result = data.getCopy();
             data.clear();
+            logger.trace("returning terminalData: {}", result);
             return result;
         } finally {
             dataLock.unlock();
@@ -152,8 +160,13 @@ public class WebTextTerminal implements TextTerminal, DataApi {
     public void postUserInput(String newInput) {
         inputLock.lock();
         try {
-            if(newInput == null) throw new IllegalArgumentException("newInput is null");
-            if(input != null) throw new IllegalStateException("input is not null");
+            if(newInput == null) {
+                logger.error("newInput is null");
+                return;
+            }
+            if(input != null) {
+                logger.warn("old input is not null");
+            }
             input = newInput;
             inputAvailable.signalAll();
         } finally {

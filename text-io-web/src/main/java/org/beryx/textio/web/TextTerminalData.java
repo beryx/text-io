@@ -27,11 +27,13 @@ public class TextTerminalData {
 
     private final List<String> messages = new ArrayList<>();
     private Action action = Action.NONE;
+    private boolean resetRequired = true;
 
     public TextTerminalData getCopy() {
         TextTerminalData data = new TextTerminalData();
         data.messages.addAll(messages);
         data.action = action;
+        data.resetRequired = resetRequired;
         return data;
     }
 
@@ -46,6 +48,14 @@ public class TextTerminalData {
         this.action = action;
     }
 
+    public boolean isResetRequired() {
+        return resetRequired;
+    }
+
+    public void setResetRequired(boolean resetRequired) {
+        this.resetRequired = resetRequired;
+    }
+
     public boolean isEmpty() {
         return messages.isEmpty() && (action == Action.NONE);
     }
@@ -57,5 +67,13 @@ public class TextTerminalData {
     public void clear() {
         messages.clear();
         action = Action.NONE;
+        resetRequired = false;
+    }
+
+    @Override
+    public String toString() {
+        return "resetRequired: " + resetRequired +
+                ", messages: " + messages +
+                ", action: " + action;
     }
 }

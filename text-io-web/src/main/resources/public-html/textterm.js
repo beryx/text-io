@@ -87,32 +87,49 @@ var TextTerm = (function() {
         return uuid;
     }
 
+    var resetTextTerm = function() {
+        var pairs = self.textTermElem.querySelectorAll(".textterm-pair");
+        for (var i = 0; i < pairs.length - 1; i++) {
+            self.textTermElem.removeChild(pairs[i]);
+        }
+        self.promptElem.textContent = "";
+        self.inputElem.textContent = "";
+    }
+
     var requestData = function() {
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
-            if (xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
-                var data = JSON.parse(xhr.responseText);
-                var msgCount = data.messages.length;
-                if(msgCount > 0) {
-                    var newPrompt = "";
-                    for (i = 0; i < msgCount; i++) {
-                        newPrompt += data.messages[i];
+            if (xhr.readyState == XMLHttpRequest.DONE) {
+                if(xhr.status == 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data.resetRequired) {
+                        resetTextTerm();
                     }
-                    self.promptElem.innerHTML += newPrompt;
-                    self.inputElem.focus();
-                }
-                if(data.action != 'NONE') {
-                    self.action = data.action;
-                }
-                var textSecurity = (self.action == 'READ_MASKED') ? "disc" : "none";
-                self.inputElem.style["-webkit-text-security"] = textSecurity;
-                self.inputElem.style["text-security"] = textSecurity;
+                    var msgCount = data.messages.length;
+                    if (msgCount > 0) {
+                        var newPrompt = "";
+                        for (i = 0; i < msgCount; i++) {
+                            newPrompt += data.messages[i];
+                        }
+                        self.promptElem.innerHTML += newPrompt;
+                        self.inputElem.focus();
+                    }
+                    if (data.action != 'NONE') {
+                        self.action = data.action;
+                    }
+                    var textSecurity = (self.action == 'READ_MASKED') ? "disc" : "none";
+                    self.inputElem.style["-webkit-text-security"] = textSecurity;
+                    self.inputElem.style["text-security"] = textSecurity;
 
-                if(self.action == 'DISPOSE') {
-                    self.inputElem.setAttribute("contenteditable", false);
-                    self.onDispose();
+                    if (self.action == 'DISPOSE') {
+                        self.inputElem.setAttribute("contenteditable", false);
+                        self.onDispose();
+                    } else {
+                        requestData();
+                    }
                 } else {
-                    requestData();
+                    console.log("xhr.onreadystatechange: readyState = " + xhr.readyState + ", status = " + xhr.status);
+                    setTimeout(requestData, 2000);
                 }
             }
         };
@@ -137,7 +154,6 @@ var TextTerm = (function() {
         self.inputElem.textContent = "";
 
         self.promptElem = newParentElem.querySelector(".textterm-prompt");
-        self.inputText = "";
         self.promptElem.textContent = "";
 
         self.textTermElem.appendChild(newParentElem);
