@@ -42,7 +42,11 @@ hs.src = ('//s10.histats.com/js15_as.js');
 <li><a href="#getting_started">Getting Started</a></li>
 <li><a href="#user_guide">User Guide</a>
 <ul class="sectlevel2">
-<li><a href="#_text_terminals">Text Terminals</a></li>
+<li><a href="#_text_terminals">Text Terminals</a>
+<ul class="sectlevel3">
+<li><a href="#_using_the_webtextterminal">Using the WebTextTerminal</a></li>
+</ul>
+</li>
 <li><a href="#_input_readers">Input Readers</a></li>
 <li><a href="#_textio">TextIO</a></li>
 <li><a href="#_textiofactory">TextIoFactory</a></li>
@@ -278,9 +282,53 @@ It is not capable to mask input strings, therefore not recommended when reading 
 </li>
 <li>
 <p><a href="javadoc/org/beryx/textio/web/WebTextTerminal.html">WebTextTerminal</a>, which allows accessing
-your application via a browser. Only WebKit-based browsers (such as Chrome, Opera or Safari) are currently able to mask input strings.</p>
+your application via a browser. See details below.</p>
 </li>
 </ul>
+</div>
+<div class="sect3">
+<h4 id="_using_the_webtextterminal">Using the WebTextTerminal</h4>
+<div class="paragraph">
+<p>The WebTextTerminal works only in conjunction with a web server supporting the
+<a href="javadoc/org/beryx/textio/web/DataApi.html">DataApi</a>
+(such as the <a href="javadoc/org/beryx/textio/web/SparkDataServer.html">SparkDataServer</a>)
+and a web page that contains code for accessing this API.
+This is typically accomplished via <a href="https://github.com/beryx/text-io/blob/v1.7.1/text-io-web/src/main/resources/public-html/textterm.js">textterm.js</a>,
+as shown in the code snippet below.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="html"><span class="tag">&lt;div</span> <span class="attribute-name">id</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>
+    <span class="tag">&lt;p</span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm-pair</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>
+        <span class="tag">&lt;span</span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm-prompt</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span> <span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;span</span> <span class="attribute-name">contenteditable</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">true</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm-input</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span> <span class="tag">&lt;/span&gt;</span>
+    <span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+
+<span class="tag">&lt;script</span> <span class="attribute-name">src</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm.js</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span><span class="tag">&lt;/script&gt;</span>
+<span class="tag">&lt;script&gt;</span>
+<span class="inline">    <span class="keyword">var</span> textTerm = TextTerm.init(document.getElementById(<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm</span><span class="delimiter">&quot;</span></span>));</span>
+<span class="tag">&lt;/script&gt;</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Run the <a href="https://github.com/beryx/text-io/blob/v1.7.1/text-io-demo/src/main/java/org/beryx/textio/demo/TextIoDemo.java">demo application</a> and select the <em>Web terminal</em> option to see a WebTextTerminal in action.
+Look at the source code of <a href="https://github.com/beryx/text-io/blob/v1.7.1/text-io-demo/src/main/java/org/beryx/textio/demo/WebTextIoExecutor.java">WebTextIoExecutor.java</a>
+and <a href="https://github.com/beryx/text-io/blob/v1.7.1/text-io-demo/src/main/resources/public-html/web-demo.html">web-demo.html</a> for more usage details.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Currently, only WebKit-based browsers (such as Chrome, Opera or Safari) are able to mask input strings.
+Keep this in mind when working with sensitive data.</p>
+</div>
 </div>
 </div>
 <div class="sect2">
