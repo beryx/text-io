@@ -31,7 +31,38 @@ http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#in[System.in] and
 http://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html[Scanner].
 It is not capable to mask input strings, therefore not recommended when reading sensitive data.
 - link:javadoc/org/beryx/textio/web/WebTextTerminal.html[WebTextTerminal], which allows accessing
-your application via a browser. Only WebKit-based browsers (such as Chrome, Opera or Safari) are currently able to mask input strings.
+your application via a browser. See details below.
+
+=== Using the WebTextTerminal
+
+The WebTextTerminal works only in conjunction with a web server supporting the
+link:javadoc/org/beryx/textio/web/DataApi.html[DataApi]
+(such as the link:javadoc/org/beryx/textio/web/SparkDataServer.html[SparkDataServer])
+and a web page that contains code for accessing this API.
+This is typically accomplished via link:{blob-root}/text-io-web/src/main/resources/public-html/textterm.js[textterm.js],
+as shown in the code snippet below.
+
+[source, html]
+----
+<div id="textterm">
+    <p class="textterm-pair">
+        <span class="textterm-prompt"> </span>
+        <span contenteditable="true" class="textterm-input"> </span>
+    </p>
+</div>
+
+<script src="textterm.js"></script>
+<script>
+    var textTerm = TextTerm.init(document.getElementById("textterm"));
+</script>
+----
+TIP: Run the link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/TextIoDemo.java[demo application] and select the _Web terminal_ option to see a WebTextTerminal in action.
+Look at the source code of link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/WebTextIoExecutor.java[WebTextIoExecutor.java]
+and link:{blob-root}/text-io-demo/src/main/resources/public-html/web-demo.html[web-demo.html] for more usage details.
+
+Currently, only WebKit-based browsers (such as Chrome, Opera or Safari) are able to mask input strings.
+Keep this in mind when working with sensitive data.
+
 
 == Input Readers
 
