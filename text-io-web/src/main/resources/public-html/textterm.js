@@ -112,6 +112,7 @@ var TextTerm = (function() {
                             newPrompt += data.messages[i];
                         }
                         self.promptElem.innerHTML += newPrompt;
+                        self.textTermElem.scrollTop = self.textTermElem.scrollHeight;
                         self.inputElem.focus();
                     }
                     if (data.action != 'NONE') {

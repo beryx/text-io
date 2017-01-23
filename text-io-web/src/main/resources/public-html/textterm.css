@@ -1,9 +1,11 @@
 #textterm {
-    font-family: 'courier', monospace;
-    height:      100%;
-    background: black;
-    color:      lightgreen;
+    font-family:    'courier', monospace;
+    height:         100%;
+    background:     black;
+    color:          lightgreen;
 
+    height:         480px;
+    overflow:       auto;
     margin:         40px;
     margin-right:   40px;
     padding:        20px;
@@ -23,6 +25,6 @@
 }
 
 #textterm p {
-    margin:     0;
-    padding:    0;
+    margin:         0;
+    padding:        0;
 }
