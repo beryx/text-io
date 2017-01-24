@@ -55,6 +55,9 @@ def pomConfig = {
 ext.groovyVersion = '2.4.7'
 
 allprojects {
+    group = 'org.beryx'
+    version = textIoVersion
+
     tasks.withType(Javadoc) {
         options.addStringOption('Xdoclint:all,-syntax,-missing', '-quiet')
     }
@@ -75,8 +78,6 @@ subprojects {
     }
 
     sourceCompatibility = 1.8
-    group = 'org.beryx'
-    version = textIoVersion
 
     def defaultEncoding = 'UTF-8'
     [compileJava, compileTestJava]*.options*.encoding = defaultEncoding
