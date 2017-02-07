@@ -15,20 +15,12 @@
  */
 package org.beryx.textio
 
+import org.beryx.textio.mock.MockTerminal
 import spock.lang.Specification
 
 class TextIoSpec extends Specification {
-    static { String.metaClass.stripAll = {-> stripAll(delegate)} }
+    static { String.metaClass.stripAll = {-> MockTerminal.stripAll(delegate)} }
 
     def terminal = new MockTerminal()
     def textIO = new TextIO(terminal)
-
-    static String stripAll(String s) {
-        s.stripIndent()
-                .replaceAll('\t', '    ')
-                .trim()
-                .replaceAll('(?m)\\s*$\\n', '\n')
-                .replaceAll('(?m)^\\s*$\\n', '')
-    }
-
 }
