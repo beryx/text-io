@@ -20,10 +20,12 @@ import org.beryx.textio.TextTerminal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import static org.beryx.textio.web.TextTerminalData.Action.*;
 
@@ -120,7 +122,21 @@ public class WebTextTerminal implements TextTerminal, DataApi {
     public void rawPrint(String message) {
         dataLock.lock();
         try {
-            String escapedMessage = StringEscapeUtils.escapeHtml4(message).replaceAll("\n", "<br>");
+            String escapedMessage = StringEscapeUtils.escapeHtml4(message);
+            escapedMessage = Arrays.stream(escapedMessage.split("\\R", -1))
+                    .map(line -> line.replaceAll("\t", "    "))
+                    .map(line -> {
+                        int count = 0;
+                        while(count < line.length() && line.charAt(count) == ' ') count++;
+                        if(count == 0) return line;
+                        StringBuilder sb = new StringBuilder(line.length() + 5 * count);
+                        for(int i = 0; i < count; i++) {
+                            sb.append("&nbsp;");
+                        }
+                        sb.append(line.substring(count));
+                        return sb.toString();
+                    })
+                    .collect(Collectors.joining("<br>"));
             data.getMessages().add(escapedMessage);
             logger.trace("rawPrint(): signalling data: {}", escapedMessage);
             dataNotEmpty.signalAll();

@@ -40,7 +40,7 @@ public class WebTextIoExecutor {
 
     public void execute(Consumer<TextIO> textIoRunner) {
         SparkTextIoApp app = new SparkTextIoApp(textIoRunner);
-        app.setMaxInactiveSeconds(60);
+        app.setMaxInactiveSeconds(600);
         app.setOnDispose(sessionId -> {
             new Thread(() -> {
                 try {

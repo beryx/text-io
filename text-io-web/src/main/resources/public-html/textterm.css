@@ -5,6 +5,7 @@
     color:          lightgreen;
 
     height:         480px;
+    resize:         both;
     overflow:       auto;
     margin:         40px;
     margin-right:   40px;
