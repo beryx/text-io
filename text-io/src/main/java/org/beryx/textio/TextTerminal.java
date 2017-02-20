@@ -18,12 +18,13 @@ package org.beryx.textio;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
  * Interface for text-based terminals capable of reading (optionally masking the input) and writing text.
  */
-public interface TextTerminal {
+public interface TextTerminal<T extends TextTerminal<T>> {
     /**
      * Reads a line of text
      * @param masking true, if the input should be masked (for example to enter a password)
@@ -44,11 +45,28 @@ public interface TextTerminal {
     void println();
 
     /**
+     * Registers a handler that will be called in response to a user interrupt.
+     * The event that triggers a user interrupt is usually Ctrl+C, but in general it is terminal specific.
+     * For example, a Swing based terminal may send a user interrupt when the X close button of its window is hit.
+     * If a terminal is not able to register user interrupt handlers, it should return false.
+     * @param handler the action to be performed in response to a user interrupt.
+     * @param abortRead true, if the current read operation should be aborted on user interrupt.
+     * @return true, if the handler has been registered; false, otherwise.
+     */
+    boolean registerUserInterruptHandler(Consumer<T> handler, boolean abortRead);
+
+    /**
      * This method is typically called at the end of a text-based input/output session in order to allow the terminal to release its screen resources.
      * The terminal should be able to rebuild the released resources when a print or read method is subsequently called.
      * The default implementation does nothing.
      */
     default void dispose() {}
+
+    /**
+     * This method is typically called when a text-based input/output session has been aborted by the user or when a severe error occurred.
+     * The default implementation does nothing.
+     */
+    default void abort() {}
 
     /**
      * Prints each message in the list in its raw form, inserting the line separator string between messages.

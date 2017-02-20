@@ -105,6 +105,7 @@ var TextTerm = (function() {
                     if (data.resetRequired) {
                         resetTextTerm();
                     }
+                    applySettings(data.settings);
                     var msgCount = data.messages.length;
                     if (msgCount > 0) {
                         var newPrompt = "";
@@ -125,6 +126,10 @@ var TextTerm = (function() {
                     if (self.action == 'DISPOSE') {
                         self.inputElem.setAttribute("contenteditable", false);
                         self.onDispose();
+                    } else if (self.action == 'ABORT') {
+                        self.inputElem.setAttribute("contenteditable", false);
+                        self.onAbort();
+
                     } else {
                         requestData();
                     }
@@ -140,7 +145,7 @@ var TextTerm = (function() {
         xhr.send(null);
     }
 
-    var postInput = function() {
+    var postInput = function(userInterrupt) {
         var xhr = new XMLHttpRequest();
         xhr.open("POST", "/textTerminalInput", true);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -148,23 +153,56 @@ var TextTerm = (function() {
 
         var input = self.inputElem.textContent;
 
-        var newParentElem = self.inputElem.parentNode.cloneNode(true);
-        self.inputElem.setAttribute("contenteditable", false);
+        if(userInterrupt) {
+            console.log("User interrupt!");
+            xhr.setRequestHeader("textio-user-interrupt", "true");
+        } else {
+            var newParentElem = self.inputElem.parentNode.cloneNode(true);
+            self.inputElem.setAttribute("contenteditable", false);
 
-        self.inputElem = newParentElem.querySelector(".textterm-input");
-        self.inputElem.textContent = "";
+            self.inputElem = newParentElem.querySelector(".textterm-input");
+            self.inputElem.textContent = "";
 
-        self.promptElem = newParentElem.querySelector(".textterm-prompt");
-        self.promptElem.textContent = "";
+            self.promptElem = newParentElem.querySelector(".textterm-prompt");
+            self.promptElem.textContent = "";
 
-        self.textTermElem.appendChild(newParentElem);
+            self.textTermElem.appendChild(newParentElem);
+        }
         self.inputElem.focus();
-
         xhr.send(input);
+    }
+
+    var isUserInterruptKey = function(event) {
+        var key = event.which || event.keyCode || 0;
+        if(key != self.settings.userInterruptKeyCode) return false;
+        if(event.ctrlKey != self.settings.userInterruptKeyCtrl) return false;
+        if(event.shiftKey != self.settings.userInterruptKeyShift) return false;
+        if(event.altKey != self.settings.userInterruptKeyAlt) return false;
+
+        return true;
+    }
+
+    var initSettings = function() {
+        self.settings = {};
+
+        self.settings.userInterruptKeyCode = 'Q'.charCodeAt(0);
+        self.settings.userInterruptKeyCtrl = true;
+        self.settings.userInterruptKeyShift = false;
+        self.settings.userInterruptKeyAlt = false;
+    }
+
+    var applySettings = function(settings) {
+        var count = settings.length;
+        for (i = 0; i < count; i++) {
+            var key = settings[i].key;
+            var value = settings[i].value;
+            self.settings[key] = value;
+        }
     }
 
     self.init = function(textTermElem) {
         self.uuid = generateUUID();
+        initSettings();
 
         self.textTermElem = textTermElem;
         self.inputElem = textTermElem.querySelector(".textterm-input");
@@ -174,18 +212,29 @@ var TextTerm = (function() {
             console.log("onDispose: default empty implementation");
         }
 
+        self.onAbort = function() {
+            console.log("onAbort: default empty implementation");
+        }
+
         textTermElem.addEventListener("keyup", function(event) {
             if(historyIndex < 0) return;
             browseHistory(event.target, event.keyCode);
         });
 
+        textTermElem.addEventListener("keydown", function(event) {
+            if(isUserInterruptKey(event)) {
+                postInput(true);
+                event.preventDefault();
+            }
+        });
+
         textTermElem.addEventListener("keypress", function(event) {
-            if(event.keyCode != 13) return false;
+            var key = event.which || event.keyCode || 0;
+            if(key != 13) return false;
             if(self.action != "READ_MASKED") {
                 updateHistory(self.inputElem.textContent);
             }
-
-            postInput();
+            postInput(false);
             event.preventDefault();
         });
 

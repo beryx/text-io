@@ -30,15 +30,18 @@ public class SparkTextIoApp {
     private static final Logger logger =  LoggerFactory.getLogger(SparkTextIoApp.class);
 
     private final Map<String, WebTextTerminal> dataApiMap = new HashMap<>();
+    private final WebTextTerminal termTemplate;
 
     private final Consumer<TextIO> textIoRunner;
     private final SparkDataServer server;
     private Integer maxInactiveSeconds = null;
 
     private Consumer<String> onDispose;
+    private Consumer<String> onAbort;
 
-    public SparkTextIoApp(Consumer<TextIO> textIoRunner) {
+    public SparkTextIoApp(Consumer<TextIO> textIoRunner, WebTextTerminal termTemplate) {
         this.textIoRunner = textIoRunner;
+        this.termTemplate = termTemplate;
         this.server = new SparkDataServer(this::getDataApi);
     }
 
@@ -50,17 +53,25 @@ public class SparkTextIoApp {
         this.onDispose = onDispose;
     }
 
+    public void setOnAbort(Consumer<String> onAbort) {
+        this.onAbort = onAbort;
+    }
+
     public void setMaxInactiveSeconds(Integer maxInactiveSeconds) {
         this.maxInactiveSeconds = maxInactiveSeconds;
     }
 
-    private final WebTextTerminal getDataApi(String sessionId, Session session) {
+    private WebTextTerminal getDataApi(String sessionId, Session session) {
         synchronized (dataApiMap) {
             WebTextTerminal terminal = dataApiMap.get(sessionId);
             if(terminal == null) {
-                terminal = new WebTextTerminal();
+                logger.debug("Creating terminal for sessionId: " + sessionId);
+                terminal = termTemplate.createCopy();
                 if(onDispose != null) {
                     terminal.setOnDispose(() -> onDispose.accept(sessionId));
+                }
+                if(onAbort != null) {
+                    terminal.setOnAbort(() -> onAbort.accept(sessionId));
                 }
                 dataApiMap.put(sessionId, terminal);
 

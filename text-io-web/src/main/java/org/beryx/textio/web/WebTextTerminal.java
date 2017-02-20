@@ -21,10 +21,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static org.beryx.textio.web.TextTerminalData.Action.*;
@@ -34,7 +36,7 @@ import static org.beryx.textio.web.TextTerminalData.Action.*;
  * It works only in conjunction with a web server supporting the {@link DataApi} (such as {@link SparkDataServer})
  * and a web component that accesses this API (typically via textterm.js).
  */
-public class WebTextTerminal implements TextTerminal, DataApi {
+public class WebTextTerminal implements TextTerminal<WebTextTerminal>, DataApi {
     private static final Logger logger =  LoggerFactory.getLogger(WebTextTerminal.class);
 
     public static final long DEFAULT_TIMEOUT_NOT_EMPTY = 5000L;
@@ -46,13 +48,20 @@ public class WebTextTerminal implements TextTerminal, DataApi {
     private final Condition dataHasAction = dataLock.newCondition();
 
     private String input;
+    private boolean userInterruptedInput;
     private final Lock inputLock = new ReentrantLock();
     private final Condition inputAvailable = inputLock.newCondition();
 
     private Runnable onDispose;
+    private Runnable onAbort;
 
     private long timeoutNotEmpty = DEFAULT_TIMEOUT_NOT_EMPTY;
     private long timeoutHasAction = DEFAULT_TIMEOUT_HAS_ACTION;
+
+    private int userInterruptKeyCode = 'Q';
+    private boolean userInterruptKeyCtrl = true;
+    private boolean userInterruptKeyShift = false;
+    private boolean userInterruptKeyAlt = false;
 
     public void setTimeoutNotEmpty(long timeoutNotEmpty) {
         this.timeoutNotEmpty = timeoutNotEmpty;
@@ -62,28 +71,63 @@ public class WebTextTerminal implements TextTerminal, DataApi {
         this.timeoutHasAction = timeoutHasAction;
     }
 
+    private Consumer<WebTextTerminal> userInterruptHandler = textTerm -> {
+        textTerm.abort();
+        Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(-1), 2, TimeUnit.SECONDS);
+    };
+    private boolean abortRead = true;
+
+    public WebTextTerminal createCopy() {
+        WebTextTerminal copy = new WebTextTerminal();
+        copy.setOnDispose(this.onDispose);
+        copy.setOnAbort(this.onAbort);
+        copy.setTimeoutNotEmpty(this.timeoutNotEmpty);
+        copy.setTimeoutHasAction(this.timeoutHasAction);
+        copy.setUserInterruptKey(this.userInterruptKeyCode, this.userInterruptKeyCtrl, this.userInterruptKeyShift, this.userInterruptKeyAlt);
+        copy.registerUserInterruptHandler(this.userInterruptHandler, abortRead);
+        return copy;
+    }
+
     @Override
     public void dispose() {
         setAction(DISPOSE);
         if(onDispose != null) onDispose.run();
     }
 
+    @Override
+    public void abort() {
+        setAction(ABORT);
+        if(onAbort != null) onAbort.run();
+    }
+
     public void setOnDispose(Runnable onDispose) {
         this.onDispose = onDispose;
     }
 
+    public void setOnAbort(Runnable onAbort) {
+        this.onAbort = onAbort;
+    }
+
     @Override
     public String read(boolean masking) {
-        setAction(masking ? READ_MASKED : READ);
         inputLock.lock();
         try {
+            if(data.getAction() != ABORT) {
+                setAction(masking ? READ_MASKED : READ);
+            }
             while(true) {
                 try {
                     logger.trace("read(): waiting for input...");
                     inputAvailable.await();
                     if(input != null) {
+                        if(userInterruptedInput && (userInterruptHandler != null)) {
+                            logger.debug("Calling userInterruptHandler");
+                             userInterruptHandler.accept(this);
+                             if(!abortRead) continue;
+                        }
                         String result = input;
                         input = null;
+                        userInterruptedInput = false;
                         if(logger.isTraceEnabled()) {
                             logger.trace("read: " + (masking ? result.replaceAll(".", "*") : result));
                         }
@@ -122,23 +166,25 @@ public class WebTextTerminal implements TextTerminal, DataApi {
     public void rawPrint(String message) {
         dataLock.lock();
         try {
-            String escapedMessage = StringEscapeUtils.escapeHtml4(message);
-            escapedMessage = Arrays.stream(escapedMessage.split("\\R", -1))
-                    .map(line -> line.replaceAll("\t", "    "))
-                    .map(line -> {
-                        int count = 0;
-                        while(count < line.length() && line.charAt(count) == ' ') count++;
-                        if(count == 0) return line;
-                        StringBuilder sb = new StringBuilder(line.length() + 5 * count);
-                        for(int i = 0; i < count; i++) {
-                            sb.append("&nbsp;");
-                        }
-                        sb.append(line.substring(count));
-                        return sb.toString();
-                    })
-                    .collect(Collectors.joining("<br>"));
-            data.getMessages().add(escapedMessage);
-            logger.trace("rawPrint(): signalling data: {}", escapedMessage);
+            if(data.getAction() != ABORT) {
+                String escapedMessage = StringEscapeUtils.escapeHtml4(message);
+                escapedMessage = Arrays.stream(escapedMessage.split("\\R", -1))
+                        .map(line -> line.replaceAll("\t", "    "))
+                        .map(line -> {
+                            int count = 0;
+                            while(count < line.length() && line.charAt(count) == ' ') count++;
+                            if(count == 0) return line;
+                            StringBuilder sb = new StringBuilder(line.length() + 5 * count);
+                            for(int i = 0; i < count; i++) {
+                                sb.append("&nbsp;");
+                            }
+                            sb.append(line.substring(count));
+                            return sb.toString();
+                        })
+                        .collect(Collectors.joining("<br>"));
+                data.getMessages().add(escapedMessage);
+                logger.trace("rawPrint(): signaling data: {}", escapedMessage);
+            }
             dataNotEmpty.signalAll();
             if(data.hasAction()) {
                 dataHasAction.signalAll();
@@ -151,6 +197,13 @@ public class WebTextTerminal implements TextTerminal, DataApi {
     @Override
     public void println() {
         rawPrint("\n");
+    }
+
+    @Override
+    public boolean registerUserInterruptHandler(Consumer<WebTextTerminal> handler, boolean abortRead) {
+        this.userInterruptHandler = handler;
+        this.abortRead = abortRead;
+        return true;
     }
 
     @Override
@@ -172,13 +225,17 @@ public class WebTextTerminal implements TextTerminal, DataApi {
         }
     }
 
-    @Override
-    public void postUserInput(String newInput) {
+    public void postUserInput(String newInput, boolean userInterrupt) {
         inputLock.lock();
         try {
+            this.userInterruptedInput = userInterrupt;
             if(newInput == null) {
-                logger.error("newInput is null");
-                return;
+                if(userInterrupt) {
+                    newInput = "";
+                } else {
+                    logger.error("newInput is null");
+                    return;
+                }
             }
             if(input != null) {
                 logger.warn("old input is not null");
@@ -187,6 +244,36 @@ public class WebTextTerminal implements TextTerminal, DataApi {
             inputAvailable.signalAll();
         } finally {
             inputLock.unlock();
+        }
+    }
+
+    @Override
+    public void postUserInput(String newInput) {
+        postUserInput(newInput, false);
+    }
+
+    @Override
+    public void postUserInterrupt(String partialInput) {
+        postUserInput(partialInput, true);
+    }
+
+    public void setUserInterruptKey(int code, boolean ctrl, boolean shift, boolean alt) {
+        dataLock.lock();
+        try {
+            this.userInterruptKeyCode = code;
+            this.userInterruptKeyCtrl = ctrl;
+            this.userInterruptKeyShift = shift;
+            this.userInterruptKeyAlt = alt;
+            data.addSetting("userInterruptKeyCode", code);
+            data.addSetting("userInterruptKeyCtrl", ctrl);
+            data.addSetting("userInterruptKeyShift", shift);
+            data.addSetting("userInterruptKeyAlt", alt);
+            dataNotEmpty.signalAll();
+            if(data.hasAction()) {
+                dataHasAction.signalAll();
+            }
+        } finally {
+            dataLock.unlock();
         }
     }
 }

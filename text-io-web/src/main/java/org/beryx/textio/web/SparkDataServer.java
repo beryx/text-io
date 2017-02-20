@@ -97,9 +97,15 @@ public class SparkDataServer {
         post(pathForPostInput, (request, response) -> {
             logger.trace("Received POST");
             DataApi dataApi = getDataApi(request);
+            boolean userInterrupt = Boolean.parseBoolean(request.headers("textio-user-interrupt"));
             String input = new String(request.body().getBytes(), "UTF-8");
-            logger.trace("Posting input...");
-            dataApi.postUserInput(input);
+            if(userInterrupt) {
+                logger.trace("Posting user interrupted input...");
+                dataApi.postUserInterrupt(input);
+            } else {
+                logger.trace("Posting input...");
+                dataApi.postUserInput(input);
+            }
             return "OK";
         });
     }

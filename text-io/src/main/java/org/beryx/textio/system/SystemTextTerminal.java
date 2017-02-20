@@ -19,12 +19,13 @@ import org.beryx.textio.TextTerminal;
 
 import java.io.PrintStream;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 /**
  * A {@link TextTerminal} implemented using {@link System#out}, {@link System#in} and {@link Scanner}.
  * It is not capable to mask input strings, therefore not recommended when reading sensitive data.
  */
-public class SystemTextTerminal implements TextTerminal {
+public class SystemTextTerminal implements TextTerminal<SystemTextTerminal> {
     private final Scanner scanner = new Scanner(System.in);
     private final PrintStream out = System.out;
 
@@ -43,5 +44,13 @@ public class SystemTextTerminal implements TextTerminal {
     public void println() {
         out.println();
         out.flush();
+    }
+
+    /**
+     * @return always false, because SystemTextTerminal cannot register a user interrupt handler
+     */
+    @Override
+    public boolean registerUserInterruptHandler(Consumer<SystemTextTerminal> handler, boolean abortRead) {
+        return false;
     }
 }

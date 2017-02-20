@@ -19,9 +19,11 @@
 <script src="textterm.js"></script>
 <script>
     var textTerm = TextTerm.init(document.getElementById("textterm"));
-
     textTerm.onDispose = function() {
         document.getElementById("app-done").textContent = "You can now close this window.";
+    }
+    textTerm.onAbort = function() {
+        document.getElementById("app-done").textContent = "Program aborted by the user. You can now close this window.";
     }
 </script>
 

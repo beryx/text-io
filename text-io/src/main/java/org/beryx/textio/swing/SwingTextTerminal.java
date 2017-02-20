@@ -20,14 +20,18 @@ import org.beryx.textio.TextTerminal;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.function.Consumer;
 
 /**
  * A {@link TextTerminal} implemented using a {@link JTextArea} inside a {@link JFrame}.
  */
-public class SwingTextTerminal implements TextTerminal {
+public class SwingTextTerminal implements TextTerminal<SwingTextTerminal> {
+    public static final String DEFAULT_USER_INTERRUPT_KEY = "ctrl Q";
+    public static final String PROP_USER_INTERRUPT_KEY = "swing.text.terminal.user.interrupt.key";
 
     private final JFrame frame;
     private final JTextArea textArea;
@@ -40,6 +44,17 @@ public class SwingTextTerminal implements TextTerminal {
     private volatile boolean writeMode = false;
     private volatile boolean inputMasking = false;
     private volatile String input;
+
+    private Consumer<SwingTextTerminal> userInterruptHandler = textTerm -> System.exit(-1);
+
+    private final Action userInterruptAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(userInterruptHandler != null) {
+                userInterruptHandler.accept(SwingTextTerminal.this);
+            }
+        }
+    };
 
     private boolean initialized = false;
 
@@ -125,6 +140,9 @@ public class SwingTextTerminal implements TextTerminal {
         textArea.setCaretColor(Color.green);
         textArea.setFont(new Font("Courier New", Font.PLAIN, 15));
 
+        String userInterruptKey = System.getProperty(PROP_USER_INTERRUPT_KEY, DEFAULT_USER_INTERRUPT_KEY);
+        setUserInterruptKey(userInterruptKey);
+
         ((AbstractDocument) textArea.getDocument()).setDocumentFilter(new TerminalDocumentFilter());
 
         JScrollPane scroll = new JScrollPane (textArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -135,10 +153,9 @@ public class SwingTextTerminal implements TextTerminal {
         WindowListener exitListener = new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                synchronized (editLock) {
-                    if(readMode || writeMode) return;
+                if(userInterruptHandler != null) {
+                    userInterruptHandler.accept(SwingTextTerminal.this);
                 }
-                frame.dispose();
             }
         };
         frame.addWindowListener(exitListener);
@@ -212,5 +229,21 @@ public class SwingTextTerminal implements TextTerminal {
     @Override
     public void dispose() {
         frame.dispose();
+    }
+
+    @Override
+    public boolean registerUserInterruptHandler(Consumer<SwingTextTerminal> handler, boolean abortRead) {
+        this.userInterruptHandler = handler;
+        return true;
+    }
+
+    public void setUserInterruptKey(KeyStroke keyStroke) {
+        String userInterruptActionKey = "SwingTextTerminal.userInterrupt";
+        textArea.getInputMap().put(keyStroke, userInterruptActionKey);
+        textArea.getActionMap().put(userInterruptActionKey, userInterruptAction);
+    }
+
+    public void setUserInterruptKey(String keyStroke) {
+        setUserInterruptKey(KeyStroke.getKeyStroke(keyStroke));
     }
 }

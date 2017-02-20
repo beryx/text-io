@@ -20,6 +20,7 @@ bin/
 *.iws
 .idea/
 out/
+classes/
 
 hs_err_pid*
 _ignore*

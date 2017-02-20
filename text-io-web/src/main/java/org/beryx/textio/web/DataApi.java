@@ -24,4 +24,10 @@ public interface DataApi {
 
     /** This method is called by the web component to post the user input */
     void postUserInput(String input);
+
+    /**
+     * This method is called by the web component in response to a user interrupt (typically triggered by typing Ctrl+Q).
+     * @param partialInput the partially entered input when the user interrupt occurred.
+     */
+    void postUserInterrupt(String partialInput);
 }

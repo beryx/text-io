@@ -22,6 +22,7 @@ import org.beryx.textio.TextTerminalProvider;
 import org.beryx.textio.console.ConsoleTextTerminalProvider;
 import org.beryx.textio.jline.AnsiTextTerminal;
 import org.beryx.textio.jline.JLineTextTerminalProvider;
+import org.beryx.textio.swing.SwingTextTerminal;
 import org.beryx.textio.swing.SwingTextTerminalProvider;
 import org.beryx.textio.system.SystemTextTerminal;
 import org.beryx.textio.system.SystemTextTerminalProvider;
@@ -57,9 +58,19 @@ public class TextIoDemo {
     }
 
     public static void main(String[] args) {
+        System.setProperty(SwingTextTerminal.PROP_USER_INTERRUPT_KEY, "ctrl C");
         TextIO textIO = chooseTextIO();
+
+        // Uncomment the line below to ignore user interrupts.
+//        textIO.getTextTerminal().registerUserInterruptHandler(term -> System.out.println("\n\t### User interrupt ignored."), false);
+
         if(textIO.getTextTerminal() instanceof WebTextTerminal) {
-            WebTextIoExecutor webTextIoExecutor = new WebTextIoExecutor().withPort(webServerPort);
+            WebTextTerminal webTextTerm = (WebTextTerminal)textIO.getTextTerminal();
+
+            // Uncomment the line below to trigger a user interrupt in the web terminal by typing Ctrl+C (instead of the default Ctrl+Q).
+//            webTextTerm.setUserInterruptKey('C', true, false, false);
+
+            WebTextIoExecutor webTextIoExecutor = new WebTextIoExecutor(webTextTerm).withPort(webServerPort);
             webTextIoExecutor.execute(SimpleApp::execute);
         } else {
             SimpleApp.execute(textIO);
@@ -125,8 +136,7 @@ public class TextIoDemo {
                 .withDefaultValue(Service.SPARK_DEFAULT_PORT)
                 .read("Server port number");
 
-        // The returned WebTextTerminal is not actually used, but treated as a marker that triggers the creation of a WebTextIoExecutor.
-        // This WebTextIoExecutor will instantiate a new WebTextTerminal each time a client starts a new session.
+        // The returned WebTextTerminal is used as a template by the WebTextIoExecutor, which instantiates a new WebTextTerminal each time a client starts a new session.
         return new WebTextTerminal();
     }
 }

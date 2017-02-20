@@ -16,33 +16,46 @@
 package org.beryx.textio.jline;
 
 import jline.console.ConsoleReader;
+import jline.console.UserInterruptException;
 import org.beryx.textio.TextTerminal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 /**
  * A JLine-based {@link TextTerminal}.
  */
-public class JLineTextTerminal implements TextTerminal {
+public class JLineTextTerminal implements TextTerminal<JLineTextTerminal> {
     private static final Logger logger =  LoggerFactory.getLogger(JLineTextTerminal.class);
+    private static final Consumer<JLineTextTerminal> DEFAULT_USER_INTERRUPT_HANDLER = textTerm -> System.exit(-1);
 
     private final ConsoleReader reader;
+    private Consumer<JLineTextTerminal>userInterruptHandler = DEFAULT_USER_INTERRUPT_HANDLER;
+    private boolean abortRead = true;
 
     public JLineTextTerminal(ConsoleReader reader) {
         if(reader == null) throw new IllegalArgumentException("reader is null");
+        reader.setHandleUserInterrupt(true);
         this.reader = reader;
     }
 
     @Override
     public String read(boolean masking) {
+        String prefix = "";
         Character mask = masking ? '*' : null;
-        try {
-            return reader.readLine(mask);
-        } catch (IOException e) {
-            logger.error("read error.", e);
-            return "";
+        while(true) {
+            try {
+                return prefix + reader.readLine(mask);
+            } catch(UserInterruptException e) {
+                userInterruptHandler.accept(this);
+                prefix = prefix + e.getPartialLine();
+                if(abortRead) return prefix;
+            } catch (IOException e) {
+                logger.error("read error.", e);
+                return "";
+            }
         }
     }
 
@@ -67,6 +80,13 @@ public class JLineTextTerminal implements TextTerminal {
         } catch (IOException e) {
             logger.error("println error.", e);
         }
+    }
+
+    @Override
+    public boolean registerUserInterruptHandler(Consumer<JLineTextTerminal> handler, boolean abortRead) {
+        this.userInterruptHandler = (handler != null) ? handler : DEFAULT_USER_INTERRUPT_HANDLER;
+        this.abortRead = abortRead;
+        return true;
     }
 
     public ConsoleReader getReader() {

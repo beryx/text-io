@@ -20,12 +20,13 @@ import org.beryx.textio.TextTerminal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
  * A mock terminal for test purposes.
  */
-public class MockTerminal implements TextTerminal {
+public class MockTerminal implements TextTerminal<MockTerminal> {
     public static final int DEFAULT_MAX_READS = 100;
 
     private int maxReads = DEFAULT_MAX_READS;
@@ -80,5 +81,10 @@ public class MockTerminal implements TextTerminal {
                 .map(s -> s.replaceAll("^\\s+|\\s+$", ""))
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.joining("\n"));
+    }
+
+    @Override
+    public boolean registerUserInterruptHandler(Consumer<MockTerminal> handler, boolean abortRead) {
+        return false;
     }
 }

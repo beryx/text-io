@@ -20,23 +20,50 @@ import java.util.List;
 
 /**
  * The data sent by the server to a polling web component.
- * Includes a list of prompt messages and an action to be executed by the web component (NONE, READ, READ_MASKED, DISPOSE).
+ * Includes a list of settings, a list of prompt messages and an action to be executed by the web component (NONE, READ, READ_MASKED, DISPOSE or ABORT).
  */
 public class TextTerminalData {
-    public enum Action {NONE, READ, READ_MASKED, DISPOSE}
+    public enum Action {NONE, READ, READ_MASKED, DISPOSE, ABORT}
 
+    public static class KeyValue {
+        public final String key;
+        public final Object value;
+
+        public KeyValue(String key, Object value) {
+            this.key = key;
+            this.value = value;
+        }
+    }
+
+    private final List<KeyValue> settings = new ArrayList<>() ;
     private final List<String> messages = new ArrayList<>();
     private Action action = Action.NONE;
     private boolean resetRequired = true;
 
     public TextTerminalData getCopy() {
         TextTerminalData data = new TextTerminalData();
+        data.settings.addAll(settings);
         data.messages.addAll(messages);
         data.action = action;
         data.resetRequired = resetRequired;
         return data;
     }
 
+    public void addSetting(String key, Object value) {
+        KeyValue keyVal = new KeyValue(key, value);
+        int size = settings.size();
+        for(int i = 0; i < size; i++) {
+            if(settings.get(i).key.equals(key)) {
+                settings.set(i, keyVal);
+                return;
+            }
+        }
+        settings.add(keyVal);
+    }
+
+    public List<KeyValue> getSettings() {
+        return settings;
+    }
     public List<String> getMessages() {
         return messages;
     }
@@ -65,6 +92,7 @@ public class TextTerminalData {
     }
 
     public void clear() {
+        settings.clear();
         messages.clear();
         action = Action.NONE;
         resetRequired = false;
@@ -73,6 +101,7 @@ public class TextTerminalData {
     @Override
     public String toString() {
         return "resetRequired: " + resetRequired +
+                ", settings: " + settings +
                 ", messages: " + messages +
                 ", action: " + action;
     }

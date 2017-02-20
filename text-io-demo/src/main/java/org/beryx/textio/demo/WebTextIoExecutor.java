@@ -18,9 +18,12 @@ package org.beryx.textio.demo;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.web.SparkDataServer;
 import org.beryx.textio.web.SparkTextIoApp;
+import org.beryx.textio.web.WebTextTerminal;
 
 import java.awt.*;
 import java.net.URI;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static spark.Spark.staticFiles;
@@ -31,7 +34,12 @@ import static spark.Spark.stop;
  * by configuring and initializing a {@link SparkDataServer}.
  */
 public class WebTextIoExecutor {
+    private final WebTextTerminal termTemplate;
     private int port = -1;
+
+    public WebTextIoExecutor(WebTextTerminal termTemplate) {
+        this.termTemplate = termTemplate;
+    }
 
     public WebTextIoExecutor withPort(int port) {
         this.port = port;
@@ -39,18 +47,14 @@ public class WebTextIoExecutor {
     }
 
     public void execute(Consumer<TextIO> textIoRunner) {
-        SparkTextIoApp app = new SparkTextIoApp(textIoRunner);
+        SparkTextIoApp app = new SparkTextIoApp(textIoRunner, termTemplate);
         app.setMaxInactiveSeconds(600);
-        app.setOnDispose(sessionId -> {
-            new Thread(() -> {
-                try {
-                    Thread.sleep(1000L);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                stop();
-            }).start();
-        });
+        Consumer<String> stopServer = sessionId -> Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+            stop();
+            System.exit(0);
+        }, 2, TimeUnit.SECONDS);
+        app.setOnDispose(stopServer);
+        app.setOnAbort(stopServer);
 
         SparkDataServer server = app.getServer();
         if(port > 0) {
