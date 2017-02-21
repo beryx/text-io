@@ -58,7 +58,9 @@ public class TextIoDemo {
     }
 
     public static void main(String[] args) {
-        System.setProperty(SwingTextTerminal.PROP_USER_INTERRUPT_KEY, "ctrl C");
+        // Uncomment the line below to trigger a user interrupt in the Swing terminal by typing Ctrl+C (instead of the default Ctrl+Q).
+//        System.setProperty(SwingTextTerminal.PROP_USER_INTERRUPT_KEY, "ctrl C");
+
         TextIO textIO = chooseTextIO();
 
         // Uncomment the line below to ignore user interrupts.
