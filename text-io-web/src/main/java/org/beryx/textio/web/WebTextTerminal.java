@@ -16,11 +16,13 @@
 package org.beryx.textio.web;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.beryx.textio.AbstractTextTerminal;
 import org.beryx.textio.TextTerminal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -32,11 +34,11 @@ import java.util.stream.Collectors;
 import static org.beryx.textio.web.TextTerminalData.Action.*;
 
 /**
- * A TextTerminal that allows accessing the application via a browser.
+ * A {@link TextTerminal} that allows accessing the application via a browser.
  * It works only in conjunction with a web server supporting the {@link DataApi} (such as {@link SparkDataServer})
  * and a web component that accesses this API (typically via textterm.js).
  */
-public class WebTextTerminal implements TextTerminal<WebTextTerminal>, DataApi {
+public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> implements DataApi {
     private static final Logger logger =  LoggerFactory.getLogger(WebTextTerminal.class);
 
     public static final long DEFAULT_TIMEOUT_NOT_EMPTY = 5000L;
@@ -76,6 +78,10 @@ public class WebTextTerminal implements TextTerminal<WebTextTerminal>, DataApi {
         Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(-1), 2, TimeUnit.SECONDS);
     };
     private boolean abortRead = true;
+
+    public WebTextTerminal() {
+        addPropertyChangeListener(PROP_USER_INTERRUPT_KEY, (oldKey, newKey) -> setUserInterruptKey(newKey));
+    }
 
     public WebTextTerminal createCopy() {
         WebTextTerminal copy = new WebTextTerminal();
@@ -255,6 +261,50 @@ public class WebTextTerminal implements TextTerminal<WebTextTerminal>, DataApi {
     @Override
     public void postUserInterrupt(String partialInput) {
         postUserInput(partialInput, true);
+    }
+
+
+    private static class KeyCombination {
+        final int code;
+        final boolean ctrl;
+        final boolean shift;
+        final boolean alt;
+
+        KeyCombination(int code, boolean ctrl, boolean shift, boolean alt) {
+            this.code = code;
+            this.ctrl = ctrl;
+            this.shift = shift;
+            this.alt = alt;
+        }
+    }
+
+    private KeyCombination getKeyCombination(String keyStroke) {
+        if(keyStroke == null) return null;
+        String[] parts = keyStroke.trim().split("\\s+");
+        if(parts.length < 2) return null;
+        String charPart = parts[parts.length - 1];
+        if(charPart.length() != 1) return null;
+        char code = Character.toUpperCase(charPart.charAt(0));
+        if(code < 'A' || code > 'Z')return null;
+        List<String> modifiers = Arrays.asList("ctrl", "shift", "alt");
+        int[] modCount = new int[3];
+        for(int i=0; i < parts.length - 1; i++) {
+            String part = parts[i].trim().toLowerCase();
+            int idx = modifiers.indexOf(part);
+            if(idx < 0) return null;
+            if(modCount[idx] > 0) return null;
+            modCount[idx]++;
+        }
+        return new KeyCombination(code, (modCount[0] > 0), (modCount[1] > 0), (modCount[2] > 0));
+    }
+
+    public void setUserInterruptKey(String keyStroke) {
+        KeyCombination kc = getKeyCombination(keyStroke);
+        if(kc == null) {
+            logger.warn("Invalid keyStroke: " + keyStroke);
+        } else {
+            setUserInterruptKey(kc.code, kc.ctrl, kc.shift, kc.alt);
+        }
     }
 
     public void setUserInterruptKey(int code, boolean ctrl, boolean shift, boolean alt) {

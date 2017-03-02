@@ -17,6 +17,7 @@ package org.beryx.textio.jline;
 
 import jline.console.ConsoleReader;
 import jline.console.UserInterruptException;
+import org.beryx.textio.AbstractTextTerminal;
 import org.beryx.textio.TextTerminal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,7 @@ import java.util.function.Consumer;
 /**
  * A JLine-based {@link TextTerminal}.
  */
-public class JLineTextTerminal implements TextTerminal<JLineTextTerminal> {
+public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     private static final Logger logger =  LoggerFactory.getLogger(JLineTextTerminal.class);
     private static final Consumer<JLineTextTerminal> DEFAULT_USER_INTERRUPT_HANDLER = textTerm -> System.exit(-1);
 

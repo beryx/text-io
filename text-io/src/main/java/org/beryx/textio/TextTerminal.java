@@ -15,9 +15,14 @@
  */
 package org.beryx.textio;
 
+import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableMap;
+
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -45,6 +50,11 @@ public interface TextTerminal<T extends TextTerminal<T>> {
     void println();
 
     /**
+     * @return an observable map of properties of this text terminal.
+     */
+    ObservableMap<String, String> getProperties();
+
+    /**
      * Registers a handler that will be called in response to a user interrupt.
      * The event that triggers a user interrupt is usually Ctrl+C, but in general it is terminal specific.
      * For example, a Swing based terminal may send a user interrupt when the X close button of its window is hit.
@@ -54,6 +64,12 @@ public interface TextTerminal<T extends TextTerminal<T>> {
      * @return true, if the handler has been registered; false, otherwise.
      */
     boolean registerUserInterruptHandler(Consumer<T> handler, boolean abortRead);
+
+    /**
+     * This method is typically called after the terminal has been created.
+     * The default implementation does nothing.
+     */
+    default void init() {}
 
     /**
      * This method is typically called at the end of a text-based input/output session in order to allow the terminal to release its screen resources.
@@ -120,11 +136,115 @@ public interface TextTerminal<T extends TextTerminal<T>> {
         println();
     }
 
+    /**
+     * Prints a formatted string using the default locale and the specified format string and arguments.
+     * @param  format A format string as described in {@link java.util.Formatter}.
+     * @param  args Arguments referenced by the format specifiers in the format string.
+     */
     default void printf(String format, Object... args) {
         print(String.format(format, args));
     }
 
+    /**
+     * Prints a formatted string using the specified locale, format string and arguments.
+     * @param l The {@linkplain java.util.Locale locale} to apply during formatting. If {@code l} is {@code null} then no localization is applied.
+     * @param  format A format string as described in {@link java.util.Formatter}.
+     * @param  args Arguments referenced by the format specifiers in the format string.
+     */
     default void printf(Locale l, String format, Object... args) {
         print(String.format(l, format, args));
+    }
+
+    /**
+     * Convenience method that provides the String value associated with a specified property key or a default value.
+     * @param key the key of the property to be retrieved.
+     * @return the corresponding value or a {@code defaultValue} if no property is associated with the specified {@code key}.
+     */
+    default String getStringProperty(String key, String defaultValue) {
+        String val = getProperties().get(key);
+        if(val == null) return defaultValue;
+        val = val.trim();
+        if(val.isEmpty()) return defaultValue;
+        return val;
+    }
+
+    /**
+     * Convenience method that provides the int value associated with a specified property key or a default value.
+     * @param key the key of the property to be retrieved.
+     * @return the corresponding value or a {@code defaultValue} if no property is associated with the specified {@code key}.
+     */
+    default int getIntProperty(String key, int defaultValue) {
+        String sVal = getStringProperty(key, null);
+        if(sVal == null) return defaultValue;
+        try {
+            return Integer.parseInt(sVal);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Convenience method that provides the long value associated with a specified property key or a default value.
+     * @param key the key of the property to be retrieved.
+     * @return the corresponding value or a {@code defaultValue} if no property is associated with the specified {@code key}.
+     */
+    default long getLongProperty(String key, long defaultValue) {
+        String sVal = getStringProperty(key, null);
+        if(sVal == null) return defaultValue;
+        try {
+            return Long.parseLong(sVal);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Convenience method that provides the double value associated with a specified property key or a default value.
+     * @param key the key of the property to be retrieved.
+     * @return the corresponding value or a {@code defaultValue} if no property is associated with the specified {@code key}.
+     */
+    default double getDoubleProperty(String key, double defaultValue) {
+        String sVal = getStringProperty(key, null);
+        if(sVal == null) return defaultValue;
+        try {
+            return Double.parseDouble(sVal);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Convenience method that provides the boolean value associated with a specified property key or a default value.
+     * @param key the key of the property to be retrieved.
+     * @return the corresponding value or a {@code defaultValue} if no property is associated with the specified {@code key}.
+     */
+    default boolean getBooleanProperty(String key, boolean defaultValue) {
+        String sVal = getStringProperty(key, null);
+        if(sVal == null) return defaultValue;
+        return Boolean.parseBoolean(sVal);
+    }
+
+    /**
+     * Convenience method for setting the value of a property with the specified key.
+     * @param key the key of the property to be set.
+     * @param value the value to be associated with the specified {@code key}.
+     * @return the previous value associated with {@code key}, or {@code null} if there was no mapping for {@code key}.
+     */
+    default String setProperty(String key, String value) {
+        return getProperties().put(key, value);
+    }
+
+    /**
+     * Convenience method that adds a listener for the property with the specified key.
+     * @param key the key of the property for which the listener is added.
+     * @param listener the listener to be added, as a {@link BiConsumer} that accepts the arguments ({@code oldValue}, {@code newValue}).
+     */
+    default void addPropertyChangeListener(String key, BiConsumer<String, String> listener) {
+        if(key == null) return;
+        getProperties().addListener((MapChangeListener<String,String>) (change -> {
+            if(key.equals(change.getKey())) {
+                listener.accept(change.getValueRemoved(), change.getValueAdded());
+            }
+        }));
     }
 }

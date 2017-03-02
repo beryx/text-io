@@ -64,6 +64,7 @@ public class TextIoFactory {
             if(t == null) {
                 t = getDefaultTerminal();
             }
+            t.init();
             this.terminal = t;
             this.textIO = new TextIO(t);
         }

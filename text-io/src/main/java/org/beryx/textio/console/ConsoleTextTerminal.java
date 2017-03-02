@@ -15,6 +15,7 @@
  */
 package org.beryx.textio.console;
 
+import org.beryx.textio.AbstractTextTerminal;
 import org.beryx.textio.TextTerminal;
 
 import java.io.Console;
@@ -23,7 +24,7 @@ import java.util.function.Consumer;
 /**
  * A {@link TextTerminal} backed by a {@link Console}.
  */
-public class ConsoleTextTerminal implements TextTerminal<ConsoleTextTerminal> {
+public class ConsoleTextTerminal extends AbstractTextTerminal<ConsoleTextTerminal> {
     private final Console console;
 
     public ConsoleTextTerminal() {

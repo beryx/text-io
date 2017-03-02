@@ -106,6 +106,7 @@ public class TextIoDemo {
                 terminal.printf("\nCannot create a %s%s\n\n", terminalProvider, ((errMsg != null) ? (": " + errMsg) : "."));
                 continue;
             }
+            chosenTerminal.init();
             return new TextIO(chosenTerminal);
         }
     }

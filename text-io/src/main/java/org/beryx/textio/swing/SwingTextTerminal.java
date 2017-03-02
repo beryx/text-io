@@ -15,6 +15,7 @@
  */
 package org.beryx.textio.swing;
 
+import org.beryx.textio.AbstractTextTerminal;
 import org.beryx.textio.TextTerminal;
 
 import javax.swing.*;
@@ -29,10 +30,7 @@ import java.util.function.Consumer;
 /**
  * A {@link TextTerminal} implemented using a {@link JTextArea} inside a {@link JFrame}.
  */
-public class SwingTextTerminal implements TextTerminal<SwingTextTerminal> {
-    public static final String DEFAULT_USER_INTERRUPT_KEY = "ctrl Q";
-    public static final String PROP_USER_INTERRUPT_KEY = "swing.text.terminal.user.interrupt.key";
-
+public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     private final JFrame frame;
     private final JTextArea textArea;
 
@@ -131,6 +129,8 @@ public class SwingTextTerminal implements TextTerminal<SwingTextTerminal> {
     }
 
     public SwingTextTerminal() {
+        addPropertyChangeListener(PROP_USER_INTERRUPT_KEY, (oldKey, newKey) -> setUserInterruptKey(newKey));
+
         frame = new JFrame("Text Terminal");
         textArea = new JTextArea(30, 80);
         textArea.setLineWrap(true);
@@ -139,9 +139,6 @@ public class SwingTextTerminal implements TextTerminal<SwingTextTerminal> {
         textArea.setForeground(Color.green);
         textArea.setCaretColor(Color.green);
         textArea.setFont(new Font("Courier New", Font.PLAIN, 15));
-
-        String userInterruptKey = System.getProperty(PROP_USER_INTERRUPT_KEY, DEFAULT_USER_INTERRUPT_KEY);
-        setUserInterruptKey(userInterruptKey);
 
         ((AbstractDocument) textArea.getDocument()).setDocumentFilter(new TerminalDocumentFilter());
 
