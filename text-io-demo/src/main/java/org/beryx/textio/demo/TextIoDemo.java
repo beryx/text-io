@@ -20,9 +20,7 @@ import org.beryx.textio.TextIoFactory;
 import org.beryx.textio.TextTerminal;
 import org.beryx.textio.TextTerminalProvider;
 import org.beryx.textio.console.ConsoleTextTerminalProvider;
-import org.beryx.textio.jline.AnsiTextTerminal;
 import org.beryx.textio.jline.JLineTextTerminalProvider;
-import org.beryx.textio.swing.SwingTextTerminal;
 import org.beryx.textio.swing.SwingTextTerminalProvider;
 import org.beryx.textio.system.SystemTextTerminal;
 import org.beryx.textio.system.SystemTextTerminalProvider;
@@ -89,7 +87,6 @@ public class TextIoDemo {
                             new SystemTextTerminalProvider(),
                             new ConsoleTextTerminalProvider(),
                             new JLineTextTerminalProvider(),
-                            new NamedProvider("ANSI terminal", () -> createAnsiTextTerminal(textIO)),
                             new SwingTextTerminalProvider(),
                             new NamedProvider("Web terminal", () -> createWebTextTerminal(textIO))
                     )
@@ -109,29 +106,6 @@ public class TextIoDemo {
             chosenTerminal.init();
             return new TextIO(chosenTerminal);
         }
-    }
-
-    private static AnsiTextTerminal createAnsiTextTerminal(TextIO textIO) {
-        boolean bold = textIO.newBooleanInputReader()
-                .withDefaultValue(false)
-                .read("Bold text?");
-
-        String[] colors = AnsiTextTerminal.ANSI_COLOR_MAP.keySet().toArray(new String[0]);
-        String color = textIO.newStringInputReader()
-                .withNumberedPossibleValues(colors)
-                .withDefaultValue("yellow")
-                .read("Text color");
-
-        String bgColor = textIO.newStringInputReader()
-                .withNumberedPossibleValues(colors)
-                .withDefaultValue("blue")
-                .read("Background color");
-
-        AnsiTextTerminal terminal = new AnsiTextTerminal();
-        terminal.withBold(bold);
-        terminal.withColor(color);
-        terminal.withBackgroundColor(bgColor);
-        return terminal;
     }
 
     private static WebTextTerminal createWebTextTerminal(TextIO textIO) {

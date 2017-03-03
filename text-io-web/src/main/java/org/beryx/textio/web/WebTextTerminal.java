@@ -17,6 +17,7 @@ package org.beryx.textio.web;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.beryx.textio.AbstractTextTerminal;
+import org.beryx.textio.PropertiesPrefixes;
 import org.beryx.textio.TextTerminal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ import static org.beryx.textio.web.TextTerminalData.Action.*;
  * It works only in conjunction with a web server supporting the {@link DataApi} (such as {@link SparkDataServer})
  * and a web component that accesses this API (typically via textterm.js).
  */
+@PropertiesPrefixes({"web"})
 public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> implements DataApi {
     private static final Logger logger =  LoggerFactory.getLogger(WebTextTerminal.class);
 

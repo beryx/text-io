@@ -1,5 +1,7 @@
 =======================================================================
- Text IO @textIoVersion@
+ Text IO @textIoVersion@ Demo
 =======================================================================
+
+Start the demo by executing 'textio-demo' or 'textio-demo.bat' in the bin directory.
 
 Visit the Text IO site for the latest news and downloads: https://github.com/beryx/text-io

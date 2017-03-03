@@ -16,6 +16,7 @@
 package org.beryx.textio.mock;
 
 import org.beryx.textio.AbstractTextTerminal;
+import org.beryx.textio.PropertiesPrefixes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 /**
  * A mock terminal for test purposes.
  */
+@PropertiesPrefixes({"mock"})
 public class MockTerminal extends AbstractTextTerminal<MockTerminal> {
     public static final int DEFAULT_MAX_READS = 100;
 

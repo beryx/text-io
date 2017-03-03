@@ -16,6 +16,7 @@
 package org.beryx.textio.system;
 
 import org.beryx.textio.AbstractTextTerminal;
+import org.beryx.textio.PropertiesPrefixes;
 import org.beryx.textio.TextTerminal;
 
 import java.io.PrintStream;
@@ -26,6 +27,7 @@ import java.util.function.Consumer;
  * A {@link TextTerminal} implemented using {@link System#out}, {@link System#in} and {@link Scanner}.
  * It is not capable to mask input strings, therefore not recommended when reading sensitive data.
  */
+@PropertiesPrefixes({"system"})
 public class SystemTextTerminal extends AbstractTextTerminal<SystemTextTerminal> {
     private final Scanner scanner = new Scanner(System.in);
     private final PrintStream out = System.out;

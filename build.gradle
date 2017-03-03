@@ -295,11 +295,16 @@ project('text-io-demo') {
     applicationName = "textio-demo"
 
     startScripts {
-        defaultJvmOpts = ['-Dlogback.configurationFile=../logback.xml']
+        defaultJvmOpts = ['-Dlogback.configurationFile=logback.xml']
     }
 
     applicationDistribution.from("${rootProject.projectDir}/dist") {
+        exclude 'xbin'
         filter(ReplaceTokens, tokens:[textIoVersion : textIoVersion])
+    }
+
+    applicationDistribution.from("${rootProject.projectDir}/dist/xbin") {
+        into 'bin'
     }
 
     applicationDistribution.from("${rootProject.projectDir}/..") {

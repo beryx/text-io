@@ -79,7 +79,7 @@ public abstract class AbstractTextTerminal<T extends AbstractTextTerminal<T>> im
     }
 
     public void initProperties() {
-        getPropertiesReader().ifPresent(reader -> initProperties(reader));
+        initProperties(getPropertiesReader().orElse(null));
     }
 
     public Optional<Reader> getPropertiesReader() {
@@ -113,15 +113,18 @@ public abstract class AbstractTextTerminal<T extends AbstractTextTerminal<T>> im
         } else {
             logger.debug("No terminal properties file found in classpath.");
         }
+        logger.debug("Using only default properties.");
         return Optional.empty();
     }
 
     public void initProperties(Reader propsReader) {
         Properties rawProps = new Properties();
-        try {
-            rawProps.load(propsReader);
-        } catch (IOException e) {
-            logger.warn("Failed to read terminal properties.", e);
+        if(propsReader != null) {
+            try {
+                rawProps.load(propsReader);
+            } catch (IOException e) {
+                logger.warn("Failed to read terminal properties.", e);
+            }
         }
         initProperties(rawProps);
     }
