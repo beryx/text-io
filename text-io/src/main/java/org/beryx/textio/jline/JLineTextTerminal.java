@@ -28,6 +28,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static org.beryx.textio.PropertiesConstants.*;
+
 /**
  * A JLine-based {@link TextTerminal}.
  */
@@ -35,17 +37,12 @@ import java.util.function.Consumer;
 public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     private static final Logger logger =  LoggerFactory.getLogger(JLineTextTerminal.class);
 
-    public static final String PROP_PROMPT_COLOR = "prompt.color";
-    public static final String PROP_PROMPT_BGCOLOR = "prompt.bgcolor";
-    public static final String PROP_PROMPT_BOLD = "prompt.promptBold";
-    public static final String PROP_INPUT_COLOR = "input.color";
-    public static final String PROP_INPUT_BGCOLOR = "input.bgcolor";
-    public static final String PROP_INPUT_BOLD = "input.promptBold";
-
     private static final Consumer<JLineTextTerminal> DEFAULT_USER_INTERRUPT_HANDLER = textTerm -> System.exit(-1);
 
     private static String ANSI_RESET = "\u001B[0m";
     private static String ANSI_BOLD = "\u001B[1m";
+    private static String ANSI_ITALIC = "\u001B[3m";
+    private static String ANSI_UNDERLINE = "\u001B[4m";
 
     public static Map<String, Integer> ANSI_COLOR_MAP = new LinkedHashMap<>();
     static {
@@ -64,12 +61,16 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     private Consumer<JLineTextTerminal>userInterruptHandler = DEFAULT_USER_INTERRUPT_HANDLER;
     private boolean abortRead = true;
 
-    private String ansiPromptColor = "";
-    private String ansiPromptBackgroundColor = "";
-    private boolean promptBold = false;
-    private String ansiInputColor = "";
-    private String ansiInputBackgroundColor = "";
-    private boolean inputBold = false;
+    private static class StyleData {
+        String ansiColor = "";
+        String ansiBackgroundColor = "";
+        boolean bold = false;
+        boolean italic = false;
+        boolean underline = false;
+    }
+
+    private static StyleData inputStyleData = new StyleData();
+    private static StyleData promptStyleData = new StyleData();
 
     public static int getColorCode(String colorName) {
         return ANSI_COLOR_MAP.getOrDefault(colorName.toLowerCase(), -1);
@@ -103,17 +104,21 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
         reader.setHandleUserInterrupt(true);
         this.reader = reader;
 
-        addPropertyChangeListener(PROP_PROMPT_COLOR, (oldKey, newKey) -> setPromptColor(newKey));
-        addPropertyChangeListener(PROP_PROMPT_BGCOLOR, (oldKey, newKey) -> setPromptBackgroundColor(newKey));
-        addPropertyChangeListener(PROP_PROMPT_BOLD, (oldKey, newKey) -> setPromptBold(Boolean.valueOf(newKey)));
-        addPropertyChangeListener(PROP_INPUT_COLOR, (oldKey, newKey) -> setInputColor(newKey));
-        addPropertyChangeListener(PROP_INPUT_BGCOLOR, (oldKey, newKey) -> setInputBackgroundColor(newKey));
-        addPropertyChangeListener(PROP_INPUT_BOLD, (oldKey, newKey) -> setInputBold(Boolean.valueOf(newKey)));
+        addPropertyChangeListener(PROP_PROMPT_COLOR, newVal -> setPromptColor(newVal));
+        addPropertyChangeListener(PROP_PROMPT_BGCOLOR, newVal -> setPromptBackgroundColor(newVal));
+        addBooleanPropertyChangeListener(PROP_PROMPT_BOLD, newVal -> setPromptBold(newVal));
+        addBooleanPropertyChangeListener(PROP_PROMPT_ITALIC, newVal -> setPromptItalic(newVal));
+        addBooleanPropertyChangeListener(PROP_PROMPT_UNDERLINE, newVal -> setPromptUnderline(newVal));
+        addPropertyChangeListener(PROP_INPUT_COLOR, newVal -> setInputColor(newVal));
+        addPropertyChangeListener(PROP_INPUT_BGCOLOR, newVal -> setInputBackgroundColor(newVal));
+        addBooleanPropertyChangeListener(PROP_INPUT_BOLD, newVal -> setInputBold(newVal));
+        addBooleanPropertyChangeListener(PROP_INPUT_ITALIC, newVal -> setInputItalic(newVal));
+        addBooleanPropertyChangeListener(PROP_INPUT_UNDERLINE, newVal -> setInputUnderline(newVal));
     }
 
     @Override
     public String read(boolean masking) {
-        printAnsi(ansiInputColor + ansiInputBackgroundColor + (inputBold ? ANSI_BOLD : ""));
+        printAnsi(getAnsiPrefix(inputStyleData));
         try {
             String prefix = "";
             Character mask = masking ? '*' : null;
@@ -136,7 +141,7 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
 
     @Override
     public void rawPrint(String message) {
-        printAnsi(ansiPromptColor + ansiPromptBackgroundColor + (promptBold ? ANSI_BOLD : "") + message + ANSI_RESET);
+        printAnsi(getAnsiPrefix(promptStyleData) + message + ANSI_RESET);
     }
 
     public void printAnsi(String message) {
@@ -149,6 +154,14 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
         } finally {
             reader.setPrompt(null);
         }
+    }
+
+    public String getAnsiPrefix(StyleData styleData) {
+        return styleData.ansiColor +
+                styleData.ansiBackgroundColor +
+                (styleData.bold ? ANSI_BOLD : "") +
+                (styleData.italic ? ANSI_ITALIC : "") +
+                (styleData.underline ? ANSI_UNDERLINE : "");
     }
 
     @Override
@@ -173,26 +186,42 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     }
 
     public void setPromptColor(String colorName) {
-        this.ansiPromptColor = getAnsiColor(colorName);
+        promptStyleData.ansiColor = getAnsiColor(colorName);
     }
 
     public void setPromptBackgroundColor(String colorName) {
-        this.ansiPromptBackgroundColor = getAnsiBackgroundColor(colorName);
+        promptStyleData.ansiBackgroundColor = getAnsiBackgroundColor(colorName);
     }
 
-    public void setPromptBold(boolean promptBold) {
-        this.promptBold = promptBold;
+    public void setPromptBold(boolean bold) {
+        promptStyleData.bold = bold;
+    }
+
+    public void setPromptItalic(boolean italic) {
+        promptStyleData.italic = italic;
+    }
+
+    public void setPromptUnderline(boolean underline) {
+        promptStyleData.underline = underline;
     }
 
     public void setInputColor(String colorName) {
-        this.ansiInputColor = getAnsiColor(colorName);
+        inputStyleData.ansiColor = getAnsiColor(colorName);
     }
 
     public void setInputBackgroundColor(String colorName) {
-        this.ansiInputBackgroundColor = getAnsiBackgroundColor(colorName);
+        inputStyleData.ansiBackgroundColor = getAnsiBackgroundColor(colorName);
     }
 
-    public void setInputBold(boolean promptBold) {
-        this.inputBold = promptBold;
+    public void setInputBold(boolean bold) {
+        inputStyleData.bold = bold;
+    }
+
+    public void setInputItalic(boolean italic) {
+        inputStyleData.italic = italic;
+    }
+
+    public void setInputUnderline(boolean underline) {
+        inputStyleData.underline = underline;
     }
 }

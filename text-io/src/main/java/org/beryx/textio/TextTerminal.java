@@ -22,8 +22,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import java.util.function.*;
 import java.util.stream.Collectors;
 
 /**
@@ -244,6 +243,98 @@ public interface TextTerminal<T extends TextTerminal<T>> {
         getProperties().addListener((MapChangeListener<String,String>) (change -> {
             if(key.equals(change.getKey())) {
                 listener.accept(change.getValueRemoved(), change.getValueAdded());
+            }
+        }));
+    }
+
+    /**
+     * Convenience method that adds a listener for the property with the specified key.
+     * @param key the key of the property for which the listener is added.
+     * @param listener the listener to be added, as a {@link Consumer} that accepts the new value.
+     */
+    default void addPropertyChangeListener(String key, Consumer<String> listener) {
+        if(key == null) return;
+        getProperties().addListener((MapChangeListener<String,String>) (change -> {
+            if(key.equals(change.getKey())) {
+                listener.accept(change.getValueAdded());
+            }
+        }));
+    }
+
+    /**
+     * Convenience method that adds a listener for the int property with the specified key.
+     * @param key the key of the property for which the listener is added.
+     * @param defaultVal the value to be used if the new value cannot be converted to an int.
+     * @param listener the listener to be added, as an {@link IntConsumer} that accepts the new value as int.
+     */
+    default void addIntPropertyChangeListener(String key, int defaultVal, IntConsumer listener) {
+        if(key == null) return;
+        getProperties().addListener((MapChangeListener<String,String>) (change -> {
+            if(key.equals(change.getKey())) {
+                int newVal = 0;
+                try {
+                    newVal = Integer.parseInt(change.getValueAdded());
+                } catch (Exception e) {
+                    newVal = defaultVal;
+                }
+                listener.accept(newVal);
+            }
+        }));
+    }
+
+    /**
+     * Convenience method that adds a listener for the long property with the specified key.
+     * @param key the key of the property for which the listener is added.
+     * @param defaultVal the value to be used if the new value cannot be converted to a long.
+     * @param listener the listener to be added, as a {@link LongConsumer} that accepts the new value as long.
+     */
+    default void addLongPropertyChangeListener(String key, long defaultVal, LongConsumer listener) {
+        if(key == null) return;
+        getProperties().addListener((MapChangeListener<String,String>) (change -> {
+            if(key.equals(change.getKey())) {
+                long newVal = 0;
+                try {
+                    newVal = Long.parseLong(change.getValueAdded());
+                } catch (Exception e) {
+                    newVal = defaultVal;
+                }
+                listener.accept(newVal);
+            }
+        }));
+    }
+
+    /**
+     * Convenience method that adds a listener for the double property with the specified key.
+     * @param key the key of the property for which the listener is added.
+     * @param defaultVal the value to be used if the new value cannot be converted to a double.
+     * @param listener the listener to be added, as a {@link DoubleConsumer} that accepts the new value as double.
+     */
+    default void addDoublePropertyChangeListener(String key, long defaultVal, DoubleConsumer listener) {
+        if(key == null) return;
+        getProperties().addListener((MapChangeListener<String,String>) (change -> {
+            if(key.equals(change.getKey())) {
+                double newVal = 0;
+                try {
+                    newVal = Double.parseDouble(change.getValueAdded());
+                } catch (Exception e) {
+                    newVal = defaultVal;
+                }
+                listener.accept(newVal);
+            }
+        }));
+    }
+
+    /**
+     * Convenience method that adds a listener for the boolean property with the specified key.
+     * @param key the key of the property for which the listener is added.
+     * @param listener the listener to be added, as a {@link Consumer} that accepts the new value as boolean.
+     */
+    default void addBooleanPropertyChangeListener(String key, Consumer<Boolean> listener) {
+        if(key == null) return;
+        getProperties().addListener((MapChangeListener<String,String>) (change -> {
+            if(key.equals(change.getKey())) {
+                boolean newVal = Boolean.parseBoolean(change.getValueAdded());
+                listener.accept(newVal);
             }
         }));
     }

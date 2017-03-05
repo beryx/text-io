@@ -16,7 +16,10 @@
 package org.beryx.textio.swing;
 
 import org.beryx.textio.AbstractTextTerminal;
+import org.beryx.textio.PropertiesPrefixes;
 import org.beryx.textio.TextTerminal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -25,21 +28,34 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.lang.reflect.Field;
+import java.util.Optional;
 import java.util.function.Consumer;
 
-/**
- * A {@link TextTerminal} implemented using a {@link JTextArea} inside a {@link JFrame}.
- */
-public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
-    private final JFrame frame;
-    private final JTextArea textArea;
+import static org.beryx.textio.PropertiesConstants.*;
 
-    private String extendedPrompt = "";
-    private String unmaskedContent = "";
+/**
+ * A {@link TextTerminal} implemented using a {@link JTextPane} inside a {@link JFrame}.
+ */
+@PropertiesPrefixes({"swing"})
+public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
+    private static final Logger logger =  LoggerFactory.getLogger(SwingTextTerminal.class);
+
+    private static final String ZERO_WIDTH_SPACE = "\u200B";
+
+    public static final int DEFAULT_FONT_SIZE = 15;
+    public static final Color DEFAULT_PANE_BACKGROUND = Color.black;
+    public static final Color DEFAULT_PROMPT_COLOR = Color.green;
+    public static final Color DEFAULT_INPUT_COLOR = Color.green;
+
+    private final JFrame frame;
+    private final JTextPane textPane;
+
+    private String unmaskedInput = "";
+    private int startReadLen;
 
     private final Object editLock = new Object();
     private volatile boolean readMode = false;
-    private volatile boolean writeMode = false;
     private volatile boolean inputMasking = false;
     private volatile String input;
 
@@ -55,6 +71,25 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     };
 
     private boolean initialized = false;
+
+    private final StyledDocument document;
+    private final StyleData promptStyleData = new StyleData();
+    private final StyleData inputStyleData = new StyleData();
+    private int styleCount = 0;
+
+    private static class StyleData {
+        Color color;
+        Color bgColor;
+        boolean bold;
+        boolean italic;
+        boolean underline;
+        boolean strikeThrough;
+        boolean subscript;
+        boolean superscript;
+        String fontFamily = "Courier New";
+        int fontSize = DEFAULT_FONT_SIZE;
+    }
+
 
     @FunctionalInterface
     private interface TextChanger {
@@ -87,28 +122,27 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
                         if(pos >= 0) text = text.substring(0, pos);
                     }
                     try {
+                        textChanger.changeText(text);
+                        int newUnmaskedInputLen = doc.getLength() - startReadLen;
                         if(readMode && inputMasking) {
-                            textChanger.changeText(text);
-                            int caretPosition = textArea.getCaretPosition();
+                            int caretPosition = textPane.getCaretPosition();
+                            fb.replace(startReadLen, newUnmaskedInputLen, unmaskedInput, attrs);
 
-                            fb.remove(0, doc.getLength());
-                            fb.insertString(0, unmaskedContent, attrs);
                             textChanger.changeText(text);
-                            unmaskedContent = doc.getText(0, doc.getLength());
+                            unmaskedInput = doc.getText(startReadLen, newUnmaskedInputLen);
 
                             maskContent(fb, attrs);
-                            textArea.setCaretPosition(caretPosition);
+                            textPane.setCaretPosition(caretPosition);
                         } else {
-                            textChanger.changeText(text);
-                            unmaskedContent = doc.getText(0, doc.getLength());
+                            unmaskedInput = doc.getText(startReadLen, newUnmaskedInputLen);
                         }
                     } catch (Exception e) {
+                        logger.error("changeText failed", e);
                         if(e instanceof BadLocationException) throw (BadLocationException)e;
                         else throw new BadLocationException(e.toString(), offset);
                     }
                     if(pos >= 0) {
-                        input = unmaskedContent.substring(extendedPrompt.length());
-                        unmaskedContent = doc.getText(0, doc.getLength());
+                        input = unmaskedInput;
                         editLock.notifyAll();
                     }
                 }
@@ -116,33 +150,56 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         }
 
         private void maskContent(FilterBypass fb, AttributeSet attrs) throws BadLocationException {
-            StringBuilder maskedSb = new StringBuilder(extendedPrompt);
-            int maskedLen = unmaskedContent.length() - extendedPrompt.length();
+            StringBuilder maskedSb = new StringBuilder();
+            int maskedLen = unmaskedInput.length();
             for(int i=0; i<maskedLen; i++) maskedSb.append('*');
-            fb.remove(0, fb.getDocument().getLength());
-            fb.insertString(0, maskedSb.toString(), attrs);
+            fb.replace(startReadLen, maskedLen, maskedSb.toString(), attrs);
         }
 
         private boolean isEditAllowedAt(int offset) {
-            return (readMode || writeMode)&& textArea.getCaretPosition() >= extendedPrompt.length() && offset >= extendedPrompt.length();
+            return offset >= startReadLen;
         }
     }
 
     public SwingTextTerminal() {
-        addPropertyChangeListener(PROP_USER_INTERRUPT_KEY, (oldKey, newKey) -> setUserInterruptKey(newKey));
+        addPropertyChangeListener(PROP_USER_INTERRUPT_KEY, newVal -> setUserInterruptKey(newVal));
+
+        addPropertyChangeListener(PROP_PANE_BGCOLOR, newVal -> setPaneBackgroundColor(newVal));
+
+        addPropertyChangeListener(PROP_PROMPT_COLOR, newVal -> setPromptColor(newVal));
+        addPropertyChangeListener(PROP_PROMPT_BGCOLOR, newVal -> setPromptBackgroundColor(newVal));
+        addPropertyChangeListener(PROP_PROMPT_FONT_FAMILY, newVal -> setPromptFontFamily(newVal));
+        addIntPropertyChangeListener(PROP_PROMPT_FONT_SIZE, DEFAULT_FONT_SIZE, newVal -> setPromptFontSize(newVal));
+        addBooleanPropertyChangeListener(PROP_PROMPT_BOLD, newVal -> setPromptBold(newVal));
+        addBooleanPropertyChangeListener(PROP_PROMPT_ITALIC, newVal -> setPromptItalic(newVal));
+        addBooleanPropertyChangeListener(PROP_PROMPT_UNDERLINE, newVal -> setPromptUnderline(newVal));
+        addBooleanPropertyChangeListener(PROP_PROMPT_SUBSCRIPT, newVal -> setPromptSubscript(newVal));
+        addBooleanPropertyChangeListener(PROP_PROMPT_SUPERSCRIPT, newVal -> setPromptSuperscript(newVal));
+
+        addPropertyChangeListener(PROP_INPUT_COLOR, newVal -> setInputColor(newVal));
+        addPropertyChangeListener(PROP_INPUT_BGCOLOR, newVal -> setInputBackgroundColor(newVal));
+        addPropertyChangeListener(PROP_INPUT_FONT_FAMILY, newVal -> setInputFontFamily(newVal));
+        addIntPropertyChangeListener(PROP_INPUT_FONT_SIZE, DEFAULT_FONT_SIZE, newVal -> setInputFontSize(newVal));
+        addBooleanPropertyChangeListener(PROP_INPUT_BOLD, newVal -> setInputBold(newVal));
+        addBooleanPropertyChangeListener(PROP_INPUT_ITALIC, newVal -> setInputItalic(newVal));
+        addBooleanPropertyChangeListener(PROP_INPUT_UNDERLINE, newVal -> setInputUnderline(newVal));
+        addBooleanPropertyChangeListener(PROP_INPUT_SUBSCRIPT, newVal -> setInputSubscript(newVal));
+        addBooleanPropertyChangeListener(PROP_INPUT_SUPERSCRIPT, newVal -> setInputSuperscript(newVal));
 
         frame = new JFrame("Text Terminal");
-        textArea = new JTextArea(30, 80);
-        textArea.setLineWrap(true);
+        textPane = new JTextPane();
 
-        textArea.setBackground(Color.black);
-        textArea.setForeground(Color.green);
-        textArea.setCaretColor(Color.green);
-        textArea.setFont(new Font("Courier New", Font.PLAIN, 15));
+        textPane.setBackground(DEFAULT_PANE_BACKGROUND);
+        promptStyleData.color = DEFAULT_PROMPT_COLOR;
+        inputStyleData.color = DEFAULT_INPUT_COLOR;
+        textPane.setCaretColor(inputStyleData.color);
 
-        ((AbstractDocument) textArea.getDocument()).setDocumentFilter(new TerminalDocumentFilter());
+        document = textPane.getStyledDocument();
+        ((AbstractDocument) document).setDocumentFilter(new TerminalDocumentFilter());
 
-        JScrollPane scroll = new JScrollPane (textArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        JScrollPane scroll = new JScrollPane (textPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scroll.setPreferredSize(new Dimension(640, 480));
+        scroll.setMinimumSize(new Dimension(40, 40));
 
         frame.add(scroll);
 
@@ -165,15 +222,18 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         return frame;
     }
 
-    public JTextArea getTextArea() {
-        return textArea;
+    public JTextPane getTextPane() {
+        return textPane;
     }
 
     @Override
     public String read(boolean masking) {
+        rawPrint(ZERO_WIDTH_SPACE, inputStyleData);
         display();
         try {
             synchronized (editLock) {
+                startReadLen = document.getLength();
+                unmaskedInput = "";
                 input = null;
                 inputMasking = masking;
                 readMode = true;
@@ -189,24 +249,25 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
                 inputMasking = false;
                 readMode = false;
             }
-            println();
+            rawPrint("\n", inputStyleData);
         }
     }
 
     @Override
     public void rawPrint(String message) {
+        rawPrint(message, promptStyleData);
+    }
+
+    private void rawPrint(String message, StyleData styleData) {
         display();
-        try {
-            synchronized (editLock) {
-                writeMode = true;
-                textArea.append(message);
-                extendedPrompt = textArea.getText();
-                textArea.setCaretPosition(extendedPrompt.length());
+        synchronized (editLock) {
+            String styleName = getStyle(styleData);
+            try {
+                document.insertString(document.getLength(), message, document.getStyle(styleName));
+            } catch (BadLocationException e) {
+                logger.error("Cannot insert string", e);
             }
-        } finally {
-            synchronized (editLock) {
-                writeMode = false;
-            }
+            textPane.setCaretPosition(document.getLength());
         }
     }
 
@@ -220,7 +281,9 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
             initialized = true;
             frame.pack();
         }
-        frame.setVisible(true);
+        if(!frame.isVisible()) {
+            frame.setVisible(true);
+        }
     }
 
     @Override
@@ -236,11 +299,136 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
 
     public void setUserInterruptKey(KeyStroke keyStroke) {
         String userInterruptActionKey = "SwingTextTerminal.userInterrupt";
-        textArea.getInputMap().put(keyStroke, userInterruptActionKey);
-        textArea.getActionMap().put(userInterruptActionKey, userInterruptAction);
+        textPane.getInputMap().put(keyStroke, userInterruptActionKey);
+        textPane.getActionMap().put(userInterruptActionKey, userInterruptAction);
     }
 
     public void setUserInterruptKey(String keyStroke) {
         setUserInterruptKey(KeyStroke.getKeyStroke(keyStroke));
+    }
+
+
+    public String getStyle(StyleData styleData) {
+        Style defaultStyle = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
+
+        styleCount++;
+        String styleName = "style-" + styleCount;
+        Style style = document.addStyle(styleName, defaultStyle);
+
+        if(styleData.fontFamily != null) {
+            StyleConstants.setFontFamily(style, styleData.fontFamily);
+        }
+        if(styleData.fontSize > 0) {
+            StyleConstants.setFontSize(style, styleData.fontSize);
+        }
+        if(styleData.color != null) {
+            StyleConstants.setForeground(style, styleData.color);
+        }
+        if(styleData.bgColor != null) {
+            StyleConstants.setBackground(style, styleData.bgColor);
+        }
+        StyleConstants.setBold(style, styleData.bold);
+        StyleConstants.setItalic(style, styleData.italic);
+        StyleConstants.setUnderline(style, styleData.underline);
+        StyleConstants.setStrikeThrough(style, styleData.strikeThrough);
+        StyleConstants.setSubscript(style, styleData.subscript);
+        StyleConstants.setSuperscript(style, styleData.superscript);
+
+        return styleName;
+    }
+
+    public void setPromptColor(String colorName) {
+        getColor(colorName).ifPresent(col -> promptStyleData.color = col);
+    }
+
+    public void setPromptBackgroundColor(String colorName) {
+        getColor(colorName).ifPresent(col -> promptStyleData.bgColor = col);
+    }
+
+    public void setPromptFontFamily(String fontFamily) {
+        promptStyleData.fontFamily = fontFamily;
+    }
+
+    public void setPromptFontSize(int fontSize) {
+        promptStyleData.fontSize = fontSize;
+    }
+
+    public void setPromptBold(boolean bold) {
+        promptStyleData.bold = bold;
+    }
+
+    public void setPromptItalic(boolean italic) {
+        promptStyleData.italic = italic;
+    }
+
+    public void setPromptUnderline(boolean underline) {
+        promptStyleData.underline = underline;
+    }
+
+    public void setPromptSubscript(boolean subscript) {
+        promptStyleData.subscript = subscript;
+    }
+
+    public void setPromptSuperscript(boolean superscript) {
+        promptStyleData.superscript = superscript;
+    }
+
+    public void setInputColor(String colorName) {
+        getColor(colorName).ifPresent(col -> {
+            inputStyleData.color = col;
+            textPane.setCaretColor(inputStyleData.color);
+        });
+    }
+
+    public void setInputBackgroundColor(String colorName) {
+        getColor(colorName).ifPresent(col -> inputStyleData.bgColor = col);
+    }
+
+    public void setInputFontFamily(String fontFamily) {
+        inputStyleData.fontFamily = fontFamily;
+    }
+
+    public void setInputFontSize(int fontSize) {
+        inputStyleData.fontSize = fontSize;
+    }
+
+    public void setInputBold(boolean bold) {
+        inputStyleData.bold = bold;
+    }
+
+    public void setInputItalic(boolean italic) {
+        inputStyleData.italic = italic;
+    }
+
+    public void setInputUnderline(boolean underline) {
+        inputStyleData.underline = underline;
+    }
+
+    public void setInputSubscript(boolean subscript) {
+        inputStyleData.subscript = subscript;
+    }
+
+    public void setInputSuperscript(boolean superscript) {
+        inputStyleData.superscript = superscript;
+    }
+
+    public void setPaneBackgroundColor(String colorName) {
+        getColor(colorName).ifPresent(col -> textPane.setBackground(col));
+    }
+
+
+    public static Optional<Color> getColor(String colorName) {
+        try {
+            if(colorName.startsWith("#")) {
+                int val = Integer.parseInt(colorName.substring(1), 16);
+                return Optional.of(new Color(val));
+            } else {
+                Field field = Color.class.getField(colorName.toLowerCase());
+                return Optional.of((Color)field.get(null));
+            }
+        } catch (Exception e) {
+            logger.warn("Invalid color: " + colorName);
+            return Optional.empty();
+        }
     }
 }
