@@ -107,19 +107,20 @@ class PropertiesSpec extends Specification {
 
     def "should correctly initialize properties from #propsName for #cls"() {
         given:
-        def props = PropertiesSpec."$propsName"
+        def propsText = PropertiesSpec."$propsName"
         TextTerminal term = cls.newInstance()
-        def reader = new StringReader(props)
+        def reader = new StringReader(propsText)
         term.initProperties(reader)
+        def props = term.getProperties()
 
         expect:
-        term.getStringProperty('key001', '???') == val001
-        term.getStringProperty('key002', '???') == val002
-        term.getStringProperty('key003', '???') == val003
-        term.getStringProperty('key004', '???') == val004
-        term.getStringProperty('key005', '???') == val005
-        term.getStringProperty('key006', '???') == val006
-        term.getStringProperty('key007', '???') == val007
+        props.getString('key001', '???') == val001
+        props.getString('key002', '???') == val002
+        props.getString('key003', '???') == val003
+        props.getString('key004', '???') == val004
+        props.getString('key005', '???') == val005
+        props.getString('key006', '???') == val006
+        props.getString('key007', '???') == val007
 
         where:
         propsName | cls   | val001    | val002 | val003 | val004    | val005 | val006 | val007
@@ -143,15 +144,16 @@ class PropertiesSpec extends Specification {
         }
         TextTerminal term = cls.newInstance()
         term.initProperties()
+        def props = term.getProperties()
 
         expect:
-        term.getStringProperty('key001', '???') == val001
-        term.getStringProperty('key002', '???') == val002
-        term.getStringProperty('key003', '???') == val003
-        term.getStringProperty('key004', '???') == val004
-        term.getStringProperty('key005', '???') == val005
-        term.getStringProperty('key006', '???') == val006
-        term.getStringProperty('key007', '???') == val007
+        props.getString('key001', '???') == val001
+        props.getString('key002', '???') == val002
+        props.getString('key003', '???') == val003
+        props.getString('key004', '???') == val004
+        props.getString('key005', '???') == val005
+        props.getString('key006', '???') == val006
+        props.getString('key007', '???') == val007
 
         where:
         location              | cls   | val001     | val002 | val003 | val004 | val005 | val006 | val007

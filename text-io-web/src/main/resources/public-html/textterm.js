@@ -105,12 +105,15 @@ var TextTerm = (function() {
                     if (data.resetRequired) {
                         resetTextTerm();
                     }
-                    applySettings(data.settings);
+                    var settingsCount = applySettings(data.settings);
                     var msgCount = data.messages.length;
                     if (msgCount > 0) {
                         var newPrompt = "";
                         for (i = 0; i < msgCount; i++) {
                             newPrompt += data.messages[i];
+                        }
+                        if(settingsCount > 0) {
+                            createNewTextTermPair();
                         }
                         self.promptElem.innerHTML += newPrompt;
                         self.textTermElem.scrollTop = self.textTermElem.scrollHeight;
@@ -157,19 +160,49 @@ var TextTerm = (function() {
             console.log("User interrupt!");
             xhr.setRequestHeader("textio-user-interrupt", "true");
         } else {
-            var newParentElem = self.inputElem.parentNode.cloneNode(true);
-            self.inputElem.setAttribute("contenteditable", false);
-
-            self.inputElem = newParentElem.querySelector(".textterm-input");
-            self.inputElem.textContent = "";
-
-            self.promptElem = newParentElem.querySelector(".textterm-prompt");
-            self.promptElem.textContent = "";
-
-            self.textTermElem.appendChild(newParentElem);
+            createNewTextTermPair();
         }
         self.inputElem.focus();
         xhr.send(input);
+    }
+
+    var createNewTextTermPair = function() {
+        var newParentElem = self.inputElem.parentNode.cloneNode(true);
+        self.inputElem.setAttribute("contenteditable", false);
+
+        self.inputElem = newParentElem.querySelector(".textterm-input");
+        self.inputElem.style.color = self.settings.inputColor || null;
+        self.inputElem.style.backgroundColor = self.settings.inputBackgroundColor || null;
+        self.inputElem.style.fontWeight = (self.settings.inputBold) ? 'bold' : null;
+        self.inputElem.style.fontStyle = (self.settings.inputItalic) ? 'italic' : null;
+        self.inputElem.style.textDecoration = (self.settings.inputUnderline) ? 'underline' : null;
+        self.inputElem.className = "textterm-input";
+        if(self.settings.inputStyleClass) {
+            self.inputElem.classList.add(self.settings.inputStyleClass);
+        }
+        self.inputElem.textContent = "";
+
+        self.promptElem = newParentElem.querySelector(".textterm-prompt");
+        self.promptElem.style.color = self.settings.promptColor || null;
+        self.promptElem.style.backgroundColor = self.settings.promptBackgroundColor || null;
+        self.promptElem.style.fontWeight = (self.settings.promptBold) ? 'bold' : null;
+        self.promptElem.style.fontStyle = (self.settings.promptItalic) ? 'italic' : null;
+        self.promptElem.style.textDecoration = (self.settings.promptUnderline) ? 'underline' : null;
+        self.promptElem.className = "textterm-prompt";
+        if(self.settings.promptStyleClass) {
+            self.promptElem.classList.add(self.settings.promptStyleClass);
+        }
+        self.promptElem.textContent = "";
+
+        if(self.settings.paneBackgroundColor) {
+            self.textTermElem.style.backgroundColor = self.settings.paneBackgroundColor;
+        }
+        if(self.settings.paneStyleClass) {
+            self.textTermElem.className = "textterm-pane";
+            self.textTermElem.classList.add(self.settings.paneStyleClass);
+        }
+
+        self.textTermElem.appendChild(newParentElem);
     }
 
     var isUserInterruptKey = function(event) {
@@ -189,6 +222,23 @@ var TextTerm = (function() {
         self.settings.userInterruptKeyCtrl = true;
         self.settings.userInterruptKeyShift = false;
         self.settings.userInterruptKeyAlt = false;
+
+        self.settings.promptStyleClass = "";
+        self.settings.promptColor = "";
+        self.settings.promptBackgroundColor = "";
+        self.settings.promptBold = false;
+        self.settings.promptItalic = false;
+        self.settings.promptUnderline = false;
+
+        self.settings.inputStyleClass = "";
+        self.settings.inputColor = "";
+        self.settings.inputBackgroundColor = "";
+        self.settings.inputBold = false;
+        self.settings.inputItalic = false;
+        self.settings.inputUnderline = false;
+
+        self.settings.paneStyleClass = "";
+        self.settings.paneBackgroundColor = "";
     }
 
     var applySettings = function(settings) {
@@ -197,7 +247,9 @@ var TextTerm = (function() {
             var key = settings[i].key;
             var value = settings[i].value;
             self.settings[key] = value;
+            console.log("settings: " + key + " = " + value);
         }
+        return count;
     }
 
     self.init = function(textTermElem) {

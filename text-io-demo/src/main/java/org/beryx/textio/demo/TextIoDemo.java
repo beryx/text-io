@@ -15,11 +15,10 @@
  */
 package org.beryx.textio.demo;
 
-import org.beryx.textio.TextIO;
-import org.beryx.textio.TextIoFactory;
-import org.beryx.textio.TextTerminal;
-import org.beryx.textio.TextTerminalProvider;
+import org.beryx.textio.*;
 import org.beryx.textio.console.ConsoleTextTerminalProvider;
+import org.beryx.textio.demo.app.Shopping;
+import org.beryx.textio.demo.app.UserDataCollector;
 import org.beryx.textio.jline.JLineTextTerminalProvider;
 import org.beryx.textio.swing.SwingTextTerminalProvider;
 import org.beryx.textio.system.SystemTextTerminal;
@@ -27,6 +26,9 @@ import org.beryx.textio.system.SystemTextTerminalProvider;
 import org.beryx.textio.web.WebTextTerminal;
 import spark.Service;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -56,9 +58,7 @@ public class TextIoDemo {
     }
 
     public static void main(String[] args) {
-        // Uncomment the line below to trigger a user interrupt in the Swing terminal by typing Ctrl+C (instead of the default Ctrl+Q).
-//        System.setProperty(SwingTextTerminal.PROP_USER_INTERRUPT_KEY, "ctrl C");
-
+        Consumer<TextIO> app = chooseApp();
         TextIO textIO = chooseTextIO();
 
         // Uncomment the line below to ignore user interrupts.
@@ -66,15 +66,26 @@ public class TextIoDemo {
 
         if(textIO.getTextTerminal() instanceof WebTextTerminal) {
             WebTextTerminal webTextTerm = (WebTextTerminal)textIO.getTextTerminal();
-
-            // Uncomment the line below to trigger a user interrupt in the web terminal by typing Ctrl+C (instead of the default Ctrl+Q).
-//            webTextTerm.setUserInterruptKey('C', true, false, false);
-
             WebTextIoExecutor webTextIoExecutor = new WebTextIoExecutor(webTextTerm).withPort(webServerPort);
-            webTextIoExecutor.execute(SimpleApp::execute);
+            webTextIoExecutor.execute(app);
         } else {
-            SimpleApp.execute(textIO);
+            app.accept(textIO);
         }
+    }
+
+    private static Consumer<TextIO> chooseApp() {
+        TextTerminal terminal = new SystemTextTerminal();
+        TextIO textIO = new TextIO(terminal);
+
+        List<Consumer<TextIO>> apps = Arrays.asList(new UserDataCollector(), new Shopping());
+
+        Consumer<TextIO> app = textIO.<Consumer<TextIO>>newGenericInputReader(null)
+            .withNumberedPossibleValues(apps)
+            .read("Choose the application to be run");
+        String propsFileName = app.getClass().getSimpleName() + ".properties";
+        System.setProperty(AbstractTextTerminal.SYSPROP_PROPERTIES_FILE_LOCATION, propsFileName);
+
+        return app;
     }
 
     private static TextIO chooseTextIO() {
@@ -90,7 +101,7 @@ public class TextIoDemo {
                             new SwingTextTerminalProvider(),
                             new NamedProvider("Web terminal", () -> createWebTextTerminal(textIO))
                     )
-                    .read("Choose the terminal to be used for running the demo");
+                    .read("\nChoose the terminal to be used for running the demo");
 
             TextTerminal chosenTerminal = null;
             String errMsg = null;

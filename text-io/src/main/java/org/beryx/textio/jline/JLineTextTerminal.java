@@ -15,10 +15,12 @@
  */
 package org.beryx.textio.jline;
 
+import javafx.scene.paint.Color;
 import jline.console.ConsoleReader;
 import jline.console.UserInterruptException;
 import org.beryx.textio.AbstractTextTerminal;
 import org.beryx.textio.PropertiesPrefixes;
+import org.beryx.textio.TerminalProperties;
 import org.beryx.textio.TextTerminal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +28,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.beryx.textio.PropertiesConstants.*;
 
@@ -44,7 +48,7 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     private static String ANSI_ITALIC = "\u001B[3m";
     private static String ANSI_UNDERLINE = "\u001B[4m";
 
-    public static Map<String, Integer> ANSI_COLOR_MAP = new LinkedHashMap<>();
+    private static Map<String, Integer> ANSI_COLOR_MAP = new LinkedHashMap<>();
     static {
         ANSI_COLOR_MAP.put("default", -1);
         ANSI_COLOR_MAP.put("black", 0);
@@ -57,9 +61,25 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
         ANSI_COLOR_MAP.put("white", 7);
     }
 
+    private static Color[] STANDARD_COLORS = {
+            Color.BLACK,
+            Color.RED,
+            Color.GREEN,
+            Color.YELLOW,
+            Color.BLUE,
+            Color.MAGENTA,
+            Color.CYAN,
+            Color.WHITE
+    };
+
     private final ConsoleReader reader;
     private Consumer<JLineTextTerminal>userInterruptHandler = DEFAULT_USER_INTERRUPT_HANDLER;
     private boolean abortRead = true;
+
+    private AnsiColorMode ansiColorMode = AnsiColorMode.STANDARD;
+
+    private StyleData inputStyleData = new StyleData();
+    private StyleData promptStyleData = new StyleData();
 
     private static class StyleData {
         String ansiColor = "";
@@ -69,21 +89,104 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
         boolean underline = false;
     }
 
-    private static StyleData inputStyleData = new StyleData();
-    private static StyleData promptStyleData = new StyleData();
+    private enum AnsiColorMode {
+        STANDARD(JLineTextTerminal::getStandardColorCode),
+        INDEXED(JLineTextTerminal::getIndexedColorCode),
+        RGB(JLineTextTerminal::getRGBColorCode);
 
-    public static int getColorCode(String colorName) {
+        private final Function<Color, String> colorCodeProvider;
+
+        AnsiColorMode(Function<Color, String> colorCodeProvider) {
+            this.colorCodeProvider = colorCodeProvider;
+        }
+
+        String getAnsiColorCode(Color color) {
+            return colorCodeProvider.apply(color);
+        }
+    }
+
+    private static String getStandardColorCode(Color color) {
+        double bestDist = Double.MAX_VALUE;
+        int bestIndex = -1;
+        for(int i = 0; i < STANDARD_COLORS.length; i++) {
+            double dist =  getColorDistance(color, STANDARD_COLORS[i]);
+            if(dist < bestDist) {
+                bestDist = dist;
+                bestIndex = i;
+            }
+        }
+        return "" + bestIndex;
+    }
+
+    private static double getColorDistance(Color col1, Color col2) {
+        double r1 = col1.getRed();
+        double g1 = col1.getGreen();
+        double b1 = col1.getBlue();
+        double r2 = col2.getRed();
+        double g2 = col2.getGreen();
+        double b2 = col2.getBlue();
+
+        double rmean = (r1 + r2) / 2;
+        double dr = r1 - r2;
+        double dg = g1 - g2;
+        double db = b1 - b2;
+
+        return Math.sqrt((2 + rmean) * dr * dr + 4 * dg * dg + (3 - rmean) * db * db);
+    }
+
+    private static String getIndexedColorCode(Color color) {
+        double r = 255 * color.getRed();
+        double g = 255 * color.getGreen();
+        double b = 255 * color.getBlue();
+        int val = 16 + 36 * mapTo6(r) + 6 * mapTo6(g) + mapTo6(b);
+        return "8;5;" + val;
+    }
+
+    private static String getRGBColorCode(Color color) {
+        int r = (int)(255 * color.getRed());
+        int g = (int)(255 * color.getGreen());
+        int b = (int)(255 * color.getBlue());
+        return "8;2;" + r + ";" + g + ";" + b;
+    }
+
+    public static int getStandardColorCode(String colorName) {
         return ANSI_COLOR_MAP.getOrDefault(colorName.toLowerCase(), -1);
     }
 
-    public static String getAnsiColor(String colorName) {
-        int color = getColorCode(colorName);
-        return (color < 0) ? "" : ("\u001B[1;3" + color + "m");
+    public Optional<String> getColorCode(String colorName) {
+        if(colorName == null || colorName.isEmpty()) return Optional.empty();
+        try {
+            int code = getStandardColorCode(colorName);
+            if(code >= 0) {
+                return Optional.of("" + code);
+            }
+            Color color = Color.web(colorName);
+            return Optional.of(ansiColorMode.getAnsiColorCode(color));
+        } catch (Exception e) {
+            // the error will be logged below
+        }
+        logger.warn("Invalid color: " + colorName);
+        return Optional.empty();
     }
 
-    public static String getAnsiBackgroundColor(String colorName) {
-        int color = getColorCode(colorName);
-        return (color < 0) ? "" : ("\u001B[1;4" + color + "m");
+    private static int mapTo6(double val) {
+        if(val < 0) val = 0;
+        if(val > 255) val = 255;
+        return (int)(val * 6.0 / 256.0);
+    }
+
+    private String getAnsiColorWithPrefix(int prefix, String colorName) {
+        String ansiCode = getColorCode(colorName).map(col -> "\u001B[1;" + prefix + col + "m").orElse("");
+        logger.debug("ansiColor(" + prefix + ", " + colorName + ") = " + ansiCode);
+        return ansiCode;
+    }
+
+    public String getAnsiColor(String colorName) {
+        return getAnsiColorWithPrefix(3, colorName);
+    }
+
+    public String getAnsiBackgroundColor(String colorName) {
+        return getAnsiColorWithPrefix(4, colorName);
     }
 
     public static ConsoleReader createReader() {
@@ -104,16 +207,19 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
         reader.setHandleUserInterrupt(true);
         this.reader = reader;
 
-        addPropertyChangeListener(PROP_PROMPT_COLOR, newVal -> setPromptColor(newVal));
-        addPropertyChangeListener(PROP_PROMPT_BGCOLOR, newVal -> setPromptBackgroundColor(newVal));
-        addBooleanPropertyChangeListener(PROP_PROMPT_BOLD, newVal -> setPromptBold(newVal));
-        addBooleanPropertyChangeListener(PROP_PROMPT_ITALIC, newVal -> setPromptItalic(newVal));
-        addBooleanPropertyChangeListener(PROP_PROMPT_UNDERLINE, newVal -> setPromptUnderline(newVal));
-        addPropertyChangeListener(PROP_INPUT_COLOR, newVal -> setInputColor(newVal));
-        addPropertyChangeListener(PROP_INPUT_BGCOLOR, newVal -> setInputBackgroundColor(newVal));
-        addBooleanPropertyChangeListener(PROP_INPUT_BOLD, newVal -> setInputBold(newVal));
-        addBooleanPropertyChangeListener(PROP_INPUT_ITALIC, newVal -> setInputItalic(newVal));
-        addBooleanPropertyChangeListener(PROP_INPUT_UNDERLINE, newVal -> setInputUnderline(newVal));
+        TerminalProperties props = getProperties();
+        props.addStringListener(PROP_PROMPT_COLOR, null, (term, newVal) -> setPromptColor(newVal));
+        props.addStringListener(PROP_PROMPT_BGCOLOR, null, (term, newVal) -> setPromptBackgroundColor(newVal));
+        props.addBooleanListener(PROP_PROMPT_BOLD, false, (term, newVal) -> setPromptBold(newVal));
+        props.addBooleanListener(PROP_PROMPT_ITALIC, false, (term, newVal) -> setPromptItalic(newVal));
+        props.addBooleanListener(PROP_PROMPT_UNDERLINE, false, (term, newVal) -> setPromptUnderline(newVal));
+        props.addStringListener(PROP_INPUT_COLOR, null, (term, newVal) -> setInputColor(newVal));
+        props.addStringListener(PROP_INPUT_BGCOLOR, null, (term, newVal) -> setInputBackgroundColor(newVal));
+        props.addBooleanListener(PROP_INPUT_BOLD, false, (term, newVal) -> setInputBold(newVal));
+        props.addBooleanListener(PROP_INPUT_ITALIC, false, (term, newVal) -> setInputItalic(newVal));
+        props.addBooleanListener(PROP_INPUT_UNDERLINE, false, (term, newVal) -> setInputUnderline(newVal));
+
+        props.addStringListener(PROP_ANSI_COLOR_MODE, AnsiColorMode.STANDARD.toString(), (term, newVal) -> setAnsiColorMode(newVal));
     }
 
     @Override
@@ -223,5 +329,18 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
 
     public void setInputUnderline(boolean underline) {
         inputStyleData.underline = underline;
+    }
+
+    public void setAnsiColorMode(String mode) {
+        if(mode == null || mode.isEmpty()) {
+            ansiColorMode = AnsiColorMode.STANDARD;
+            return;
+        }
+        try {
+            ansiColorMode = AnsiColorMode.valueOf(mode.toUpperCase());
+            logger.debug("ansiColorMed set to: " + ansiColorMode);
+        } catch (Exception e) {
+            logger.warn("Invalid value for ansiColorMode: " + mode);
+        }
     }
 }

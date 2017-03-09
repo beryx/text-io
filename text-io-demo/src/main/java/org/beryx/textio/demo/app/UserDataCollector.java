@@ -13,23 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.beryx.textio.demo;
+package org.beryx.textio.demo.app;
 
 import org.beryx.textio.TextIO;
 import org.beryx.textio.TextIoFactory;
 
 import java.time.Month;
+import java.util.function.Consumer;
 
 /**
  * A simple application illustrating the use of TextIO.
  */
-public class SimpleApp {
+public class UserDataCollector implements Consumer<TextIO> {
     public static void main(String[] args) {
         TextIO textIO = TextIoFactory.getTextIO();
-        execute(textIO);
+        new UserDataCollector().accept(textIO);
     }
 
-    public static void execute(TextIO textIO) {
+    @Override
+    public void accept(TextIO textIO) {
         String user = textIO.newStringInputReader()
                 .withDefaultValue("admin")
                 .read("Username");
@@ -50,5 +52,10 @@ public class SimpleApp {
 
         textIO.newStringInputReader().withMinLength(0).read("\nPress enter to terminate...");
         textIO.dispose();
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ": an application for reading personal data";
     }
 }

@@ -17,6 +17,7 @@ package org.beryx.textio.swing;
 
 import org.beryx.textio.AbstractTextTerminal;
 import org.beryx.textio.PropertiesPrefixes;
+import org.beryx.textio.TerminalProperties;
 import org.beryx.textio.TextTerminal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -162,29 +163,31 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     }
 
     public SwingTextTerminal() {
-        addPropertyChangeListener(PROP_USER_INTERRUPT_KEY, newVal -> setUserInterruptKey(newVal));
+        TerminalProperties props = getProperties();
 
-        addPropertyChangeListener(PROP_PANE_BGCOLOR, newVal -> setPaneBackgroundColor(newVal));
+        props.addStringListener(PROP_USER_INTERRUPT_KEY, null, (term, newVal) -> setUserInterruptKey(newVal));
 
-        addPropertyChangeListener(PROP_PROMPT_COLOR, newVal -> setPromptColor(newVal));
-        addPropertyChangeListener(PROP_PROMPT_BGCOLOR, newVal -> setPromptBackgroundColor(newVal));
-        addPropertyChangeListener(PROP_PROMPT_FONT_FAMILY, newVal -> setPromptFontFamily(newVal));
-        addIntPropertyChangeListener(PROP_PROMPT_FONT_SIZE, DEFAULT_FONT_SIZE, newVal -> setPromptFontSize(newVal));
-        addBooleanPropertyChangeListener(PROP_PROMPT_BOLD, newVal -> setPromptBold(newVal));
-        addBooleanPropertyChangeListener(PROP_PROMPT_ITALIC, newVal -> setPromptItalic(newVal));
-        addBooleanPropertyChangeListener(PROP_PROMPT_UNDERLINE, newVal -> setPromptUnderline(newVal));
-        addBooleanPropertyChangeListener(PROP_PROMPT_SUBSCRIPT, newVal -> setPromptSubscript(newVal));
-        addBooleanPropertyChangeListener(PROP_PROMPT_SUPERSCRIPT, newVal -> setPromptSuperscript(newVal));
+        props.addStringListener(PROP_PANE_BGCOLOR, null, (term, newVal) -> setPaneBackgroundColor(newVal));
 
-        addPropertyChangeListener(PROP_INPUT_COLOR, newVal -> setInputColor(newVal));
-        addPropertyChangeListener(PROP_INPUT_BGCOLOR, newVal -> setInputBackgroundColor(newVal));
-        addPropertyChangeListener(PROP_INPUT_FONT_FAMILY, newVal -> setInputFontFamily(newVal));
-        addIntPropertyChangeListener(PROP_INPUT_FONT_SIZE, DEFAULT_FONT_SIZE, newVal -> setInputFontSize(newVal));
-        addBooleanPropertyChangeListener(PROP_INPUT_BOLD, newVal -> setInputBold(newVal));
-        addBooleanPropertyChangeListener(PROP_INPUT_ITALIC, newVal -> setInputItalic(newVal));
-        addBooleanPropertyChangeListener(PROP_INPUT_UNDERLINE, newVal -> setInputUnderline(newVal));
-        addBooleanPropertyChangeListener(PROP_INPUT_SUBSCRIPT, newVal -> setInputSubscript(newVal));
-        addBooleanPropertyChangeListener(PROP_INPUT_SUPERSCRIPT, newVal -> setInputSuperscript(newVal));
+        props.addStringListener(PROP_PROMPT_COLOR, null, (term, newVal) -> setPromptColor(newVal));
+        props.addStringListener(PROP_PROMPT_BGCOLOR, null, (term, newVal) -> setPromptBackgroundColor(newVal));
+        props.addStringListener(PROP_PROMPT_FONT_FAMILY, null, (term, newVal) -> setPromptFontFamily(newVal));
+        props.addIntListener(PROP_PROMPT_FONT_SIZE, DEFAULT_FONT_SIZE, (term, newVal) -> setPromptFontSize(newVal));
+        props.addBooleanListener(PROP_PROMPT_BOLD, false, (term, newVal) -> setPromptBold(newVal));
+        props.addBooleanListener(PROP_PROMPT_ITALIC, false, (term, newVal) -> setPromptItalic(newVal));
+        props.addBooleanListener(PROP_PROMPT_UNDERLINE, false, (term, newVal) -> setPromptUnderline(newVal));
+        props.addBooleanListener(PROP_PROMPT_SUBSCRIPT, false, (term, newVal) -> setPromptSubscript(newVal));
+        props.addBooleanListener(PROP_PROMPT_SUPERSCRIPT, false, (term, newVal) -> setPromptSuperscript(newVal));
+
+        props.addStringListener(PROP_INPUT_COLOR, null, (term, newVal) -> setInputColor(newVal));
+        props.addStringListener(PROP_INPUT_BGCOLOR, null, (term, newVal) -> setInputBackgroundColor(newVal));
+        props.addStringListener(PROP_INPUT_FONT_FAMILY, null, (term, newVal) -> setInputFontFamily(newVal));
+        props.addIntListener(PROP_INPUT_FONT_SIZE, DEFAULT_FONT_SIZE, (term, newVal) -> setInputFontSize(newVal));
+        props.addBooleanListener(PROP_INPUT_BOLD, false, (term, newVal) -> setInputBold(newVal));
+        props.addBooleanListener(PROP_INPUT_ITALIC, false, (term, newVal) -> setInputItalic(newVal));
+        props.addBooleanListener(PROP_INPUT_UNDERLINE, false, (term, newVal) -> setInputUnderline(newVal));
+        props.addBooleanListener(PROP_INPUT_SUBSCRIPT, false, (term, newVal) -> setInputSubscript(newVal));
+        props.addBooleanListener(PROP_INPUT_SUPERSCRIPT, false, (term, newVal) -> setInputSuperscript(newVal));
 
         frame = new JFrame("Text Terminal");
         textPane = new JTextPane();

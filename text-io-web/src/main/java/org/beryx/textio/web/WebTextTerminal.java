@@ -18,7 +18,9 @@ package org.beryx.textio.web;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.beryx.textio.AbstractTextTerminal;
 import org.beryx.textio.PropertiesPrefixes;
+import org.beryx.textio.TerminalProperties;
 import org.beryx.textio.TextTerminal;
+import org.beryx.textio.web.TextTerminalData.KeyValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static org.beryx.textio.PropertiesConstants.*;
 import static org.beryx.textio.web.TextTerminalData.Action.*;
 
 /**
@@ -82,17 +85,42 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
     private boolean abortRead = true;
 
     public WebTextTerminal() {
-        addPropertyChangeListener(PROP_USER_INTERRUPT_KEY, (oldKey, newKey) -> setUserInterruptKey(newKey));
+        TerminalProperties props = getProperties();
+        props.addStringListener(PROP_USER_INTERRUPT_KEY, null, (term, newVal) -> setUserInterruptKey(newVal));
+
+        props.addStringListener(PROP_PROMPT_STYLE_CLASS, null, (term, newVal) -> addSetting("promptStyleClass", newVal));
+        props.addStringListener(PROP_PROMPT_COLOR, null, (term, newVal) -> addSetting("promptColor", newVal));
+        props.addStringListener(PROP_PROMPT_BGCOLOR, null, (term, newVal) -> addSetting("promptBackgroundColor", newVal));
+        props.addBooleanListener(PROP_PROMPT_BOLD, false, (term, newVal) -> addSetting("promptBold", newVal));
+        props.addBooleanListener(PROP_PROMPT_ITALIC, false, (term, newVal) -> addSetting("promptItalic", newVal));
+        props.addBooleanListener(PROP_PROMPT_UNDERLINE, false, (term, newVal) -> addSetting("promptUnderline", newVal));
+
+        props.addStringListener(PROP_INPUT_STYLE_CLASS, null, (term, newVal) -> addSetting("inputStyleClass", newVal));
+        props.addStringListener(PROP_INPUT_COLOR, null, (term, newVal) -> addSetting("inputColor", newVal));
+        props.addStringListener(PROP_INPUT_BGCOLOR, null, (term, newVal) -> addSetting("inputBackgroundColor", newVal));
+        props.addBooleanListener(PROP_INPUT_BOLD, false, (term, newVal) -> addSetting("inputBold", newVal));
+        props.addBooleanListener(PROP_INPUT_ITALIC, false, (term, newVal) -> addSetting("inputItalic", newVal));
+        props.addBooleanListener(PROP_INPUT_UNDERLINE, false, (term, newVal) -> addSetting("inputUnderline", newVal));
+
+        props.addStringListener(PROP_PANE_BGCOLOR, null, (term, newVal) -> addSetting("paneBackgroundColor", newVal));
+        props.addStringListener(PROP_PANE_STYLE_CLASS, null, (term, newVal) -> addSetting("paneStyleClass", newVal));
     }
 
     public WebTextTerminal createCopy() {
         WebTextTerminal copy = new WebTextTerminal();
         copy.setOnDispose(this.onDispose);
         copy.setOnAbort(this.onAbort);
+
+        TerminalProperties props = copy.getProperties();
+        List<TerminalProperties.ExtendedChangeListener> listeners = getProperties().getListeners();
+        listeners.forEach(listener -> props.addListener(listener));
+
         copy.setTimeoutNotEmpty(this.timeoutNotEmpty);
         copy.setTimeoutHasAction(this.timeoutHasAction);
         copy.setUserInterruptKey(this.userInterruptKeyCode, this.userInterruptKeyCtrl, this.userInterruptKeyShift, this.userInterruptKeyAlt);
         copy.registerUserInterruptHandler(this.userInterruptHandler, abortRead);
+
+        copy.init();
         return copy;
     }
 
@@ -226,7 +254,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
             }
             TextTerminalData result = data.getCopy();
             data.clear();
-            logger.trace("returning terminalData: {}", result);
+            logger.debug("returning terminalData: {}", result);
             return result;
         } finally {
             dataLock.unlock();
@@ -306,6 +334,26 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
             logger.warn("Invalid keyStroke: " + keyStroke);
         } else {
             setUserInterruptKey(kc.code, kc.ctrl, kc.shift, kc.alt);
+        }
+    }
+
+    public void addSetting(String key, Object value) {
+        addSettings(new KeyValue(key, value));
+    }
+
+    public void addSettings(KeyValue... keyValues) {
+        logger.debug("Adding settings: " + Arrays.asList(keyValues));
+        dataLock.lock();
+        try {
+            for(KeyValue keyVal : keyValues) {
+                data.addSetting(keyVal);
+            }
+            dataNotEmpty.signalAll();
+            if(data.hasAction()) {
+                dataHasAction.signalAll();
+            }
+        } finally {
+            dataLock.unlock();
         }
     }
 

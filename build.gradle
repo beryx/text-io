@@ -52,7 +52,7 @@ def pomConfig = {
     }
 }
 
-ext.groovyVersion = '2.4.9'
+ext.groovyVersion = '2.4.7'
 
 allprojects {
     group = 'org.beryx'

@@ -33,6 +33,11 @@ public class TextTerminalData {
             this.key = key;
             this.value = value;
         }
+
+        @Override
+        public String toString() {
+            return key + ": " + value;
+        }
     }
 
     private final List<KeyValue> settings = new ArrayList<>() ;
@@ -50,10 +55,13 @@ public class TextTerminalData {
     }
 
     public void addSetting(String key, Object value) {
-        KeyValue keyVal = new KeyValue(key, value);
+        addSetting(new KeyValue(key, value));
+    }
+
+    public void addSetting(KeyValue keyVal) {
         int size = settings.size();
         for(int i = 0; i < size; i++) {
-            if(settings.get(i).key.equals(key)) {
+            if(settings.get(i).key.equals(keyVal.key)) {
                 settings.set(i, keyVal);
                 return;
             }

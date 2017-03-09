@@ -15,8 +15,6 @@
  */
 package org.beryx.textio;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,17 +31,18 @@ public abstract class AbstractTextTerminal<T extends AbstractTextTerminal<T>> im
     public static final String PROP_USER_INTERRUPT_KEY = "user.interrupt.key";
     public static final String DEFAULT_USER_INTERRUPT_KEY = "ctrl C";
 
-    private final ObservableMap<String, String> properties = FXCollections.observableHashMap();
+    private final TerminalProperties<T> properties;
     private final Map<String, String> defaultProperties = new HashMap<>();
 
     private boolean initialized = false;
 
     public AbstractTextTerminal() {
+        this.properties = new TerminalProperties(this);
         addDefaultProperty(PROP_USER_INTERRUPT_KEY, DEFAULT_USER_INTERRUPT_KEY);
     }
 
     @Override
-    public ObservableMap<String, String> getProperties() {
+    public TerminalProperties getProperties() {
         return properties;
     }
 
@@ -86,6 +85,9 @@ public abstract class AbstractTextTerminal<T extends AbstractTextTerminal<T>> im
         String propsPath = System.getProperty(SYSPROP_PROPERTIES_FILE_LOCATION, null);
         if(propsPath != null) {
             logger.debug("Found system property " + SYSPROP_PROPERTIES_FILE_LOCATION + " with value: " + propsPath);
+            if(!new File(propsPath).isAbsolute()) {
+                propsPath = System.getProperty("user.dir") + "/" + propsPath;
+            }
         } else {
             logger.debug("System property " + SYSPROP_PROPERTIES_FILE_LOCATION + " not set.");
             propsPath = System.getProperty("user.dir") + "/textio.properties";
@@ -135,8 +137,12 @@ public abstract class AbstractTextTerminal<T extends AbstractTextTerminal<T>> im
             String prefix = pp + ".";
             int prefixLen = prefix.length();
             for(String key : rawProps.stringPropertyNames()) {
+                key = key.trim();
                 if(key.startsWith(prefix)) {
                     String value = rawProps.getProperty(key);
+                    if(value != null) {
+                        value = value.trim();
+                    }
                     props.put(key.substring(prefixLen), value);
                 }
             }
