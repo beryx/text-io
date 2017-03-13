@@ -17,6 +17,7 @@ package org.beryx.textio.demo;
 
 import org.beryx.textio.*;
 import org.beryx.textio.console.ConsoleTextTerminalProvider;
+import org.beryx.textio.demo.app.Cuboid;
 import org.beryx.textio.demo.app.Shopping;
 import org.beryx.textio.demo.app.UserDataCollector;
 import org.beryx.textio.jline.JLineTextTerminalProvider;
@@ -26,6 +27,8 @@ import org.beryx.textio.system.SystemTextTerminalProvider;
 import org.beryx.textio.web.WebTextTerminal;
 import spark.Service;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -77,7 +80,7 @@ public class TextIoDemo {
         TextTerminal terminal = new SystemTextTerminal();
         TextIO textIO = new TextIO(terminal);
 
-        List<Consumer<TextIO>> apps = Arrays.asList(new UserDataCollector(), new Shopping());
+        List<Consumer<TextIO>> apps = Arrays.asList(new UserDataCollector(), new Shopping(), new Cuboid());
 
         Consumer<TextIO> app = textIO.<Consumer<TextIO>>newGenericInputReader(null)
             .withNumberedPossibleValues(apps)

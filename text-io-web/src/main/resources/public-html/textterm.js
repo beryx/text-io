@@ -105,20 +105,26 @@ var TextTerm = (function() {
                     if (data.resetRequired) {
                         resetTextTerm();
                     }
-                    var settingsCount = applySettings(data.settings);
-                    var msgCount = data.messages.length;
-                    if (msgCount > 0) {
-                        var newPrompt = "";
-                        for (i = 0; i < msgCount; i++) {
-                            newPrompt += data.messages[i];
+                    var groupCount = data.messageGroups.length;
+                    console.log("groupCount: " + groupCount);
+                    for(k = 0; k < groupCount; k++) {
+                        var settingsCount = applySettings(data.messageGroups[k].settings);
+                        var msgCount = data.messageGroups[k].messages.length;
+                        console.log("msgCount: " + msgCount);
+                        if (msgCount > 0) {
+                            var newPrompt = "";
+                            for (i = 0; i < msgCount; i++) {
+                                newPrompt += data.messageGroups[k].messages[i];
+                            }
+                            if(settingsCount > 0) {
+                                createNewTextTermPair("");
+                            }
+                            self.promptElem.innerHTML += newPrompt;
+                            self.textTermElem.scrollTop = self.textTermElem.scrollHeight;
+                            self.inputElem.focus();
                         }
-                        if(settingsCount > 0) {
-                            createNewTextTermPair();
-                        }
-                        self.promptElem.innerHTML += newPrompt;
-                        self.textTermElem.scrollTop = self.textTermElem.scrollHeight;
-                        self.inputElem.focus();
                     }
+                    console.log("action: " + data.action);
                     if (data.action != 'NONE') {
                         self.action = data.action;
                     }
@@ -160,15 +166,19 @@ var TextTerm = (function() {
             console.log("User interrupt!");
             xhr.setRequestHeader("textio-user-interrupt", "true");
         } else {
-            createNewTextTermPair();
+            createNewTextTermPair("<br/>");
         }
         self.inputElem.focus();
         xhr.send(input);
     }
 
-    var createNewTextTermPair = function() {
-        var newParentElem = self.inputElem.parentNode.cloneNode(true);
-        self.inputElem.setAttribute("contenteditable", false);
+    var createNewTextTermPair = function(initialInnerHTML) {
+        newParentElem = self.inputElem.parentNode.cloneNode(true);
+        if(self.inputElem.textContent) {
+            self.inputElem.setAttribute("contenteditable", false);
+        } else {
+            self.inputElem.parentNode.removeChild(self.inputElem);
+        }
 
         self.inputElem = newParentElem.querySelector(".textterm-input");
         self.inputElem.style.color = self.settings.inputColor || null;
@@ -193,6 +203,9 @@ var TextTerm = (function() {
             self.promptElem.classList.add(self.settings.promptStyleClass);
         }
         self.promptElem.textContent = "";
+        if(initialInnerHTML) {
+            self.promptElem.innerHTML = initialInnerHTML;
+        }
 
         if(self.settings.paneBackgroundColor) {
             self.textTermElem.style.backgroundColor = self.settings.paneBackgroundColor;

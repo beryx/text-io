@@ -218,7 +218,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
                             return sb.toString();
                         })
                         .collect(Collectors.joining("<br>"));
-                data.getMessages().add(escapedMessage);
+                data.addMessage(escapedMessage);
                 logger.trace("rawPrint(): signaling data: {}", escapedMessage);
             }
             dataNotEmpty.signalAll();

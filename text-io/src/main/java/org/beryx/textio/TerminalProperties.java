@@ -15,6 +15,7 @@
  */
 package org.beryx.textio;
 
+import javafx.scene.paint.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+
+import static org.beryx.textio.PropertiesConstants.*;
 
 /**
  * A map of properties associated with a TextTerminal.
@@ -140,7 +143,7 @@ public class TerminalProperties<T extends TextTerminal<T>> {
     }
 
     /**
-     * Sets the value associatedf with the specified key.
+     * Sets the value associated with the specified key.
      * @param key the key with which the specified value should be associated.
      * @param value the value to be associated with the specified key.
      * @return
@@ -296,4 +299,93 @@ public class TerminalProperties<T extends TextTerminal<T>> {
     public void addBooleanListener(String key, boolean defaultValue, BooleanChangeListener<T> listener) {
         listeners.add(new ChangeListenerForKey<>(key, defaultValue, Boolean::parseBoolean, listener.get()));
     }
+
+
+    private static String toHex(Color color) {
+        int r = (int)Math.round(color.getRed() * 255.0);
+        int g = (int)Math.round(color.getGreen() * 255.0);
+        int b = (int)Math.round(color.getBlue() * 255.0);
+        return String.format("#%02x%02x%02x", r, g, b);
+    }
+
+    /** Convenience method that associates the specified {@code color} with the key {@value PropertiesConstants#PROP_PROMPT_COLOR} */
+    public void setPromptColor(String color) {
+        put(PROP_PROMPT_COLOR, color);
+    }
+
+    /** Convenience method that associates the hex representation of the specified {@code color} with the key {@value PropertiesConstants#PROP_PROMPT_COLOR} */
+    public void setPromptColor(Color color) {
+        put(PROP_PROMPT_COLOR, toHex(color));
+    }
+
+    /** Convenience method that associates the specified {@code bgcolor} with the key {@value PropertiesConstants#PROP_PROMPT_BGCOLOR} */
+    public void setPromptBackgroundColor(String bgcolor) {
+        put(PROP_PROMPT_BGCOLOR, bgcolor);
+    }
+
+    /** Convenience method that associates the hex representation of the specified {@code bgcolor} with the key {@value PropertiesConstants#PROP_PROMPT_BGCOLOR} */
+    public void setPromptBackgroundColor(Color bgcolor) {
+        put(PROP_PROMPT_BGCOLOR, toHex(bgcolor));
+    }
+
+    /** Convenience method that associates the boolean value {@code bold} with the key {@value PropertiesConstants#PROP_PROMPT_BOLD} */
+    public void setPromptBold(boolean bold) {
+        put(PROP_PROMPT_BOLD, bold);
+    }
+
+    /** Convenience method that associates the boolean value {@code italic} with the key {@value PropertiesConstants#PROP_PROMPT_ITALIC} */
+    public void setPromptItalic(boolean italic) {
+        put(PROP_PROMPT_ITALIC, italic);
+    }
+
+    /** Convenience method that associates the boolean value {@code underline} with the key {@value PropertiesConstants#PROP_PROMPT_UNDERLINE} */
+    public void setPromptUnderline(boolean underline) {
+        put(PROP_PROMPT_UNDERLINE, underline);
+    }
+
+    /** Convenience method that associates the specified {@code color} with the key {@value PropertiesConstants#PROP_INPUT_COLOR} */
+    public void setInputColor(String color) {
+        put(PROP_INPUT_COLOR, color);
+    }
+
+    /** Convenience method that associates the hex representation of the specified {@code color} with the key {@value PropertiesConstants#PROP_INPUT_COLOR} */
+    public void setInputColor(Color color) {
+        put(PROP_INPUT_COLOR, toHex(color));
+    }
+
+    /** Convenience method that associates the specified {@code bgcolor} with the key {@value PropertiesConstants#PROP_INPUT_BGCOLOR} */
+    public void setInputBackgroundColor(String bgcolor) {
+        put(PROP_INPUT_BGCOLOR, bgcolor);
+    }
+
+    /** Convenience method that associates the hex representation of the specified {@code bgcolor} with the key {@value PropertiesConstants#PROP_INPUT_BGCOLOR} */
+    public void setInputBackgroundColor(Color bgcolor) {
+        put(PROP_INPUT_BGCOLOR, toHex(bgcolor));
+    }
+
+    /** Convenience method that associates the boolean value {@code bold} with the key {@value PropertiesConstants#PROP_INPUT_BOLD} */
+    public void setInputBold(boolean bold) {
+        put(PROP_INPUT_BOLD, bold);
+    }
+
+    /** Convenience method that associates the boolean value {@code italic} with the key {@value PropertiesConstants#PROP_INPUT_ITALIC} */
+    public void setInputItalic(boolean italic) {
+        put(PROP_INPUT_ITALIC, italic);
+    }
+
+    /** Convenience method that associates the boolean value {@code underline} with the key {@value PropertiesConstants#PROP_INPUT_UNDERLINE} */
+    public void setInputUnderline(boolean underline) {
+        put(PROP_INPUT_UNDERLINE, underline);
+    }
+
+
+    /** Convenience method that associates the specified {@code bgcolor} with the key {@value PropertiesConstants#PROP_PANE_BGCOLOR} */
+    public void setPaneBackgroundColor(String bgcolor) {
+        put(PROP_PANE_BGCOLOR, bgcolor);
+    }
+    /** Convenience method that associates the hex representation of the specified {@code bgcolor} with the key {@value PropertiesConstants#PROP_PANE_BGCOLOR} */
+    public void setPaneBackgroundColor(Color bgcolor) {
+        put(PROP_PANE_BGCOLOR, toHex(bgcolor));
+    }
+
 }

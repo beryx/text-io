@@ -38,15 +38,15 @@ public class Shopping implements Consumer<TextIO> {
         TextTerminal terminal = textIO.getTextTerminal();
         TerminalProperties props = terminal.getProperties();
 
-        props.put(PROP_PROMPT_BOLD, true);
-        props.put(PROP_PROMPT_UNDERLINE, true);
-        props.put(PROP_PROMPT_COLOR, "cyan");
+        props.setPromptBold(true);
+        props.setPromptUnderline(true);
+        props.setPromptColor("cyan");
         terminal.println("Order details");
 
-        props.put(PROP_PROMPT_UNDERLINE, false);
-        props.put(PROP_PROMPT_BOLD, false);
-        props.put(PROP_INPUT_COLOR, "blue");
-        props.put(PROP_INPUT_ITALIC, true);
+        props.setPromptUnderline(false);
+        props.setPromptBold(false);
+        props.setInputColor("blue");
+        props.setInputItalic(true);
         String product = textIO.newStringInputReader().read("Product name");
 
         int quantity = textIO.newIntInputReader()
@@ -54,14 +54,14 @@ public class Shopping implements Consumer<TextIO> {
                 .withMaxVal(10)
                 .read("Quantity");
 
-        props.put(PROP_PROMPT_BOLD, true);
-        props.put(PROP_PROMPT_UNDERLINE, true);
-        props.put(PROP_PROMPT_COLOR, "green");
+        props.setPromptBold(true);
+        props.setPromptUnderline(true);
+        props.setPromptColor("green");
         terminal.println("\nShipping Information");
 
-        props.put(PROP_PROMPT_BOLD, false);
-        props.put(PROP_PROMPT_UNDERLINE, false);
-        props.put(PROP_INPUT_COLOR, "yellow");
+        props.setPromptBold(false);
+        props.setPromptUnderline(false);
+        props.setInputColor("yellow");
         String city = textIO.newStringInputReader().read("City");
         String street = textIO.newStringInputReader().read("Street Address");
         String shippingOptions = textIO.newStringInputReader()
@@ -69,41 +69,41 @@ public class Shopping implements Consumer<TextIO> {
                 .read("Shipping Options");
 
 
-        props.put(PROP_PROMPT_BOLD, true);
-        props.put(PROP_PROMPT_UNDERLINE, true);
-        props.put(PROP_PROMPT_COLOR, "white");
+        props.setPromptBold(true);
+        props.setPromptUnderline(true);
+        props.setPromptColor("white");
         terminal.println("\nPayment Details");
 
-        props.put(PROP_PROMPT_BOLD, false);
-        props.put(PROP_PROMPT_UNDERLINE, false);
-        props.put(PROP_INPUT_COLOR, "magenta");
+        props.setPromptBold(false);
+        props.setPromptUnderline(false);
+        props.setInputColor("magenta");
         String paymentType = textIO.newStringInputReader()
                 .withNumberedPossibleValues("PayPal", "MasterCard", "VISA")
                 .read("Payment Type");
         String owner = textIO.newStringInputReader().read("Account Owner");
 
 
-        props.put(PROP_PROMPT_BOLD, true);
-        props.put(PROP_PROMPT_UNDERLINE, true);
-        props.put(PROP_PROMPT_COLOR, "red");
+        props.setPromptBold(true);
+        props.setPromptUnderline(true);
+        props.setPromptColor("red");
         terminal.println("\nOrder Overview");
 
-        props.put(PROP_PROMPT_BOLD, false);
-        props.put(PROP_PROMPT_UNDERLINE, false);
-        props.put(PROP_PROMPT_COLOR, "yellow");
+        props.setPromptBold(false);
+        props.setPromptUnderline(false);
+        props.setPromptColor("yellow");
         terminal.printf("Product: %s\nQuantity: %d\n", product, quantity);
 
         terminal.printf("\n%s to %s, %s\n", shippingOptions, street, city);
 
         terminal.printf("%s is paying with %s.\n", owner, paymentType);
 
-        props.put(PROP_PROMPT_COLOR, "green");
+        props.setPromptColor("green");
         textIO.newStringInputReader().withMinLength(0).read("\nPress enter to terminate...");
         textIO.dispose();
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ": an application for placing an online order";
+        return "Shopping: an application for placing an online order";
     }
 }

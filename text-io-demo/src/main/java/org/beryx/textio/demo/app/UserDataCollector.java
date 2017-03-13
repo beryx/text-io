@@ -56,6 +56,6 @@ public class UserDataCollector implements Consumer<TextIO> {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ": an application for reading personal data";
+        return getClass().getSimpleName() + ": reading personal data";
     }
 }
