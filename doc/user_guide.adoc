@@ -45,10 +45,10 @@ as shown in the code snippet below.
 [source, html]
 ----
 <div id="textterm">
-    <p class="textterm-pair">
-        <span class="textterm-prompt"> </span>
-        <span contenteditable="true" class="textterm-input"> </span>
-    </p>
+    <span class="textterm-pair">
+        <span class="textterm-prompt"></span>
+        <span contenteditable="true" class="textterm-input"></span>
+    </span>
 </div>
 
 <script src="textterm.js"></script>

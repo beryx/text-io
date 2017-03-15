@@ -466,8 +466,9 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
             if(promptAdjustments && defaultValue != null) textTerminal.print(" [" + valueFormatter.apply(defaultValue) + "]: ");
             else textTerminal.print(useColon ? ": " : " ");
         } else if(promptAdjustments) {
+            int optionCount = possibleValues.size();
             if(inlinePossibleValues) {
-                String sValues = IntStream.range(0, possibleValues.size())
+                String sValues = IntStream.range(0, optionCount)
                         .mapToObj(i -> possibleValues.get(i))
                         .map(option -> {
                             boolean isDefault = (defaultValue != null) && equalsFunc.apply(defaultValue, option);
@@ -477,12 +478,21 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
                 textTerminal.print(sValues);
             } else {
                 textTerminal.println(useColon ? ":" : "");
-                for(int i = 0; i < possibleValues.size(); i++) {
+                for(int i = 0; i < optionCount; i++) {
                     T option = possibleValues.get(i);
                     boolean isDefault = (defaultValue != null) && equalsFunc.apply(defaultValue, option);
-                    textTerminal.println((isDefault ? "* ": "  ")
-                            + (numberedPossibleValues ? ((i + 1) + ": ") : "")
-                            + valueFormatter.apply(option));
+                    String optionId = "";
+                    String optionText = valueFormatter.apply(option);
+                    if(numberedPossibleValues) {
+                        int digits = ("" + optionCount).length();
+                        optionId = String.format("%"+ digits + "d: ", i + 1);
+                        String[] textLines = optionText.split("\\R", -1);
+                        if(textLines.length > 1) {
+                            String delimiter = String.format("\n%" + (digits + 4) + "s", "");
+                            optionText = Arrays.stream(textLines).collect(Collectors.joining(delimiter));
+                        }
+                    }
+                    textTerminal.println((isDefault ? "* ": "  ") + optionId + optionText);
                 }
                 textTerminal.print(valueListMode ? "Enter your choices as comma-separated values: " : "Enter your choice: ");
             }

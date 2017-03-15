@@ -15,10 +15,7 @@
  */
 package org.beryx.textio.demo.app;
 
-import org.beryx.textio.TerminalProperties;
-import org.beryx.textio.TextIO;
-import org.beryx.textio.TextIoFactory;
-import org.beryx.textio.TextTerminal;
+import org.beryx.textio.*;
 
 import java.util.function.Consumer;
 
@@ -42,6 +39,7 @@ public class Cuboid implements Consumer<TextIO> {
         public final boolean bold;
         public final boolean italic;
         public final boolean underline;
+        public final String style;
 
         public TextProps(TerminalProperties props, String prefix) {
             this.props = props;
@@ -51,6 +49,7 @@ public class Cuboid implements Consumer<TextIO> {
             bold = props.getBoolean(propName("bold"), false);
             italic = props.getBoolean(propName("italic"), false);
             underline = props.getBoolean(propName("underline"), false);
+            style = props.getString(propName("style"));
         }
 
         private String propName(String name) {
@@ -67,6 +66,7 @@ public class Cuboid implements Consumer<TextIO> {
             props.setPromptBold(bold);
             props.setPromptItalic(italic);
             props.setPromptUnderline(underline);
+            props.put(PropertiesConstants.PROP_PROMPT_STYLE_CLASS, style);
         }
 
         public void configureInput() {
@@ -79,6 +79,7 @@ public class Cuboid implements Consumer<TextIO> {
             props.setInputBold(bold);
             props.setInputItalic(italic);
             props.setInputUnderline(underline);
+            props.put(PropertiesConstants.PROP_INPUT_STYLE_CLASS, style);
         }
     }
 
@@ -119,6 +120,8 @@ public class Cuboid implements Consumer<TextIO> {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ": computing the volume of a cuboid.";
+        return getClass().getSimpleName() + ": computing the volume of a cuboid.\n" +
+                "(Properties are dynamically changed at runtime using custom properties values.\n" +
+                "Properties file: " + getClass().getSimpleName() + ".properties.)";
     }
 }

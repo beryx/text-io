@@ -56,6 +56,8 @@ public class UserDataCollector implements Consumer<TextIO> {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ": reading personal data";
+        return getClass().getSimpleName() + ": reading personal data.\n" +
+                "(Properties are initialized at start-up.\n" +
+                "Properties file: " + getClass().getSimpleName() + ".properties.)";
     }
 }
