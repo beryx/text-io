@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * A mock terminal for test purposes.
  */
 @PropertiesPrefixes({"mock"})
-public class MockTerminal extends AbstractTextTerminal<MockTerminal> {
+public class MockTextTerminal extends AbstractTextTerminal<MockTextTerminal> {
     public static final int DEFAULT_MAX_READS = 100;
 
     private int maxReads = DEFAULT_MAX_READS;
@@ -86,7 +86,7 @@ public class MockTerminal extends AbstractTextTerminal<MockTerminal> {
     }
 
     @Override
-    public boolean registerUserInterruptHandler(Consumer<MockTerminal> handler, boolean abortRead) {
+    public boolean registerUserInterruptHandler(Consumer<MockTextTerminal> handler, boolean abortRead) {
         return false;
     }
 }

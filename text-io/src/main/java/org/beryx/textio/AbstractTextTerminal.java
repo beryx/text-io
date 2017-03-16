@@ -28,7 +28,6 @@ public abstract class AbstractTextTerminal<T extends AbstractTextTerminal<T>> im
 
     public static final String SYSPROP_PROPERTIES_FILE_LOCATION = "textio.properties.location";
 
-    public static final String PROP_USER_INTERRUPT_KEY = "user.interrupt.key";
     public static final String DEFAULT_USER_INTERRUPT_KEY = "ctrl C";
 
     private final TerminalProperties<T> properties;
@@ -38,7 +37,7 @@ public abstract class AbstractTextTerminal<T extends AbstractTextTerminal<T>> im
 
     public AbstractTextTerminal() {
         this.properties = new TerminalProperties(this);
-        addDefaultProperty(PROP_USER_INTERRUPT_KEY, DEFAULT_USER_INTERRUPT_KEY);
+        addDefaultProperty(PropertiesConstants.PROP_USER_INTERRUPT_KEY, DEFAULT_USER_INTERRUPT_KEY);
     }
 
     @Override

@@ -27,4 +27,6 @@ public class PropertiesConstants {
     public static final String PROP_PANE_STYLE_CLASS = "pane.style.class";
 
     public static final String PROP_ANSI_COLOR_MODE = "ansi.color.mode";
+
+    public static final String PROP_USER_INTERRUPT_KEY = "user.interrupt.key";
 }

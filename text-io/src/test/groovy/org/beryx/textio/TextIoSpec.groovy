@@ -15,12 +15,12 @@
  */
 package org.beryx.textio
 
-import org.beryx.textio.mock.MockTerminal
+import org.beryx.textio.mock.MockTextTerminal
 import spock.lang.Specification
 
 class TextIoSpec extends Specification {
-    static { String.metaClass.stripAll = {-> MockTerminal.stripAll(delegate)} }
+    static { String.metaClass.stripAll = {-> MockTextTerminal.stripAll(delegate)} }
 
-    def terminal = new MockTerminal()
+    def terminal = new MockTextTerminal()
     def textIO = new TextIO(terminal)
 }

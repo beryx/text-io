@@ -15,7 +15,6 @@
  */
 package org.beryx.textio.swing;
 
-import javafx.scene.paint.*;
 import org.beryx.textio.AbstractTextTerminal;
 import org.beryx.textio.PropertiesPrefixes;
 import org.beryx.textio.TerminalProperties;
@@ -31,7 +30,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.lang.reflect.Field;
 import java.util.Optional;
 import java.util.function.Consumer;
 
