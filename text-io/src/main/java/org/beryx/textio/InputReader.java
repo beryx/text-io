@@ -35,10 +35,10 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         /**
          * Returns the list of error messages for the given string representation of the value
          * @param sVal the string representation of the value
-         * @param propertyName the name of the property corresponding to this value. May be null.
+         * @param itemName the name of the item corresponding to this value. May be null.
          * @return - the list of error messages or null if no error has been detected.
          */
-        List<String> getErrorMessages(String sVal, String propertyName);
+        List<String> getErrorMessages(String sVal, String itemName);
     }
 
     /** Functional interface for checking value constraints */
@@ -47,10 +47,10 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         /**
          * Returns the list of error messages due to constraint violations caused by <tt>val</tt>
          * @param val the value for which constraint violations are checked
-         * @param propertyName the name of the property corresponding to this value. May be null.
+         * @param itemName the name of the item corresponding to this value. May be null.
          * @return - the list of error messages or null if no error has been detected.
          */
-        List<String> getErrorMessages(T val, String propertyName);
+        List<String> getErrorMessages(T val, String itemName);
     }
 
     /**
@@ -103,8 +103,8 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     /** The provider of parse error messages. If null, the {@link #getDefaultErrorMessages(String)} will be used. */
     protected ErrorMessagesProvider parseErrorMessagesProvider;
 
-    /** The name of the property corresponding to the value to be read. May be null. */
-    protected String propertyName;
+    /** The name of the item corresponding to the value to be read. May be null. */
+    protected String itemName;
 
     /** If true, the input will be masked (useful for example when reading passwords) */
     protected boolean inputMasking = false;
@@ -205,8 +205,8 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return (B)this;
     }
 
-    public B withPropertyName(String propertyName) {
-        this.propertyName = "".equals(propertyName) ? null : propertyName;
+    public B withItemName(String itemName) {
+        this.itemName = "".equals(itemName) ? null : itemName;
         return (B)this;
     }
 
@@ -249,10 +249,10 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         StringBuilder errBuilder = new StringBuilder("Invalid value");
         if(valueListMode) {
             errBuilder.append(" in the comma-separated list");
-            if(propertyName != null) errBuilder.append(" of '" + propertyName + "'");
+            if(itemName != null) errBuilder.append(" of '" + itemName + "'");
             if(sVal != null && !sVal.isEmpty()) errBuilder.append(": " + sVal);
         } else {
-            if(propertyName != null) errBuilder.append(" for '" + propertyName + "'");
+            if(itemName != null) errBuilder.append(" for '" + itemName + "'");
         }
         errBuilder.append('.');
         return errBuilder.toString();
@@ -271,7 +271,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      * If a {@link #parseErrorMessagesProvider} exists, it will be used. Otherwise, {@link #getDefaultErrorMessages(String)} will be called.
      */
     protected final List<String> getErrorMessages(String s) {
-        if(parseErrorMessagesProvider != null) return parseErrorMessagesProvider.getErrorMessages(s, propertyName);
+        if(parseErrorMessagesProvider != null) return parseErrorMessagesProvider.getErrorMessages(s, itemName);
         return getDefaultErrorMessages(s);
     }
 
@@ -285,7 +285,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         if(res.errorMessages == null) {
             List<String> allErrors = new ArrayList<>();
             for(ValueChecker<T> checker : valueCheckers) {
-                List<String> errors = checker.getErrorMessages(res.value, propertyName);
+                List<String> errors = checker.getErrorMessages(res.value, itemName);
                 if(errors != null) allErrors.addAll(errors);
             }
             if(!allErrors.isEmpty()) {
@@ -354,7 +354,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
             }
             List<String> allErrors = new ArrayList<>();
             for(ValueChecker<List<T>> checker : valueListCheckers) {
-                List<String> errors = checker.getErrorMessages(values, propertyName);
+                List<String> errors = checker.getErrorMessages(values, itemName);
                 if(errors != null) allErrors.addAll(errors);
             }
             if(!allErrors.isEmpty()) {
@@ -438,12 +438,12 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         for(ValueChecker<T> checker : valueCheckers) {
             List<String> errors = null;
             if(defaultValue != null) {
-                errors = checker.getErrorMessages(defaultValue, propertyName);
+                errors = checker.getErrorMessages(defaultValue, itemName);
                 if(errors != null) throw new IllegalArgumentException("Invalid default value: " + valueFormatter.apply(defaultValue) + ".\n" + errors);
             }
             if(possibleValues != null) {
                 for(T val : possibleValues) {
-                    errors = checker.getErrorMessages(val, propertyName);
+                    errors = checker.getErrorMessages(val, itemName);
                     if(errors != null) throw new IllegalArgumentException("Invalid entry in the list of possible values: " + valueFormatter.apply(val) + ".\n" + errors);
                 }
             }

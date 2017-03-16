@@ -29,7 +29,7 @@ class TextIoReadSpec extends TextIoSpec {
         def millis = textIO.newLongInputReader()
                 .withMinVal(5L)
                 .withMaxVal(13L)
-                .withPropertyName("delay")
+                .withItemName("delay")
                 .withDefaultValue(10L)
                 .read("Delay in milliseconds")
 
@@ -53,7 +53,7 @@ class TextIoReadSpec extends TextIoSpec {
     def "should read a long between #minVal and #maxVal with default value #defVal and inputs #inputs"() {
         when:
         terminal.inputs.addAll(inputs)
-        def reader = textIO.newLongInputReader().withPropertyName("delay")
+        def reader = textIO.newLongInputReader().withItemName("delay")
 
         if(minVal) reader.withMinVal((Long)minVal)
         if(maxVal) reader.withMaxVal((Long)maxVal)
@@ -77,7 +77,7 @@ class TextIoReadSpec extends TextIoSpec {
     def "should throw exception when reading a long between #minVal and #maxVal with default value #defVal"() {
         when:
         terminal.inputs << ""
-        def reader = textIO.newLongInputReader().withPropertyName("delay")
+        def reader = textIO.newLongInputReader().withItemName("delay")
 
         if(minVal) reader.withMinVal((Long)minVal)
         if(maxVal) reader.withMaxVal((Long)maxVal)
@@ -103,7 +103,7 @@ class TextIoReadSpec extends TextIoSpec {
         def enabled = textIO.newBooleanInputReader()
                 .withTrueInput("enabled")
                 .withFalseInput("disabled")
-                .withPropertyName("auto-connect")
+                .withItemName("auto-connect")
                 .read("Auto-connect feature")
 
         then:
@@ -133,7 +133,7 @@ class TextIoReadSpec extends TextIoSpec {
                 .withTrueInput("enabled")
                 .withFalseInput("disabled")
                 .withDefaultValue(false)
-                .withPropertyName("auto-connect")
+                .withItemName("auto-connect")
                 .read("Auto-connect feature")
 
         then:
@@ -158,7 +158,7 @@ class TextIoReadSpec extends TextIoSpec {
         terminal.inputs.addAll(["Jack", "7", "", "3"])
         def name = textIO.newStringInputReader()
                 .withNumberedPossibleValues("Jack", "Emma", "Jane", "Bill", "Laura")
-                .withPropertyName("opponent")
+                .withItemName("opponent")
                 .read("Choose your opponent")
 
         then:
@@ -206,7 +206,7 @@ class TextIoReadSpec extends TextIoSpec {
         def name = textIO.newStringInputReader()
                 .withDefaultValue("Emma")
                 .withNumberedPossibleValues("Jack", "Emma", "Jane", "Bill", "Laura")
-                .withPropertyName("opponent")
+                .withItemName("opponent")
                 .read("Choose your opponent")
 
         then:
@@ -246,7 +246,7 @@ class TextIoReadSpec extends TextIoSpec {
         def name = textIO.newStringInputReader()
                 .withDefaultValue("Emma")
                 .withPossibleValues("Jack", "Emma", "Jane", "Bill", "Laura")
-                .withPropertyName("opponent")
+                .withItemName("opponent")
                 .read("Choose your opponent")
 
         then:
@@ -285,7 +285,7 @@ class TextIoReadSpec extends TextIoSpec {
         def name = textIO.newStringInputReader()
                 .withDefaultValue("Emma")
                 .withInlinePossibleValues("Jack", "Emma", "Jane", "Bill", "Laura")
-                .withPropertyName("opponent")
+                .withItemName("opponent")
                 .read("Choose your opponent")
 
         then:
@@ -469,7 +469,7 @@ class TextIoReadSpec extends TextIoSpec {
         terminal.inputs.addAll(["Tuesday", "MONDAY", "3"])
         def day = textIO.newEnumInputReader(DayOfWeek.class)
                 .withDefaultValue(DayOfWeek.FRIDAY)
-                .withPropertyName("dayOfWeek")
+                .withItemName("dayOfWeek")
                 .read("Choose the day of week")
 
         then:
