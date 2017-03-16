@@ -62,3 +62,5 @@ Download the https://github.com/beryx/{project-name}/releases/download/v{project
 Make sure your JAVA_HOME environment variable correctly points to a JDK 8u40 or later.
 
 Start the demo by executing 'textio-demo' or 'textio-demo.bat' in the bin directory.
+
+Change the configuration by editing the properties files and 

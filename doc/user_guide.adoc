@@ -16,14 +16,15 @@ interface, which requires to allow at least:
 
 The following concrete implementations are provided by the Text-IO library:
 
-- link:javadoc/org/beryx/textio/jline/JLineTextTerminal.html[JLineTextTerminal], which is backed by a
-https://github.com/jline/jline2[JLine] ReadConsole.
-- link:javadoc/org/beryx/textio/jline/AnsiTextTerminal.html[AnsiTextTerminal], which extends JLineTextTerminal
-by allowing to customize the appearance of the prompt messages (colors and boldness).
 - link:javadoc/org/beryx/textio/console/ConsoleTextTerminal.html[ConsoleTextTerminal], which is backed by a
 http://docs.oracle.com/javase/8/docs/api/java/io/Console.html[java.io.Console].
+- link:javadoc/org/beryx/textio/jline/JLineTextTerminal.html[JLineTextTerminal], which is backed by a
+https://github.com/jline/jline2[JLine] ReadConsole.
+- link:javadoc/org/beryx/textio/mock/MockTextTerminal.html[MockTextTerminal], which simulates
+a terminal session by providing preconfigured values for the input
+and stores the output in a string buffer.
 - link:javadoc/org/beryx/textio/swing/SwingTextTerminal.html[SwingTextTerminal], which uses a
-http://docs.oracle.com/javase/8/docs/api/javax/swing/JTextArea.html[JTextArea] inside a
+http://docs.oracle.com/javase/8/docs/api/javax/swing/JTextPane.html[JTextPane] inside a
 http://docs.oracle.com/javase/8/docs/api/javax/swing/JFrame.html[JFrame].
 - link:javadoc/org/beryx/textio/system/SystemTextTerminal.html[SystemTextTerminal], which uses
 http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#out[System.out],
@@ -45,7 +46,7 @@ as shown in the code snippet below.
 [source, html]
 ----
 <div id="textterm">
-    <span class="textterm-pair">
+    <span class="textterm-pair" class="textterm-pane">
         <span class="textterm-prompt"></span>
         <span contenteditable="true" class="textterm-input"></span>
     </span>
@@ -75,7 +76,7 @@ which offers (via methods with names of the form _withXXX()_) a fluent interface
 - link:javadoc/org/beryx/textio/InputReader.html#withPossibleValues-java.util.List-[possible values] - necessary if the value to be read must be chosen from a list of allowed values.
 - link:javadoc/org/beryx/textio/InputReader.html#withParseErrorMessagesProvider-org.beryx.textio.InputReader.ErrorMessagesProvider-[parse error messages] - used to provide custom parse error messages.
 - link:javadoc/org/beryx/textio/InputReader.html#withValueChecker-org.beryx.textio.InputReader.ValueChecker-[value checkers] - used to check for constraint violations.
-- link:javadoc/org/beryx/textio/InputReader.html#withPropertyName-java.lang.String-[property name] - if configured, the name of the property to be read will appear in error messages.
+- link:javadoc/org/beryx/textio/InputReader.html#withItemName-java.lang.String-[item name] - if configured, the name of the item to be read will appear in error messages.
 
 See the link:javadoc/org/beryx/textio/InputReader.html[javadoc] for more configuration methods.
 
@@ -152,3 +153,123 @@ link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/SimpleApp.java
 for an example of using the default TextTerminal provided by TextIofactory,
 and link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/TextIoDemo.java[TextIoDemo.java]
 for examples of using custom TextTerminals.
+
+== Terminal properties
+
+TextIO uses the
+link:javadoc/org/beryx/textio/TextTerminal.html[TextTerminal]
+interface as an abstraction layer that provides device independence.
+However, some terminals may have capabilities beyond those exposed by the TextTerminal API.
+Such capabilities include the possibility to use colors or emphasis (bold, underline, italic).
+TextIO lets you make use of these capabilities through _terminal properties_.
+
+Terminal properties can be statically configured in a properties file or dynamically set at runtime.
+You can also combine these two techniques.
+TextIO uses the following strategy for locating the file containing terminal properties:
+
+- search for a file at the location given by the value of the system property `textio.properties.location`.
+- search for a file named `textio.properties` located in the current directory.
+- search for a file named `textio.properties` in the classpath.
+
+For a given property, you may configure the same value for all terminal types,
+or you may assign different values to different terminal types.
+This is possible by using _property prefixes_.
+Each terminal has a list of accepted prefixes, as in the table below:
+
+.Property prefixes
+|===
+|Terminal type |Property prefix
+
+|_<generic>_ | textio
+|ConsoleTextTerminal |console
+|JLineTextTerminal |jline
+|MockTerminal |mock
+|SwingTextTerminal |swing
+|SystemTextTerminal |system
+|WebTextTerminal |web
+|===
+
+A terminal accepts the generic prefix `textio` and the prefix corresponding to its type.
+For example, a SwingTextTerminal accepts the prefixes `textio` and `swing`.
+Consider, for example, the following configuration:
+
+[source, properties]
+----
+textio.input.color = yellow
+textio.prompt.color = cyan
+swing.prompt.color = #2bf3c5
+----
+
+The property `input.color` will have the value `yellow`, irrespective of the terminal type.
+For `prompt.color`, the actual value depends on the type of terminal used:
+it will be `#2bf3c5` for a SwingTextTerminal, and `cyan` for any other type.
+
+Each terminal type has its own set of supported properties.
+The behavior of a terminal is not affected by the values of the properties it does not support.
+It is therefore safe to configure the value of a certain property for all terminals
+(that is, using the generic prefix `textio`), even if it is not supported by all terminal types.
+
+Currently, only the JLineTextTerminal, SwingTextTerminal and WebTextTerminal types have a non-empty set of supported properties,
+which are shown in the table below:
+
+.Supported properties
+[cols="3,1,1,1,8"]
+|===
+|Property name | JLine | Swing | Web | Comment
+
+|ansi.color.mode | &#x2713; | - | - | The https://en.wikipedia.org/wiki/ANSI_escape_code#Colors[ANSI color mode]. +
+Accepted values: `standard`, `indexed`, `rgb`. +
+Default value: `standard`.
+|input.bgcolor | &#x2713; | &#x2713; | &#x2713; | The background color of the input text.
+|input.bold | &#x2713; | &#x2713; | &#x2713; | `true`, if the input text should be bold. +
+Default value: `false`.
+|input.color | &#x2713; | &#x2713; | &#x2713; | The color of the input text.
+|input.font.family | - | &#x2713; | - | The font family of the input text.
+|input.font.size | - | &#x2713; | - | The font size  of the input text.
+|input.italic | &#x2713; | &#x2713; | &#x2713; | `true`, if the input text should be italic. +
+Default value: `false`.
+|input.style.class | - | - | &#x2713; | The CSS class used for styling the input text.
+|input.subscript | - | &#x2713; | - | `true`, if the input text should be displayed as a subscript. +
+Default value: `false`.
+|input.superscript | - | &#x2713; | - | `true`, if the input text should be displayed as a superscript. +
+Default value: `false`.
+|input.underline | &#x2713; | &#x2713; | &#x2713; | `true`, if the input text should be underlined. +
+Default value: `false`.
+|pane.bgcolor | - | &#x2713; | &#x2713; | The background color of the terminal pane.
+|pane.style.class | - | - | &#x2713; | The CSS style class of the terminal pane.
+|prompt.bgcolor | &#x2713; | &#x2713; | &#x2713; | The background color of the prompt text.
+|prompt.bold | &#x2713; | &#x2713; | &#x2713; | `true`, if the prompt text should be bold. +
+Default value: `false`.
+|prompt.color | &#x2713; | &#x2713; | &#x2713; | The color of the prompt text.
+|prompt.font.family | - | &#x2713; | - | The font family of the prompt text.
+|prompt.font.size | - | &#x2713; | - | The font size of the prompt text.
+|prompt.italic | &#x2713; | &#x2713; | &#x2713; | `true`, if the prompt text should be italic. +
+Default value: `false`.
+|prompt.style.class | - | - | &#x2713; | The CSS class used for styling the prompt text.
+|prompt.subscript | - | &#x2713; | - | `true`, if the prompt text should be displayed as a subscript. +
+Default value: `false`.
+|prompt.superscript | - | &#x2713; | - | `true`, if the prompt text should be displayed as a superscript. +
+Default value: `false`.
+|prompt.underline | &#x2713; | &#x2713; | &#x2713; | `true`, if the prompt text should be underlined. +
+Default value: `false`.
+|user.interrupt.key | - | &#x2713; | &#x2713; | The key combination used to interrupt the program. +
+Default value: `Ctrl C`.
+|===
+
+
+The values of the color properties are interpreted using the
+https://docs.oracle.com/javase/8/javafx/api/javafx/scene/paint/Color.html#web-java.lang.String-[Color.web(String colorString)].
+method.
+This means that you can specify colors in various ways, such as: `red`, `#aa38e0`, `0x40A8CC`, `rgba(112,36,228,0.9)`, `hsla(270,100%,100%,1.0)` etc.
+
+In the `standard` and `indexed` mode, JLineTextTerminal has a limited number of colors available.
+Therefore, it tries to map the provided value to the nearest available color.
+
+The properties of a TextTerminal can be accessed at runtime through the method
+link:javadoc/org/beryx/textio/TextTerminal.html#getProperties--[getProperties()],
+which returns a link:javadoc/org/beryx/textio/TerminalProperties.html[TerminalProperties] instance.
+Using this TerminalProperties, you can dynamically configure properties by calling the
+link:javadoc/org/beryx/textio/TerminalProperties.html#put-java.lang.String-java.lang.Object-[put(String key, Object value)] method.
+Additionally, convenience methods are available for frequently used properties (for example:
+link:javadoc/org/beryx/textio/TerminalProperties.html#setInputBold-boolean-[setInputBold(boolean bold)] or
+link:javadoc/org/beryx/textio/TerminalProperties.html#setPromptColor-javafx.scene.paint.Color-[setPromptColor(Color color)]).
