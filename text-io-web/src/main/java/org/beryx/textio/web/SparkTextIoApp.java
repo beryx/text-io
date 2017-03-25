@@ -20,16 +20,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Session;
 
-import javax.servlet.http.HttpSessionBindingEvent;
-import javax.servlet.http.HttpSessionBindingListener;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Consumer;
 
 public class SparkTextIoApp {
     private static final Logger logger =  LoggerFactory.getLogger(SparkTextIoApp.class);
 
-    private final Map<String, WebTextTerminal> dataApiMap = new HashMap<>();
     private final WebTextTerminal termTemplate;
 
     private final Consumer<TextIO> textIoRunner;
@@ -62,57 +57,40 @@ public class SparkTextIoApp {
     }
 
     private WebTextTerminal getDataApi(String sessionId, Session session) {
-        synchronized (dataApiMap) {
-            WebTextTerminal terminal = dataApiMap.get(sessionId);
-            if(terminal == null) {
-                logger.debug("Creating terminal for sessionId: " + sessionId);
-                terminal = termTemplate.createCopy();
+        WebTextTerminal terminal = session.attribute(getSessionIdAttribute(sessionId));
+        if(terminal == null) {
+            logger.debug("Creating terminal for sessionId: " + sessionId);
+            terminal = termTemplate.createCopy();
+            terminal.setOnDispose(() -> {
+                session.removeAttribute(getSessionIdAttribute(sessionId));
                 if(onDispose != null) {
-                    terminal.setOnDispose(() -> onDispose.accept(sessionId));
+                    onDispose.accept(sessionId);
                 }
+            });
+            terminal.setOnAbort(() -> {
+                session.removeAttribute(getSessionIdAttribute(sessionId));
                 if(onAbort != null) {
-                    terminal.setOnAbort(() -> onAbort.accept(sessionId));
+                    onAbort.accept(sessionId);
                 }
-                dataApiMap.put(sessionId, terminal);
+            });
+            session.attribute(getSessionIdAttribute(sessionId), terminal);
 
-                if(maxInactiveSeconds != null) {
-                    session.maxInactiveInterval(maxInactiveSeconds);
-                }
-                session.attribute("web-text-io-session-id", new SessionIdListener(sessionId));
-
-                TextIO textIO = new TextIO(terminal);
-
-                Thread thread = new Thread(() -> textIoRunner.accept(textIO));
-                thread.setDaemon(true);
-                thread.start();
+            if(maxInactiveSeconds != null) {
+                session.maxInactiveInterval(maxInactiveSeconds);
             }
-            return terminal;
+
+            TextIO textIO = new TextIO(terminal);
+
+            Thread thread = new Thread(() -> textIoRunner.accept(textIO));
+            thread.setDaemon(true);
+            thread.start();
+        } else {
+            logger.trace("Terminal found for sessionId: " + sessionId + " on session with attributes " + session.attributes());
         }
+        return terminal;
     }
 
-    private class SessionIdListener implements HttpSessionBindingListener {
-        private final String sessionId;
-
-        SessionIdListener(String sessionId) {
-            this.sessionId = sessionId;
-        }
-
-        @Override
-        public void valueBound(HttpSessionBindingEvent event) {
-            // Nothing to do
-        }
-
-        @Override
-        public void valueUnbound(HttpSessionBindingEvent event) {
-            WebTextTerminal removed;
-            synchronized (dataApiMap) {
-                removed = dataApiMap.remove(sessionId);
-            }
-            if(removed == null) {
-                logger.warn("Unbinding sessionId {}: not found in dataApiMap", sessionId);
-            } else {
-                logger.trace("Unbinding sessionId {}: removed from dataApiMap", sessionId);
-            }
-        }
+    private String getSessionIdAttribute(String sessionId) {
+        return "web-text-terminal-" + sessionId;
     }
 }
