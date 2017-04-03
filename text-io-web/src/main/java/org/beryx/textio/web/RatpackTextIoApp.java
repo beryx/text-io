@@ -57,8 +57,6 @@ public class RatpackTextIoApp implements TextIoApp<RatpackTextIoApp> {
                 .removalListener((RemovalListener<String, WebTextTerminal>) notification ->
                         logger.debug("removed from cache: " + notification.getKey() + ". Remaining entries: " + webTextTerminalCache.size()))
                 .build();
-
-
         server.init();
     }
 

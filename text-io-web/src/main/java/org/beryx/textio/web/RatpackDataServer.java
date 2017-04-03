@@ -17,11 +17,15 @@ package org.beryx.textio.web;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ratpack.func.Action;
+import ratpack.guice.BindingsSpec;
 import ratpack.guice.Guice;
+import ratpack.handling.Chain;
 import ratpack.handling.Context;
 import ratpack.http.Request;
 import ratpack.server.BaseDir;
 import ratpack.server.RatpackServer;
+import ratpack.server.ServerConfigBuilder;
 import ratpack.session.Session;
 import ratpack.session.SessionModule;
 
@@ -29,9 +33,7 @@ import javax.activation.MimetypesFileTypeMap;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.nio.file.Path;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -44,8 +46,90 @@ public class RatpackDataServer extends AbstractDataServer {
     private String baseDir;
     private final Function<String, DataApi> dataApiProvider;
 
+    protected final Action<Chain> handlerGetData =  chain ->
+            chain.get(getPathForGetData(), ctx -> {
+                logger.trace("Received GET");
+                ctx.getResponse().contentType("application/json");
+                ctx.render(handleGetData(getDataApi(ctx)));
+            });
+
+    protected final Action<Chain> handlerPostInput =  chain ->
+            chain.post(getPathForPostInput(), ctx -> {
+                logger.trace("Received POST");
+                DataApi dataApi = getDataApi(ctx);
+                Request request = ctx.getRequest();
+                boolean userInterrupt = Boolean.parseBoolean(request.getHeaders().get("textio-user-interrupt"));
+                request.getBody().then(req -> {
+                    String result = handlePostInput(dataApi, req.getText(Charset.forName("UTF-8")), userInterrupt);
+                    ctx.getResponse().send(result);
+                });
+            });
+
+    protected final Action<Chain> handlerTexttermAssets =  chain ->
+            chain.get("textterm/:name", ctx -> {
+                String resName = "/public-html/textterm/" + ctx.getPathTokens().get("name");
+                String content = getResourceContent(resName).orElse(null);
+                if(content == null) {
+                    ctx.next();
+                } else {
+                    String contentType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(resName);
+                    if(contentType != null) {
+                        ctx.getResponse().contentType(contentType);
+                    }
+                    ctx.getResponse().send(content);
+                }
+            });
+
+    protected final Action<Chain> handlerStaticAssets =  chain ->
+            chain.files(files -> {
+                if(baseDir != null) {
+                    files.dir(baseDir);
+                }
+            });
+
+    private final List<Action<Chain>> handlers = new ArrayList<>(Arrays.asList(
+            handlerGetData,
+            handlerPostInput,
+            handlerTexttermAssets,
+            handlerStaticAssets
+    ));
+
+    private final List<Action<BindingsSpec>> bindings = new ArrayList<>(Arrays.asList(
+            b -> b.module(SessionModule.class)
+    ));
+
+
+    protected final Action<ServerConfigBuilder> portConfigurator = c -> {
+        if (port > 0) {
+            c.port(port);
+        }
+    };
+
+    protected final Action<ServerConfigBuilder> baseDirConfigurator = c -> {
+        if(baseDir != null) {
+            c.baseDir(BaseDir.find(baseDir));
+        }
+    };
+
+    private final List<Action<ServerConfigBuilder>> configurators = new ArrayList<>(Arrays.asList(
+            portConfigurator,
+            baseDirConfigurator
+    ));
+
     public RatpackDataServer(Function<String, DataApi> dataApiProvider) {
         this.dataApiProvider = dataApiProvider;
+    }
+
+    public List<Action<Chain>> getHandlers() {
+        return handlers;
+    }
+
+    public List<Action<BindingsSpec>> getBindings() {
+        return bindings;
+    }
+
+    public List<Action<ServerConfigBuilder>> getConfigurators() {
+        return configurators;
     }
 
     public RatpackDataServer withBaseDir(String baseDir) {
@@ -61,53 +145,26 @@ public class RatpackDataServer extends AbstractDataServer {
         return port;
     }
 
+
     public void init() {
         try {
             RatpackServer.start(server -> {
                 server.serverConfig(c -> {
-                    if(port > 0) {
-                        c.port(port);
-                    }
-                    if(baseDir != null) {
-                        c.baseDir(BaseDir.find(baseDir));
+                    for(Action<ServerConfigBuilder> cfg : getConfigurators()) {
+                        c = cfg.with(c);
                     }
                 });
-                server.registry(Guice.registry(b -> b.module(SessionModule.class)));
-                server.handlers(chain -> chain
-                                .get(getPathForGetData(), ctx -> {
-                                    logger.trace("Received GET");
-                                    ctx.getResponse().contentType("application/json");
-                                    ctx.render(handleGetData(getDataApi(ctx)));
-                                })
-                                .post(getPathForPostInput(), ctx -> {
-                                    logger.trace("Received POST");
-                                    DataApi dataApi = getDataApi(ctx);
-                                    Request request = ctx.getRequest();
-                                    boolean userInterrupt = Boolean.parseBoolean(request.getHeaders().get("textio-user-interrupt"));
-                                    request.getBody().then(req -> {
-                                        String result = handlePostInput(dataApi, req.getText(Charset.forName("UTF-8")), userInterrupt);
-                                        ctx.getResponse().send(result);
-                                    });
-                                })
-                                .get("textterm/:name", ctx -> {
-                                    String resName = "/public-html/textterm/" + ctx.getPathTokens().get("name");
-                                    String content = getResourceContent(resName).orElse(null);
-                                    if(content == null) {
-                                        ctx.next();
-                                    } else {
-                                        String contentType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(resName);
-                                        if(contentType != null) {
-                                            ctx.getResponse().contentType(contentType);
-                                        }
-                                        ctx.getResponse().send(content);
-                                    }
-                                })
-                                .files(files -> {
-                                    if(baseDir != null) {
-                                        files.dir(baseDir);
-                                    }
-                                })
-                );
+                server.registry(Guice.registry(b -> {
+                    for(Action<BindingsSpec> binding : getBindings()) {
+                        b = binding.with(b);
+                    }
+                }));
+                server.handlers(chain -> {
+                    for(Action<Chain> handler : getHandlers()) {
+//                        chain = chain.insert(handler);
+                        chain = handler.with(chain);
+                    }
+                });
             });
         } catch (Exception e) {
             logger.error("Ratpack failure", e);
