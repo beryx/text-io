@@ -296,9 +296,15 @@ your application via a browser. See details below.</p>
 <div class="paragraph">
 <p>The WebTextTerminal works only in conjunction with a web server supporting the
 <a href="javadoc/org/beryx/textio/web/DataApi.html">DataApi</a>
-(such as the <a href="javadoc/org/beryx/textio/web/SparkDataServer.html">SparkDataServer</a>)
+(such as the <a href="javadoc/org/beryx/textio/web/SparkDataServer.html">SparkDataServer</a>
+or the <a href="javadoc/org/beryx/textio/web/RatpackDataServer.html">RatpackDataServer</a>)
 and a web page that contains code for accessing this API.
-This is typically accomplished via <a href="https://github.com/beryx/text-io/blob/master/text-io-web/src/main/resources/public-html/textterm.js">textterm.js</a>,
+Typically, the web server is managed by an implementation of
+<a href="javadoc/org/beryx/textio/web/TextIoApp.html">TextIoApp</a> (such as
+<a href="javadoc/org/beryx/textio/web/SparkTextIoApp.html">SparkTextIoApp</a> or
+<a href="javadoc/org/beryx/textio/web/RatpackTextIoApp.html">RatpackTextIoApp</a>),
+while the web page makes use of the library
+<a href="https://github.com/beryx/text-io/blob/master/text-io-web/src/main/resources/public-html/textterm.js">textterm.js</a>,
 as shown in the code snippet below.</p>
 </div>
 <div class="listingblock">
@@ -841,6 +847,21 @@ Using this TerminalProperties, you can dynamically configure properties by calli
 Additionally, convenience methods are available for frequently used properties (for example:
 <a href="javadoc/org/beryx/textio/TerminalProperties.html#setInputBold-boolean-">setInputBold(boolean bold)</a> or
 <a href="javadoc/org/beryx/textio/TerminalProperties.html#setPromptColor-javafx.scene.paint.Color-">setPromptColor(Color color)</a>).</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+You can learn how to configure and use terminal properties by looking at the
+<a href="https://github.com/beryx/text-io/blob/master/text-io-demo/src/main/java/org/beryx/textio/demo">source code</a>
+and the <a href="https://github.com/beryx/text-io/blob/master/dist/xbin">configuration files</a>
+of the <a href="https://github.com/beryx/text-io/releases/download/v2.1.0-SNAPSHOT/textio-demo-2.1.0-SNAPSHOT.zip">demo application</a>.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
