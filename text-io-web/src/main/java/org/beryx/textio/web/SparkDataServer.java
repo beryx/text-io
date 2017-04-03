@@ -15,7 +15,6 @@
  */
 package org.beryx.textio.web;
 
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -28,11 +27,8 @@ import static spark.Spark.*;
 /**
  * A SparkJava-based web server that allows clients to access the {@link DataApi}.
  */
-public class SparkDataServer {
+public class SparkDataServer extends AbstractDataServer {
     private static final Logger logger =  LoggerFactory.getLogger(WebTextTerminal.class);
-    public static final String DEFAULT_PATH_FOR_GET_DATA = "/textTerminalData";
-    public static final String DEFAULT_PATH_FOR_POST_INPUT  = "/textTerminalInput";
-
     static {
         exception(Exception.class, (exception, request, response) -> {
             logger.error("Spark failure", exception);
@@ -41,23 +37,8 @@ public class SparkDataServer {
 
     private final BiFunction<String, Session, DataApi> dataApiProvider;
 
-    private String pathForGetData = DEFAULT_PATH_FOR_GET_DATA;
-    private String pathForPostInput = DEFAULT_PATH_FOR_POST_INPUT;
-
-    private final Gson gson = new Gson();
-
     public SparkDataServer(BiFunction<String, Session, DataApi> dataApiProvider) {
         this.dataApiProvider = dataApiProvider;
-    }
-
-    public SparkDataServer withPathForGetData(String pathForGetData) {
-        this.pathForGetData = pathForGetData;
-        return this;
-    }
-
-    public SparkDataServer withPathForPostInput(String pathForPostInput) {
-        this.pathForPostInput = pathForPostInput;
-        return this;
     }
 
     public SparkDataServer withPort(int portNumber) {
@@ -85,28 +66,17 @@ public class SparkDataServer {
     }
 
     public void init() {
-        get(pathForGetData, "application/json", (request, response) -> {
+        get("/" + getPathForGetData(), "application/json", (request, response) -> {
             logger.trace("Received GET");
-            DataApi dataApi = getDataApi(request);
-            logger.trace("Retrieving terminal data...");
-            TextTerminalData data = dataApi.getTextTerminalData();
-            logger.trace("Retrieved terminal data: {}", data);
-            return gson.toJson(data);
+            return handleGetData(getDataApi(request));
         });
 
-        post(pathForPostInput, (request, response) -> {
+        post("/" + getPathForPostInput(), (request, response) -> {
             logger.trace("Received POST");
             DataApi dataApi = getDataApi(request);
             boolean userInterrupt = Boolean.parseBoolean(request.headers("textio-user-interrupt"));
             String input = new String(request.body().getBytes(), "UTF-8");
-            if(userInterrupt) {
-                logger.trace("Posting user interrupted input...");
-                dataApi.postUserInterrupt(input);
-            } else {
-                logger.trace("Posting input...");
-                dataApi.postUserInput(input);
-            }
-            return "OK";
+            return handlePostInput(dataApi, input, userInterrupt);
         });
     }
 }

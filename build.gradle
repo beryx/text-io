@@ -269,9 +269,12 @@ project('text-io') {
 project('text-io-web') {
     dependencies {
         compile project(':text-io')
-        compile 'com.sparkjava:spark-core:2.5.4'
         compile 'com.google.code.gson:gson:2.8.0'
         compile 'org.apache.commons:commons-lang3:3.5'
+        compileOnly 'com.sparkjava:spark-core:2.5.4'
+        compileOnly 'io.ratpack:ratpack-core:1.4.5'
+        compileOnly 'io.ratpack:ratpack-session:1.4.5'
+        testCompile 'io.ratpack:ratpack-test:1.4.5'
     }
 }
 
@@ -280,6 +283,9 @@ project('text-io-demo') {
     dependencies {
         compile project(':text-io')
         compile project(':text-io-web')
+        compile 'com.sparkjava:spark-core:2.5.4'
+        compile 'io.ratpack:ratpack-core:1.4.5'
+        compile 'io.ratpack:ratpack-session:1.4.5'
         runtime ('ch.qos.logback:logback-classic:1.1.7')
     }
     artifacts {

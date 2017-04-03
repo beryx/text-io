@@ -15,10 +15,7 @@
  */
 package org.beryx.textio.demo;
 
-import org.beryx.textio.TextIO;
-import org.beryx.textio.web.SparkDataServer;
-import org.beryx.textio.web.SparkTextIoApp;
-import org.beryx.textio.web.WebTextTerminal;
+import org.beryx.textio.web.TextIoApp;
 
 import java.awt.*;
 import java.net.URI;
@@ -26,45 +23,34 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static spark.Spark.staticFiles;
 import static spark.Spark.stop;
 
 /**
- * Allows executing code in a {@link org.beryx.textio.web.WebTextTerminal}.
- * by configuring and initializing a {@link SparkDataServer}.
+ * Allows executing code in a {@link org.beryx.textio.web.WebTextTerminal}
+ * by configuring and initializing a {@link TextIoApp}.
  */
 public class WebTextIoExecutor {
-    private final WebTextTerminal termTemplate;
-    private int port = -1;
-
-    public WebTextIoExecutor(WebTextTerminal termTemplate) {
-        this.termTemplate = termTemplate;
-    }
+    private Integer port;
 
     public WebTextIoExecutor withPort(int port) {
         this.port = port;
         return this;
     }
 
-    public void execute(Consumer<TextIO> textIoRunner) {
-        SparkTextIoApp app = new SparkTextIoApp(textIoRunner, termTemplate);
-        app.setMaxInactiveSeconds(600);
+    public void execute(TextIoApp app) {
         Consumer<String> stopServer = sessionId -> Executors.newSingleThreadScheduledExecutor().schedule(() -> {
             stop();
             System.exit(0);
         }, 2, TimeUnit.SECONDS);
-        app.setOnDispose(stopServer);
-        app.setOnAbort(stopServer);
 
-        SparkDataServer server = app.getServer();
-        if(port > 0) {
-            server.withPort(port);
-        }
+        app.withOnDispose(stopServer)
+            .withOnAbort(stopServer)
+            .withPort(port)
+            .withMaxInactiveSeconds(600)
+            .withStaticFilesLocation("public-html")
+            .init();
 
-        staticFiles.location("/public-html");
-        server.init();
-
-        String url = "http://localhost:" + server.getPort() + "/web-demo.html";
+        String url = "http://localhost:" + app.getPort() + "/web-demo.html";
         boolean browserStarted = false;
         if(Desktop.isDesktopSupported()) {
             try {

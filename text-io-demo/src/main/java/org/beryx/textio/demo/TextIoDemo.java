@@ -24,8 +24,10 @@ import org.beryx.textio.jline.JLineTextTerminalProvider;
 import org.beryx.textio.swing.SwingTextTerminalProvider;
 import org.beryx.textio.system.SystemTextTerminal;
 import org.beryx.textio.system.SystemTextTerminalProvider;
+import org.beryx.textio.web.RatpackTextIoApp;
+import org.beryx.textio.web.SparkTextIoApp;
+import org.beryx.textio.web.TextIoApp;
 import org.beryx.textio.web.WebTextTerminal;
-import spark.Service;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,8 +38,6 @@ import java.util.function.Supplier;
  * Demo application showing various TextTerminals.
  */
 public class TextIoDemo {
-    private static int webServerPort = -1;
-
     private static class NamedProvider implements TextTerminalProvider {
         final String name;
         final Supplier<TextTerminal> supplier;
@@ -59,7 +59,10 @@ public class TextIoDemo {
     }
 
     public static void main(String[] args) {
-        Consumer<TextIO> app = chooseApp();
+        TextTerminal sysTerminal = new SystemTextTerminal();
+        TextIO sysTextIO = new TextIO(sysTerminal);
+
+        Consumer<TextIO> app = chooseApp(sysTextIO);
         TextIO textIO = chooseTextIO();
 
         // Uncomment the line below to ignore user interrupts.
@@ -67,17 +70,48 @@ public class TextIoDemo {
 
         if(textIO.getTextTerminal() instanceof WebTextTerminal) {
             WebTextTerminal webTextTerm = (WebTextTerminal)textIO.getTextTerminal();
-            WebTextIoExecutor webTextIoExecutor = new WebTextIoExecutor(webTextTerm).withPort(webServerPort);
-            webTextIoExecutor.execute(app);
+            TextIoApp textIoApp = createTextIoApp(sysTextIO, app, webTextTerm);
+            WebTextIoExecutor webTextIoExecutor = new WebTextIoExecutor();
+            configurePort(sysTextIO, webTextIoExecutor, 8080);
+            webTextIoExecutor.execute(textIoApp);
         } else {
             app.accept(textIO);
         }
     }
 
-    private static Consumer<TextIO> chooseApp() {
-        TextTerminal terminal = new SystemTextTerminal();
-        TextIO textIO = new TextIO(terminal);
+    private static TextIoApp createTextIoApp(TextIO textIO, Consumer<TextIO> app, WebTextTerminal webTextTerm) {
+        class Provider {
+            private final String name;
+            private final Supplier<TextIoApp> supplier;
 
+            private Provider(String name, Supplier<TextIoApp> supplier) {
+                this.name = name;
+                this.supplier = supplier;
+            }
+
+            @Override
+            public String toString() {
+                return name;
+            }
+        }
+        Provider textIoAppProvider = textIO.<Provider>newGenericInputReader(null)
+                .withNumberedPossibleValues(
+                    new Provider("Ratpack", () -> new RatpackTextIoApp(app, webTextTerm)),
+                    new Provider("Spark", () -> new SparkTextIoApp(app, webTextTerm))
+                )
+                .read("\nChoose the web framework to be used");
+
+        return textIoAppProvider.supplier.get();
+    }
+
+    private static void configurePort(TextIO textIO, WebTextIoExecutor webTextIoExecutor, int defaultPort) {
+        int port = textIO.newIntInputReader()
+                .withDefaultValue(defaultPort)
+                .read("Server port number");
+        webTextIoExecutor.withPort(port);
+    }
+
+    private static Consumer<TextIO> chooseApp(TextIO textIO) {
         List<Consumer<TextIO>> apps = Arrays.asList(new UserDataCollector(), new ECommerce(), new Cuboid());
 
         Consumer<TextIO> app = textIO.<Consumer<TextIO>>newGenericInputReader(null)
@@ -100,7 +134,7 @@ public class TextIoDemo {
                             new ConsoleTextTerminalProvider(),
                             new JLineTextTerminalProvider(),
                             new SwingTextTerminalProvider(),
-                            new NamedProvider("Web terminal", () -> createWebTextTerminal(textIO))
+                            new NamedProvider("Web terminal", WebTextTerminal::new)
                     )
                     .read("\nChoose the terminal to be used for running the demo");
 
@@ -118,14 +152,5 @@ public class TextIoDemo {
             chosenTerminal.init();
             return new TextIO(chosenTerminal);
         }
-    }
-
-    private static WebTextTerminal createWebTextTerminal(TextIO textIO) {
-        webServerPort = textIO.newIntInputReader()
-                .withDefaultValue(Service.SPARK_DEFAULT_PORT)
-                .read("Server port number");
-
-        // The returned WebTextTerminal is used as a template by the WebTextIoExecutor, which instantiates a new WebTextTerminal each time a client starts a new session.
-        return new WebTextTerminal();
     }
 }

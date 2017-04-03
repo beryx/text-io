@@ -38,9 +38,15 @@ your application via a browser. See details below.
 
 The WebTextTerminal works only in conjunction with a web server supporting the
 link:javadoc/org/beryx/textio/web/DataApi.html[DataApi]
-(such as the link:javadoc/org/beryx/textio/web/SparkDataServer.html[SparkDataServer])
+(such as the link:javadoc/org/beryx/textio/web/SparkDataServer.html[SparkDataServer]
+or the link:javadoc/org/beryx/textio/web/RatpackDataServer.html[RatpackDataServer])
 and a web page that contains code for accessing this API.
-This is typically accomplished via link:{blob-root}/text-io-web/src/main/resources/public-html/textterm.js[textterm.js],
+Typically, the web server is managed by an implementation of
+link:javadoc/org/beryx/textio/web/TextIoApp.html[TextIoApp] (such as
+link:javadoc/org/beryx/textio/web/SparkTextIoApp.html[SparkTextIoApp] or
+link:javadoc/org/beryx/textio/web/RatpackTextIoApp.html[RatpackTextIoApp]),
+while the web page makes use of the library
+link:{blob-root}/text-io-web/src/main/resources/public-html/textterm.js[textterm.js],
 as shown in the code snippet below.
 
 [source, html]
@@ -273,3 +279,9 @@ link:javadoc/org/beryx/textio/TerminalProperties.html#put-java.lang.String-java.
 Additionally, convenience methods are available for frequently used properties (for example:
 link:javadoc/org/beryx/textio/TerminalProperties.html#setInputBold-boolean-[setInputBold(boolean bold)] or
 link:javadoc/org/beryx/textio/TerminalProperties.html#setPromptColor-javafx.scene.paint.Color-[setPromptColor(Color color)]).
+
+
+TIP: You can learn how to configure and use terminal properties by looking at the
+link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo[source code]
+and the link:{blob-root}/dist/xbin[configuration files]
+of the https://github.com/beryx/text-io/releases/download/v{project-version}/textio-demo-{project-version}.zip[demo application].

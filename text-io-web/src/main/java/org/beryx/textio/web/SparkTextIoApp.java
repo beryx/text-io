@@ -22,7 +22,9 @@ import spark.Session;
 
 import java.util.function.Consumer;
 
-public class SparkTextIoApp {
+import static spark.Spark.staticFiles;
+
+public class SparkTextIoApp implements TextIoApp<SparkTextIoApp> {
     private static final Logger logger =  LoggerFactory.getLogger(SparkTextIoApp.class);
 
     private final WebTextTerminal termTemplate;
@@ -44,16 +46,43 @@ public class SparkTextIoApp {
         return server;
     }
 
-    public void setOnDispose(Consumer<String> onDispose) {
+    @Override
+    public void init() {
+        server.init();
+    }
+
+    public SparkTextIoApp withOnDispose(Consumer<String> onDispose) {
         this.onDispose = onDispose;
+        return this;
     }
 
-    public void setOnAbort(Consumer<String> onAbort) {
+    public SparkTextIoApp withOnAbort(Consumer<String> onAbort) {
         this.onAbort = onAbort;
+        return this;
     }
 
-    public void setMaxInactiveSeconds(Integer maxInactiveSeconds) {
+    public SparkTextIoApp withMaxInactiveSeconds(Integer maxInactiveSeconds) {
         this.maxInactiveSeconds = maxInactiveSeconds;
+        return this;
+    }
+
+    @Override
+    public SparkTextIoApp withStaticFilesLocation(String location) {
+        staticFiles.location(location);
+        return this;
+    }
+
+    @Override
+    public SparkTextIoApp withPort(Integer portNumber) {
+        if(portNumber != null) {
+            server.withPort(portNumber);
+        }
+        return this;
+    }
+
+    @Override
+    public int getPort() {
+        return server.getPort();
     }
 
     private WebTextTerminal getDataApi(String sessionId, Session session) {
