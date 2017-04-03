@@ -25,10 +25,13 @@ import ratpack.server.RatpackServer;
 import ratpack.session.Session;
 import ratpack.session.SessionModule;
 
+import javax.activation.MimetypesFileTypeMap;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Optional;
+import java.util.Scanner;
 import java.util.function.Function;
 
 /**
@@ -86,18 +89,42 @@ public class RatpackDataServer extends AbstractDataServer {
                                         ctx.getResponse().send(result);
                                     });
                                 })
-                                .get(":name", ctx -> {
-                                    String resName = "/public-html/" + ctx.getPathTokens().get("name");
-                                    URL res = getClass().getResource(resName);
-                                    if(res != null) {
-                                        Path path = Paths.get(res.toURI());
-                                        ctx.getResponse().sendFile(path);
+                                .get("textterm/:name", ctx -> {
+                                    String resName = "/public-html/textterm/" + ctx.getPathTokens().get("name");
+                                    String content = getResourceContent(resName).orElse(null);
+                                    if(content == null) {
+                                        ctx.next();
+                                    } else {
+                                        String contentType = MimetypesFileTypeMap.getDefaultFileTypeMap().getContentType(resName);
+                                        if(contentType != null) {
+                                            ctx.getResponse().contentType(contentType);
+                                        }
+                                        ctx.getResponse().send(content);
+                                    }
+                                })
+                                .files(files -> {
+                                    if(baseDir != null) {
+                                        files.dir(baseDir);
                                     }
                                 })
                 );
             });
         } catch (Exception e) {
             logger.error("Ratpack failure", e);
+        }
+    }
+
+    protected Optional<String> getResourceContent(String resourceName) {
+        URL url = getClass().getResource(resourceName);
+        if(url == null) return Optional.empty();
+        return getUrlContent(url);
+    }
+
+    protected Optional<String> getUrlContent(URL url) {
+        try(Scanner scanner = new Scanner(url.openStream(), "UTF-8")) {
+            return Optional.of(scanner.useDelimiter("\\A").next());
+        } catch (IOException e) {
+            return Optional.empty();
         }
     }
 

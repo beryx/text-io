@@ -46,7 +46,7 @@ link:javadoc/org/beryx/textio/web/TextIoApp.html[TextIoApp] (such as
 link:javadoc/org/beryx/textio/web/SparkTextIoApp.html[SparkTextIoApp] or
 link:javadoc/org/beryx/textio/web/RatpackTextIoApp.html[RatpackTextIoApp]),
 while the web page makes use of the library
-link:{blob-root}/text-io-web/src/main/resources/public-html/textterm.js[textterm.js],
+link:{blob-root}/text-io-web/src/main/resources/public-html/textterm/textterm.js[textterm.js],
 as shown in the code snippet below.
 
 [source, html]
@@ -58,7 +58,7 @@ as shown in the code snippet below.
     </span>
 </div>
 
-<script src="textterm.js"></script>
+<script src="textterm/textterm.js"></script>
 <script>
     var textTerm = TextTerm.init(document.getElementById("textterm"));
 </script>
