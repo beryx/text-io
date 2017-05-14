@@ -15,19 +15,18 @@
  */
 package org.beryx.textio.demo.app;
 
+import com.google.gson.Gson;
 import org.beryx.textio.*;
 
-import java.util.function.Consumer;
-
-import static org.beryx.textio.PropertiesConstants.*;
+import java.util.function.BiConsumer;
 
 /**
  * A simple application illustrating the use of TextIO.
  */
-public class Cuboid implements Consumer<TextIO> {
+public class Cuboid implements BiConsumer<TextIO, String> {
     public static void main(String[] args) {
         TextIO textIO = TextIoFactory.getTextIO();
-        new Cuboid().accept(textIO);
+        new Cuboid().accept(textIO, null);
     }
 
     private static class TextProps {
@@ -84,8 +83,10 @@ public class Cuboid implements Consumer<TextIO> {
     }
 
     @Override
-    public void accept(TextIO textIO) {
+    public void accept(TextIO textIO, String initData) {
         TextTerminal terminal = textIO.getTextTerminal();
+        AppUtil.printGsonMessage(terminal, initData);
+
         TerminalProperties props = terminal.getProperties();
 
         new TextProps(props, "title").configurePrompt();

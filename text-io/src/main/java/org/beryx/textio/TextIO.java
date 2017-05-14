@@ -35,6 +35,10 @@ public class TextIO {
         return textTerminal;
     }
 
+    public void dispose(String resultData) {
+        textTerminal.dispose(resultData);
+    }
+
     public void dispose() {
         textTerminal.dispose();
     }

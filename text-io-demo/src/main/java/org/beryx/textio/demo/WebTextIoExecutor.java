@@ -23,8 +23,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static spark.Spark.stop;
-
 /**
  * Allows executing code in a {@link org.beryx.textio.web.WebTextTerminal}
  * by configuring and initializing a {@link TextIoApp}.
@@ -39,7 +37,6 @@ public class WebTextIoExecutor {
 
     public void execute(TextIoApp app) {
         Consumer<String> stopServer = sessionId -> Executors.newSingleThreadScheduledExecutor().schedule(() -> {
-            stop();
             System.exit(0);
         }, 2, TimeUnit.SECONDS);
 

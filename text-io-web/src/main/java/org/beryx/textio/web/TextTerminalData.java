@@ -15,11 +15,14 @@
  */
 package org.beryx.textio.web;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The data sent by the server to a polling web component.
@@ -71,6 +74,7 @@ public class TextTerminalData {
 
     private final List<MessageGroup> messageGroups = new ArrayList<>();
     private Action action = Action.NONE;
+    private String actionData = null;
     private boolean resetRequired = true;
 
     public TextTerminalData getCopy() {
@@ -83,6 +87,7 @@ public class TextTerminalData {
             data.messageGroups.add(copyGroup);
         });
         data.action = action;
+        data.actionData = actionData;
         data.resetRequired = resetRequired;
         return data;
     }
@@ -118,9 +123,29 @@ public class TextTerminalData {
         group.settings.add(keyVal);
     }
 
-    public void addMessage(String message) {
+    public void addRawMessage(String message) {
         MessageGroup group = (messageGroups.isEmpty()) ? newMessageGroup() : messageGroups.get(messageGroups.size() - 1);
         group.messages.add(message);
+    }
+
+    public String addMessage(String message) {
+        String escapedMessage = StringEscapeUtils.escapeHtml4(message);
+        escapedMessage = Arrays.stream(escapedMessage.split("\\R", -1))
+                .map(line -> line.replaceAll("\t", "    "))
+                .map(line -> {
+                    int count = 0;
+                    while(count < line.length() && line.charAt(count) == ' ') count++;
+                    if(count == 0) return line;
+                    StringBuilder sb = new StringBuilder(line.length() + 5 * count);
+                    for(int i = 0; i < count; i++) {
+                        sb.append("&nbsp;");
+                    }
+                    sb.append(line.substring(count));
+                    return sb.toString();
+                })
+                .collect(Collectors.joining("<br>"));
+        addRawMessage(escapedMessage);
+        return escapedMessage;
     }
 
     public Action getAction() {
@@ -128,6 +153,13 @@ public class TextTerminalData {
     }
     public void setAction(Action action) {
         this.action = action;
+    }
+
+    public String getActionData() {
+        return actionData;
+    }
+    public void setActionData(String actionData) {
+        this.actionData = actionData;
     }
 
     public boolean isResetRequired() {
@@ -149,6 +181,7 @@ public class TextTerminalData {
     public void clear() {
         messageGroups.clear();
         action = Action.NONE;
+        actionData = null;
         resetRequired = false;
     }
 
@@ -156,6 +189,7 @@ public class TextTerminalData {
     public String toString() {
         return "resetRequired: " + resetRequired +
                 ", action: " + action +
+                ", actionData: " + actionData +
                 ", messageGroups: " + messageGroups;
     }
 }

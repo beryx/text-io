@@ -17,21 +17,25 @@ package org.beryx.textio.demo.app;
 
 import org.beryx.textio.TextIO;
 import org.beryx.textio.TextIoFactory;
+import org.beryx.textio.TextTerminal;
 
 import java.time.Month;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * A simple application illustrating the use of TextIO.
  */
-public class UserDataCollector implements Consumer<TextIO> {
+public class UserDataCollector implements BiConsumer<TextIO, String> {
     public static void main(String[] args) {
         TextIO textIO = TextIoFactory.getTextIO();
-        new UserDataCollector().accept(textIO);
+        new UserDataCollector().accept(textIO, null);
     }
 
     @Override
-    public void accept(TextIO textIO) {
+    public void accept(TextIO textIO, String initData) {
+        TextTerminal terminal = textIO.getTextTerminal();
+        AppUtil.printGsonMessage(terminal, initData);
+
         String user = textIO.newStringInputReader()
                 .withDefaultValue("admin")
                 .read("Username");
@@ -48,10 +52,10 @@ public class UserDataCollector implements Consumer<TextIO> {
         Month month = textIO.newEnumInputReader(Month.class)
                 .read("What month were you born in?");
 
-        textIO.getTextTerminal().printf("\nUser %s is %d years old, was born in %s and has the password %s.\n", user, age, month, password);
+        terminal.printf("\nUser %s is %d years old, was born in %s and has the password %s.\n", user, age, month, password);
 
         textIO.newStringInputReader().withMinLength(0).read("\nPress enter to terminate...");
-        textIO.dispose();
+        textIO.dispose("User '" + user + "' has left the building.");
     }
 
     @Override

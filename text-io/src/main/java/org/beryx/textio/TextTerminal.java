@@ -74,8 +74,18 @@ public interface TextTerminal<T extends TextTerminal<T>> {
      * This method is typically called at the end of a text-based input/output session in order to allow the terminal to release its screen resources.
      * The terminal should be able to rebuild the released resources when a print or read method is subsequently called.
      * The default implementation does nothing.
+     *
+     * @param resultData stringified information about the outcome of the input/output session; may be null,
      */
-    default void dispose() {}
+    default void dispose(String resultData) {}
+
+    /**
+     * Convenience method for disposing the terminal without providing information about the outcome of the input/output session.
+     * The default implementation calls {@link #dispose(String)} with a null argument.
+     */
+    default void dispose() {
+        dispose(null);
+    }
 
     /**
      * This method is typically called when a text-based input/output session has been aborted by the user or when a severe error occurred.

@@ -165,7 +165,7 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
         } catch (Exception e) {
             // the error will be logged below
         }
-        logger.warn("Invalid color: " + colorName);
+        logger.warn("Invalid color: {}", colorName);
         return Optional.empty();
     }
 
@@ -177,7 +177,7 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
 
     private String getAnsiColorWithPrefix(int prefix, String colorName) {
         String ansiCode = getColorCode(colorName).map(col -> "\u001B[1;" + prefix + col + "m").orElse("");
-        logger.debug("ansiColor(" + prefix + ", " + colorName + ") = " + ansiCode);
+        logger.debug("ansiColor({}, {}) = {}", prefix , colorName, ansiCode);
         return ansiCode;
     }
 
@@ -338,9 +338,9 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
         }
         try {
             ansiColorMode = AnsiColorMode.valueOf(mode.toUpperCase());
-            logger.debug("ansiColorMed set to: " + ansiColorMode);
+            logger.debug("ansiColorMed set to: {}", ansiColorMode);
         } catch (Exception e) {
-            logger.warn("Invalid value for ansiColorMode: " + mode);
+            logger.warn("Invalid value for ansiColorMode: {}", mode);
         }
     }
 }

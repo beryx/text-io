@@ -42,10 +42,32 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-var TextTerm = (function() {
+var TextTerm = function(ttElem) {
+    "use strict";
     console.log("Creating new terminal.");
 
-    self = {};
+    var self = {};
+    self.textTerminalInitPath = "/textTerminalInit";
+    self.textTerminalDataPath = "/textTerminalData";
+    self.textTerminalInputPath = "/textTerminalInput";
+
+    var textTermElem;
+    var inputElem;
+    var promptElem;
+
+    var action;
+
+    var generateUUID = function() {
+        var d = new Date().getTime();
+        var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = (d + Math.random()*16)%16 | 0;
+            d = Math.floor(d/16);
+            return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+        });
+        return uuid;
+    };
+
+    var uuid = generateUUID();
 
     var history = [];
     try {
@@ -78,15 +100,15 @@ var TextTerm = (function() {
     var browseHistory = function(target, direction) {
         var changedInput = false;
         if(direction == KEY_UP && historyIndex > 0) {
-            if(self.action == 'READ') {
-                self.inputElem.textContent = history[--historyIndex];
+            if(action == 'READ') {
+                inputElem.textContent = history[--historyIndex];
             }
             changedInput = true;
         } else if(direction == KEY_DOWN) {
-            if(self.action == 'READ') {
+            if(action == 'READ') {
                 if(historyIndex < history.length) ++historyIndex;
-                if(historyIndex < history.length) self.inputElem.textContent = history[historyIndex];
-                else self.inputElem.textContent = "";
+                if(historyIndex < history.length) inputElem.textContent = history[historyIndex];
+                else inputElem.textContent = "";
             }
             changedInput = true;
         }
@@ -98,102 +120,125 @@ var TextTerm = (function() {
     var moveCaretToEnd = function() {
         var range = document.createRange();
         var sel = window.getSelection();
-        var childCount = self.inputElem.childNodes.length;
+        var childCount = inputElem.childNodes.length;
         if(childCount > 0) {
-            range.setEnd(self.inputElem.childNodes[0], self.inputElem.textContent.length);
+            range.setEnd(inputElem.childNodes[0], inputElem.textContent.length);
         } else {
-            range.setEnd(self.inputElem, self.inputElem.textContent.length);
+            range.setEnd(inputElem, inputElem.textContent.length);
         }
         range.collapse(false);
         sel.removeAllRanges();
         sel.addRange(range);
     };
 
-    var generateUUID = function() {
-        var d = new Date().getTime();
-        var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = (d + Math.random()*16)%16 | 0;
-            d = Math.floor(d/16);
-            return (c=='x' ? r : (r&0x3|0x8)).toString(16);
-        });
-        return uuid;
-    }
 
-    var resetTextTerm = function() {
-        console.log("Resetting terminal.")
-        var pairs = self.textTermElem.querySelectorAll(".textterm-pair");
-        for (var i = 0; i < pairs.length - 1; i++) {
-            self.textTermElem.removeChild(pairs[i]);
+    var displayMessageGroups = function(messageGroups) {
+        var groupCount = messageGroups.length;
+        console.log("groupCount: " + groupCount);
+        for(var k = 0; k < groupCount; k++) {
+            var settingsCount = applySettings(messageGroups[k].settings);
+            var msgCount = messageGroups[k].messages.length;
+            console.log("msgCount: " + msgCount);
+            if (msgCount > 0) {
+                var newPrompt = "";
+                for (var i = 0; i < msgCount; i++) {
+                    newPrompt += messageGroups[k].messages[i];
+                }
+                if(settingsCount > 0) {
+                    createNewTextTermPair("");
+                }
+                promptElem.innerHTML += newPrompt;
+                textTermElem.scrollTop = textTermElem.scrollHeight;
+                inputElem.focus();
+            }
         }
-        self.promptElem.textContent = "";
-        self.inputElem.textContent = "";
-    }
+    };
+
+    var rawHandleXhrError = function(xhr) {
+        switch (xhr.status) {
+            case 403:
+                self.onSessionExpired();
+                break;
+            case 500:
+                self.onServerError();
+                break;
+            default:
+                console.log("xhr: readyState = " + xhr.readyState + ", status = " + xhr.status);
+                if(xhr.status > 200) {
+                    setTimeout(requestData, 2000);
+                }
+                break;
+        }
+    };
+
+    var handleXhrError = function(xhr) {
+        return (function() {
+            rawHandleXhrError(xhr);
+        });
+    };
+
+
+    var handleXhrStateChange = function(xhr) {
+        return (function() {
+            if((xhr.readyState == XMLHttpRequest.DONE) && (xhr.status == 200)) {
+                var data = JSON.parse(xhr.responseText);
+                if (data.resetRequired) {
+                    self.resetTextTerm();
+                }
+                displayMessageGroups(data.messageGroups);
+                console.log("action: " + data.action);
+                if (data.action != 'NONE') {
+                    action = data.action;
+                }
+                var textSecurity = (action == 'READ_MASKED') ? "disc" : "none";
+                inputElem.style["-webkit-text-security"] = textSecurity;
+                inputElem.style["text-security"] = textSecurity;
+
+                if (action == 'DISPOSE') {
+                    inputElem.setAttribute("contenteditable", false);
+                    self.onDispose(data.actionData);
+                } else if (action == 'ABORT') {
+                    inputElem.setAttribute("contenteditable", false);
+                    self.onAbort();
+
+                } else {
+                    requestData();
+                }
+            } else {
+                rawHandleXhrError(xhr);
+            }
+        });
+    };
 
     var requestData = function() {
         var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState == XMLHttpRequest.DONE) {
-                if(xhr.status == 200) {
-                    var data = JSON.parse(xhr.responseText);
-                    if (data.resetRequired) {
-                        resetTextTerm();
-                    }
-                    var groupCount = data.messageGroups.length;
-                    console.log("groupCount: " + groupCount);
-                    for(k = 0; k < groupCount; k++) {
-                        var settingsCount = applySettings(data.messageGroups[k].settings);
-                        var msgCount = data.messageGroups[k].messages.length;
-                        console.log("msgCount: " + msgCount);
-                        if (msgCount > 0) {
-                            var newPrompt = "";
-                            for (i = 0; i < msgCount; i++) {
-                                newPrompt += data.messageGroups[k].messages[i];
-                            }
-                            if(settingsCount > 0) {
-                                createNewTextTermPair("");
-                            }
-                            self.promptElem.innerHTML += newPrompt;
-                            self.textTermElem.scrollTop = self.textTermElem.scrollHeight;
-                            self.inputElem.focus();
-                        }
-                    }
-                    console.log("action: " + data.action);
-                    if (data.action != 'NONE') {
-                        self.action = data.action;
-                    }
-                    var textSecurity = (self.action == 'READ_MASKED') ? "disc" : "none";
-                    self.inputElem.style["-webkit-text-security"] = textSecurity;
-                    self.inputElem.style["text-security"] = textSecurity;
-
-                    if (self.action == 'DISPOSE') {
-                        self.inputElem.setAttribute("contenteditable", false);
-                        self.onDispose();
-                    } else if (self.action == 'ABORT') {
-                        self.inputElem.setAttribute("contenteditable", false);
-                        self.onAbort();
-
-                    } else {
-                        requestData();
-                    }
-                } else {
-                    console.log("xhr.onreadystatechange: readyState = " + xhr.readyState + ", status = " + xhr.status);
-                    setTimeout(requestData, 2000);
-                }
-            }
-        };
+        xhr.onreadystatechange = handleXhrStateChange(xhr);
         var rnd = generateUUID();
-        xhr.open("GET", "/textTerminalData?rnd=" + rnd, true);
-        xhr.setRequestHeader("uuid", self.uuid);
+        xhr.open("GET", self.textTerminalDataPath + "?rnd=" + rnd, true);
+        xhr.setRequestHeader("uuid", uuid);
         xhr.send(null);
-    }
+    };
+
+    var currentInitData = null;
+
+    var postInitData = function(initData) {
+        currentInitData = initData;
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = handleXhrStateChange(xhr);
+        xhr.open("POST", self.textTerminalInitPath, true);
+        xhr.setRequestHeader("Content-type", "application/json");
+        xhr.setRequestHeader("uuid", uuid);
+        xhr.send(JSON.stringify(initData));
+    };
 
     var postInput = function(userInterrupt) {
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/textTerminalInput", true);
-        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhr.setRequestHeader("uuid", self.uuid);
+        xhr.onreadystatechange = handleXhrError(xhr);
+        xhr.open("POST", self.textTerminalInputPath, true);
+        xhr.setRequestHeader("Content-type", "text/plain");
+        xhr.setRequestHeader("uuid", uuid);
 
-        var input = self.inputElem.textContent;
+        var input = inputElem.textContent;
 
         if(userInterrupt) {
             console.log("User interrupt!");
@@ -201,9 +246,9 @@ var TextTerm = (function() {
         } else {
             createNewTextTermPair("<br/>");
         }
-        self.inputElem.focus();
+        inputElem.focus();
         xhr.send(input);
-    }
+    };
 
     var getColor = function(colorName) {
         var color = colorName || null;
@@ -211,53 +256,53 @@ var TextTerm = (function() {
             color = null;
         }
         return color;
-    }
+    };
 
     var createNewTextTermPair = function(initialInnerHTML) {
-        newParentElem = self.inputElem.parentNode.cloneNode(true);
-        if(self.inputElem.textContent) {
-            self.inputElem.setAttribute("contenteditable", false);
+        var newParentElem = inputElem.parentNode.cloneNode(true);
+        if(inputElem.textContent) {
+            inputElem.setAttribute("contenteditable", false);
         } else {
-            self.inputElem.parentNode.removeChild(self.inputElem);
+            inputElem.parentNode.removeChild(inputElem);
         }
 
-        self.inputElem = newParentElem.querySelector(".textterm-input");
-        self.inputElem.style.color = getColor(self.settings.inputColor);
-        self.inputElem.style.backgroundColor = getColor(self.settings.inputBackgroundColor);
-        self.inputElem.style.fontWeight = (self.settings.inputBold) ? 'bold' : null;
-        self.inputElem.style.fontStyle = (self.settings.inputItalic) ? 'italic' : null;
-        self.inputElem.style.textDecoration = (self.settings.inputUnderline) ? 'underline' : null;
-        self.inputElem.className = "textterm-input";
+        inputElem = newParentElem.querySelector(".textterm-input");
+        inputElem.style.color = getColor(self.settings.inputColor);
+        inputElem.style.backgroundColor = getColor(self.settings.inputBackgroundColor);
+        inputElem.style.fontWeight = (self.settings.inputBold) ? 'bold' : null;
+        inputElem.style.fontStyle = (self.settings.inputItalic) ? 'italic' : null;
+        inputElem.style.textDecoration = (self.settings.inputUnderline) ? 'underline' : null;
+        inputElem.className = "textterm-input";
         if(self.settings.inputStyleClass) {
-            self.inputElem.classList.add(self.settings.inputStyleClass);
+            inputElem.classList.add(self.settings.inputStyleClass);
         }
-        self.inputElem.textContent = "";
+        inputElem.textContent = "";
 
-        self.promptElem = newParentElem.querySelector(".textterm-prompt");
-        self.promptElem.style.color = getColor(self.settings.promptColor);
-        self.promptElem.style.backgroundColor = getColor(self.settings.promptBackgroundColor);
-        self.promptElem.style.fontWeight = (self.settings.promptBold) ? 'bold' : null;
-        self.promptElem.style.fontStyle = (self.settings.promptItalic) ? 'italic' : null;
-        self.promptElem.style.textDecoration = (self.settings.promptUnderline) ? 'underline' : null;
-        self.promptElem.className = "textterm-prompt";
+        promptElem = newParentElem.querySelector(".textterm-prompt");
+        promptElem.style.color = getColor(self.settings.promptColor);
+        promptElem.style.backgroundColor = getColor(self.settings.promptBackgroundColor);
+        promptElem.style.fontWeight = (self.settings.promptBold) ? 'bold' : null;
+        promptElem.style.fontStyle = (self.settings.promptItalic) ? 'italic' : null;
+        promptElem.style.textDecoration = (self.settings.promptUnderline) ? 'underline' : null;
+        promptElem.className = "textterm-prompt";
         if(self.settings.promptStyleClass) {
-            self.promptElem.classList.add(self.settings.promptStyleClass);
+            promptElem.classList.add(self.settings.promptStyleClass);
         }
-        self.promptElem.textContent = "";
+        promptElem.textContent = "";
         if(initialInnerHTML) {
-            self.promptElem.innerHTML = initialInnerHTML;
+            promptElem.innerHTML = initialInnerHTML;
         }
 
         if(self.settings.paneBackgroundColor) {
-            self.textTermElem.style.backgroundColor = self.settings.paneBackgroundColor;
+            textTermElem.style.backgroundColor = self.settings.paneBackgroundColor;
         }
         if(self.settings.paneStyleClass) {
-            self.textTermElem.className = "textterm-pane";
-            self.textTermElem.classList.add(self.settings.paneStyleClass);
+            textTermElem.className = "textterm-pane";
+            textTermElem.classList.add(self.settings.paneStyleClass);
         }
 
-        self.textTermElem.appendChild(newParentElem);
-    }
+        textTermElem.appendChild(newParentElem);
+    };
 
     var isUserInterruptKey = function(event) {
         var key = event.which || event.keyCode || 0;
@@ -267,7 +312,7 @@ var TextTerm = (function() {
         if(event.altKey != self.settings.userInterruptKeyAlt) return false;
 
         return true;
-    }
+    };
 
     var initSettings = function() {
         self.settings = {};
@@ -293,72 +338,124 @@ var TextTerm = (function() {
 
         self.settings.paneStyleClass = "";
         self.settings.paneBackgroundColor = "";
-    }
+    };
 
     var applySettings = function(settings) {
         var count = settings.length;
-        for (i = 0; i < count; i++) {
+        for (var i = 0; i < count; i++) {
             var key = settings[i].key;
             var value = settings[i].value;
             self.settings[key] = value;
             console.log("settings: " + key + " = " + value);
         }
         return count;
-    }
+    };
 
-    self.init = function(textTermElem) {
-        self.uuid = generateUUID();
+    var create = function(ttElem) {
+        textTermElem = ttElem;
+        inputElem = ttElem.querySelector(".textterm-input");
+        promptElem = ttElem.querySelector(".textterm-prompt");
+
         initSettings();
 
-        self.textTermElem = textTermElem;
-        self.inputElem = textTermElem.querySelector(".textterm-input");
-        self.promptElem = textTermElem.querySelector(".textterm-prompt");
+        self.specialKeyPressHandler = null;
 
-        self.onDispose = function() {
-            console.log("onDispose: default empty implementation");
+        self.displayMessage = function(message, styleClass) {
+            var messageGroup = {
+                messages: [message],
+                settings: []
+            };
+            if(styleClass) {
+                messageGroup.settings = [{key: "promptStyleClass", value: styleClass}];
+            }
+            displayMessageGroups([messageGroup]);
         }
+
+        self.onDispose = function(resultData) {
+            console.log("onDispose: resultData = " + resultData);
+        };
 
         self.onAbort = function() {
             console.log("onAbort: default empty implementation");
+        };
+
+        var waitForEnterToRestart = function(event) {
+            var key = event.which || event.keyCode || 0;
+            event.preventDefault();
+            if(key != 13) return;
+            self.specialKeyPressHandler = null;
+            self.restart();
         }
 
-        textTermElem.onkeyup = function(event) {
+        self.onSessionExpired = function() {
+            console.log("onSessionExpired() called.");
+            self.resetTextTerm();
+            self.displayMessage("<h2>Session expired.</h2><br/>Press enter to restart.", null);
+            self.specialKeyPressHandler = waitForEnterToRestart;
+        };
+
+        self.onServerError = function() {
+            console.log("onServerError() called.");
+            self.resetTextTerm();
+            self.displayMessage("<h2>Session expired.</h2><br/>Press enter to restart.", null);
+            self.specialKeyPressHandler = waitForEnterToRestart;
+        };
+
+        self.resetTextTerm = function() {
+            console.log("Resetting terminal.");
+            var pairs = textTermElem.querySelectorAll(".textterm-pair");
+            for (var i = 0; i < pairs.length - 1; i++) {
+                textTermElem.removeChild(pairs[i]);
+            }
+            promptElem.textContent = "";
+            inputElem.textContent = "";
+        };
+
+        self.execute = postInitData;
+
+        self.restart = function() {
+            postInitData(currentInitData);
+        };
+
+        ttElem.onkeyup = function(event) {
             if(historyIndex < 0) return;
             browseHistory(event.target, event.keyCode);
         };
 
-        textTermElem.onkeydown = function(event) {
+        ttElem.onkeydown = function(event) {
             if(isUserInterruptKey(event)) {
                 postInput(true);
                 event.preventDefault();
             }
         };
 
-        textTermElem.onmouseup = function(event) {
-            var inputHasFocus = (document.activeElement == self.inputElem);
+        ttElem.onmouseup = function(event) {
+            var inputHasFocus = (document.activeElement == inputElem);
             var sel = window.getSelection();
             var selRange = sel.getRangeAt(sel.rangeCount - 1);
             var count = selRange.endOffset - selRange.startOffset;
             if(!count && !inputHasFocus) {
-                self.inputElem.focus();
+                inputElem.focus();
                 moveCaretToEnd();
             }
         };
 
-        textTermElem.addEventListener("keypress", function(event) {
-            var key = event.which || event.keyCode || 0;
-            if(key != 13) return;
-            if(self.action != "READ_MASKED") {
-                updateHistory(self.inputElem.textContent);
+        ttElem.addEventListener("keypress", function(event) {
+            if(self.specialKeyPressHandler) {
+                self.specialKeyPressHandler(event);
+            } else {
+                var key = event.which || event.keyCode || 0;
+                if(key != 13) return;
+                if(action != "READ_MASKED") {
+                    updateHistory(inputElem.textContent);
+                }
+                postInput(false);
+                event.preventDefault();
             }
-            postInput(false);
-            event.preventDefault();
         });
-
-        requestData();
 
         return self;
     };
 
-    return self;
-})();
+    return create(ttElem);
+};

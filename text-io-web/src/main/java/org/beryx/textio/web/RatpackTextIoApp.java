@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class RatpackTextIoApp implements TextIoApp<RatpackTextIoApp> {
@@ -30,7 +31,7 @@ public class RatpackTextIoApp implements TextIoApp<RatpackTextIoApp> {
 
     private final WebTextTerminal termTemplate;
 
-    private final Consumer<TextIO> textIoRunner;
+    private final BiConsumer<TextIO, String> textIoRunner;
     private final RatpackDataServer server;
 
     private Consumer<String> onDispose;
@@ -39,10 +40,10 @@ public class RatpackTextIoApp implements TextIoApp<RatpackTextIoApp> {
     private Cache<String, WebTextTerminal> webTextTerminalCache;
     private int maxInactiveSeconds = 600;
 
-    public RatpackTextIoApp(Consumer<TextIO> textIoRunner, WebTextTerminal termTemplate) {
+    public RatpackTextIoApp(BiConsumer<TextIO, String> textIoRunner, WebTextTerminal termTemplate) {
         this.textIoRunner = textIoRunner;
         this.termTemplate = termTemplate;
-        this.server = new RatpackDataServer(this::getDataApi);
+        this.server = new RatpackDataServer(this::create, this::get);
     }
 
     public RatpackDataServer getServer() {
@@ -55,7 +56,7 @@ public class RatpackTextIoApp implements TextIoApp<RatpackTextIoApp> {
                 CacheBuilder.newBuilder()
                 .expireAfterAccess(maxInactiveSeconds, TimeUnit.SECONDS)
                 .removalListener((RemovalListener<String, WebTextTerminal>) notification ->
-                        logger.debug("removed from cache: " + notification.getKey() + ". Remaining entries: " + webTextTerminalCache.size()))
+                        logger.debug("removed from cache: {}. Remaining entries: {}", notification.getKey(), webTextTerminalCache.size()))
                 .build();
         server.init();
     }
@@ -96,38 +97,43 @@ public class RatpackTextIoApp implements TextIoApp<RatpackTextIoApp> {
         return server.getPort();
     }
 
-    private WebTextTerminal getDataApi(String textTermSessionId) {
+    protected DataApi create(String textTermSessionId, String initData) {
+        logger.debug("Creating terminal for textTermSessionId: {}", textTermSessionId);
+        WebTextTerminal terminal = termTemplate.createCopy();
+        String mapKey = getSessionIdMapKey(textTermSessionId);
+        terminal.setOnDispose(() -> {
+            webTextTerminalCache.invalidate(mapKey);
+            if(onDispose != null) {
+                onDispose.accept(textTermSessionId);
+            }
+        });
+        terminal.setOnAbort(() -> {
+            webTextTerminalCache.invalidate(mapKey);
+            if(onAbort != null) {
+                onAbort.accept(textTermSessionId);
+            }
+        });
+        webTextTerminalCache.put(mapKey, terminal);
+        TextIO textIO = new TextIO(terminal);
+
+        Thread thread = new Thread(() -> textIoRunner.accept(textIO, initData));
+        thread.setDaemon(true);
+        thread.start();
+        webTextTerminalCache.cleanUp();
+        return terminal;
+    }
+
+    protected DataApi get(String textTermSessionId) {
         String mapKey = getSessionIdMapKey(textTermSessionId);
         WebTextTerminal terminal = webTextTerminalCache.getIfPresent(mapKey);
         if(terminal == null) {
-            logger.debug("Creating terminal for textTermSessionId: " + textTermSessionId);
-            terminal = termTemplate.createCopy();
-            terminal.setOnDispose(() -> {
-                webTextTerminalCache.invalidate(mapKey);
-                if(onDispose != null) {
-                    onDispose.accept(textTermSessionId);
-                }
-            });
-            terminal.setOnAbort(() -> {
-                webTextTerminalCache.invalidate(mapKey);
-                if(onAbort != null) {
-                    onAbort.accept(textTermSessionId);
-                }
-            });
-            webTextTerminalCache.put(mapKey, terminal);
-            TextIO textIO = new TextIO(terminal);
-
-            Thread thread = new Thread(() -> textIoRunner.accept(textIO));
-            thread.setDaemon(true);
-            thread.start();
-        } else {
-            logger.trace("Terminal found for mapKey: " + mapKey);
+            throw new DataApiProviderException("Unknown session: " + textTermSessionId);
         }
         webTextTerminalCache.cleanUp();
         return terminal;
     }
 
-    private String getSessionIdMapKey(String textTermSessionId) {
+    private static String getSessionIdMapKey(String textTermSessionId) {
         return "web-text-terminal-" + textTermSessionId;
     }
 }

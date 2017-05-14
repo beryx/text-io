@@ -20,20 +20,22 @@ import org.beryx.textio.TextIO;
 import org.beryx.textio.TextIoFactory;
 import org.beryx.textio.TextTerminal;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * A simple application illustrating the use of TextIO.
  */
-public class ECommerce implements Consumer<TextIO> {
+public class ECommerce implements BiConsumer<TextIO, String> {
     public static void main(String[] args) {
         TextIO textIO = TextIoFactory.getTextIO();
-        new ECommerce().accept(textIO);
+        new ECommerce().accept(textIO, null);
     }
 
     @Override
-    public void accept(TextIO textIO) {
+    public void accept(TextIO textIO, String initData) {
         TextTerminal terminal = textIO.getTextTerminal();
+        AppUtil.printGsonMessage(terminal, initData);
+
         TerminalProperties props = terminal.getProperties();
 
         props.setPromptBold(true);
@@ -97,7 +99,7 @@ public class ECommerce implements Consumer<TextIO> {
 
         props.setPromptColor("green");
         textIO.newStringInputReader().withMinLength(0).read("\nPress enter to terminate...");
-        textIO.dispose();
+        textIO.dispose("Payment receipt sent to " + owner + ".");
     }
 
     @Override

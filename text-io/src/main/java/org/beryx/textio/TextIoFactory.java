@@ -76,7 +76,7 @@ public class TextIoFactory {
                 Class<?> cls = Class.forName(clsName);
                 return (TextTerminal) cls.newInstance();
             } catch(Exception e) {
-                logger.warn("Unable to create a TextTerminal of type " + clsName);
+                logger.warn("Unable to create a TextTerminal of type {}", clsName);
                 return null;
             }
         }

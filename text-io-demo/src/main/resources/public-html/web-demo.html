@@ -19,13 +19,19 @@
 
 <script src="textterm/textterm.js"></script>
 <script>
-    var textTerm = TextTerm.init(document.getElementById("textterm"));
-    textTerm.onDispose = function() {
-        document.getElementById("app-done").textContent = "You can now close this window.";
+    var textTerm = TextTerm(document.getElementById("textterm"));
+    textTerm.onDispose = function(resultData) {
+        var message = "You can now close this window.";
+        if(resultData) {
+            message = resultData + " " + message;
+        }
+        document.getElementById("app-done").textContent = message;
     }
     textTerm.onAbort = function() {
         document.getElementById("app-done").textContent = "Program aborted by the user. You can now close this window.";
     }
+    textTerm.settings.paneBackgroundColor = "#000022";
+    textTerm.execute("Thanks for using the WebTextTerminal!\n");
 </script>
 
 </body>

@@ -83,29 +83,29 @@ public abstract class AbstractTextTerminal<T extends AbstractTextTerminal<T>> im
     public Optional<Reader> getPropertiesReader() {
         String propsPath = System.getProperty(SYSPROP_PROPERTIES_FILE_LOCATION, null);
         if(propsPath != null) {
-            logger.debug("Found system property " + SYSPROP_PROPERTIES_FILE_LOCATION + " with value: " + propsPath);
+            logger.debug("Found system property {} with value: {}", SYSPROP_PROPERTIES_FILE_LOCATION, propsPath);
             if(!new File(propsPath).isAbsolute()) {
                 propsPath = System.getProperty("user.dir") + "/" + propsPath;
             }
         } else {
-            logger.debug("System property " + SYSPROP_PROPERTIES_FILE_LOCATION + " not set.");
+            logger.debug("System property {} not set.", SYSPROP_PROPERTIES_FILE_LOCATION);
             propsPath = System.getProperty("user.dir") + "/textio.properties";
         }
         File propsFile = new File(propsPath);
         if(propsFile.exists()) {
             try {
                 Reader reader = new FileReader(propsFile);
-                logger.debug("Found terminal properties file " + propsFile.getAbsolutePath());
+                logger.debug("Found terminal properties file {}", propsFile.getAbsolutePath());
                 return Optional.of(reader);
             } catch (FileNotFoundException e) {
-                logger.warn("Cannot read terminal properties from " + propsFile.getAbsolutePath(), e);
+                logger.warn("Cannot read terminal properties from {}", propsFile.getAbsolutePath(), e);
             }
         } else {
-            logger.debug("Terminal properties file " + propsFile.getAbsolutePath() + " not found");
+            logger.debug("Terminal properties file {} not found.", propsFile.getAbsolutePath());
         }
         URL propsResource = getClass().getResource("/textio.properties");
         if(propsResource != null) {
-            logger.debug("Found terminal properties file in classpath: " + propsResource);
+            logger.debug("Found terminal properties file in classpath: {}", propsResource);
             try {
                 return Optional.of(new InputStreamReader(propsResource.openStream()));
             } catch (IOException e) {

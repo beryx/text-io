@@ -125,8 +125,8 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
     }
 
     @Override
-    public void dispose() {
-        setAction(DISPOSE);
+    public void dispose(String resultData) {
+        setAction(DISPOSE, resultData);
         if(onDispose != null) onDispose.run();
     }
 
@@ -165,7 +165,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
                         input = null;
                         userInterruptedInput = false;
                         if(logger.isTraceEnabled()) {
-                            logger.trace("read: " + (masking ? result.replaceAll(".", "*") : result));
+                            logger.trace("read: {}", masking ? result.replaceAll(".", "*") : result);
                         }
                         return result;
                     }
@@ -181,8 +181,12 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
     }
 
     protected void setAction(TextTerminalData.Action action) {
+        setAction(action, null);
+    }
+
+    protected void setAction(TextTerminalData.Action action, String actionData) {
         if(action == NONE || action == null) {
-            logger.error("Not a proper action: " + action);
+            logger.error("Not a proper action: {}", action);
             return;
         }
         dataLock.lock();
@@ -191,6 +195,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
                 logger.warn("data.getAction() is not NONE");
             }
             data.setAction(action);
+            data.setActionData(actionData);
             dataNotEmpty.signalAll();
             dataHasAction.signalAll();
         } finally {
@@ -203,22 +208,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
         dataLock.lock();
         try {
             if(data.getAction() != ABORT) {
-                String escapedMessage = StringEscapeUtils.escapeHtml4(message);
-                escapedMessage = Arrays.stream(escapedMessage.split("\\R", -1))
-                        .map(line -> line.replaceAll("\t", "    "))
-                        .map(line -> {
-                            int count = 0;
-                            while(count < line.length() && line.charAt(count) == ' ') count++;
-                            if(count == 0) return line;
-                            StringBuilder sb = new StringBuilder(line.length() + 5 * count);
-                            for(int i = 0; i < count; i++) {
-                                sb.append("&nbsp;");
-                            }
-                            sb.append(line.substring(count));
-                            return sb.toString();
-                        })
-                        .collect(Collectors.joining("<br>"));
-                data.addMessage(escapedMessage);
+                String escapedMessage = data.addMessage(message);
                 logger.trace("rawPrint(): signaling data: {}", escapedMessage);
             }
             dataNotEmpty.signalAll();
@@ -331,7 +321,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
     public void setUserInterruptKey(String keyStroke) {
         KeyCombination kc = getKeyCombination(keyStroke);
         if(kc == null) {
-            logger.warn("Invalid keyStroke: " + keyStroke);
+            logger.warn("Invalid keyStroke: {}", keyStroke);
         } else {
             setUserInterruptKey(kc.code, kc.ctrl, kc.shift, kc.alt);
         }
@@ -342,7 +332,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
     }
 
     public void addSettings(KeyValue... keyValues) {
-        logger.debug("Adding settings: " + Arrays.asList(keyValues));
+        logger.debug("Adding settings: {}", Arrays.asList(keyValues));
         dataLock.lock();
         try {
             for(KeyValue keyVal : keyValues) {

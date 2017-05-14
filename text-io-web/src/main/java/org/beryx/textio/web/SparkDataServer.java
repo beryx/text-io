@@ -18,27 +18,61 @@ package org.beryx.textio.web;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
+import spark.Response;
 import spark.Session;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static spark.Spark.*;
 
 /**
  * A SparkJava-based web server that allows clients to access the {@link DataApi}.
  */
-public class SparkDataServer extends AbstractDataServer {
-    private static final Logger logger =  LoggerFactory.getLogger(WebTextTerminal.class);
+public class SparkDataServer extends AbstractDataServer<Request> {
+    private static final Logger logger =  LoggerFactory.getLogger(SparkDataServer.class);
     static {
-        exception(Exception.class, (exception, request, response) -> {
-            logger.error("Spark failure", exception);
-        });
+        exception(Exception.class, (exception, request, response) -> logger.error("Spark failure", exception));
     }
 
-    private final BiFunction<String, Session, DataApi> dataApiProvider;
+    private final BiFunction<SessionHolder, String, DataApi> dataApiCreator;
+    private final Function<SessionHolder, DataApi> dataApiGetter;
 
-    public SparkDataServer(BiFunction<String, Session, DataApi> dataApiProvider) {
-        this.dataApiProvider = dataApiProvider;
+    private final DataApiProvider<Request> dataApiProvider = new DataApiProvider<Request>() {
+        @Override
+        public DataApi create(Request request, String initData) {
+            return dataApiCreator.apply(getSessionHolder(request), initData);
+        }
+
+        @Override
+        public DataApi get(Request request) {
+            return dataApiGetter.apply(getSessionHolder(request));
+        }
+    };
+
+
+    public static class SessionHolder {
+        public final String sessionId;
+        public final Session session;
+
+        public SessionHolder(String sessionId, Session session) {
+            this.sessionId = sessionId;
+            this.session = session;
+        }
+    }
+
+    private static SessionHolder getSessionHolder(Request r) {
+        return new SessionHolder(getId(r), r.session());
+    }
+
+    @Override
+    public DataApiProvider<Request> getDataApiProvider() {
+        return dataApiProvider;
+    }
+
+    public SparkDataServer(BiFunction<SessionHolder, String, DataApi> dataApiCreator, Function<SessionHolder, DataApi> dataApiGetter) {
+        this.dataApiCreator = dataApiCreator;
+        this.dataApiGetter = dataApiGetter;
     }
 
     public SparkDataServer withPort(int portNumber) {
@@ -60,23 +94,30 @@ public class SparkDataServer extends AbstractDataServer {
         return id;
     }
 
-    protected DataApi getDataApi(Request request) {
-        String id = getId(request);
-        return dataApiProvider.apply(id, request.session());
+    protected String configureResponseData(Response response, ResponseData r) {
+        response.status(r.status);
+        response.type(r.contentType);
+        response.body(r.text);
+        return r.text;
     }
 
     public void init() {
+        post("/" + getPathForPostInit(), (request, response) -> {
+            logger.trace("Received INIT");
+            String initData = new String(request.bodyAsBytes(), UTF_8_CHARSET);
+            return configureResponseData(response, handleInit(request, initData));
+        });
+
         get("/" + getPathForGetData(), "application/json", (request, response) -> {
             logger.trace("Received GET");
-            return handleGetData(getDataApi(request));
+            return configureResponseData(response, handleGetData(request));
         });
 
         post("/" + getPathForPostInput(), (request, response) -> {
             logger.trace("Received POST");
-            DataApi dataApi = getDataApi(request);
             boolean userInterrupt = Boolean.parseBoolean(request.headers("textio-user-interrupt"));
-            String input = new String(request.body().getBytes(), "UTF-8");
-            return handlePostInput(dataApi, input, userInterrupt);
+            String input = new String(request.body().getBytes(), UTF_8_CHARSET);
+            return configureResponseData(response, handlePostInput(request, input, userInterrupt));
         });
     }
 }

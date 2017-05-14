@@ -32,36 +32,61 @@ import ratpack.session.SessionModule;
 import javax.activation.MimetypesFileTypeMap;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
  * A Ratpack-based web server that allows clients to access the {@link DataApi}.
  */
-public class RatpackDataServer extends AbstractDataServer {
-    private static final Logger logger =  LoggerFactory.getLogger(WebTextTerminal.class);
+public class RatpackDataServer extends AbstractDataServer<Context> {
+    private static final Logger logger =  LoggerFactory.getLogger(RatpackDataServer.class);
 
     private int port;
     private String baseDir;
-    private final Function<String, DataApi> dataApiProvider;
 
+    private final BiFunction<String, String, DataApi> dataApiCreator;
+    private final Function<String, DataApi> dataApiGetter;
+
+    private final DataApiProvider<Context> dataApiProvider = new DataApiProvider<Context>() {
+        @Override
+        public DataApi create(Context context, String initData) {
+            return dataApiCreator.apply(getId(context), initData);
+        }
+
+        @Override
+        public DataApi get(Context context) {
+            return dataApiGetter.apply(getId(context));
+        }
+    };
+
+    public DataApiProvider<Context> getDataApiProvider() {
+        return dataApiProvider;
+    }
+
+    protected final Action<Chain> handlerPostInit = chain ->
+            chain.post(getPathForPostInit(), ctx -> {
+                logger.trace("Received INIT");
+                Request request = ctx.getRequest();
+                request.getBody().then(req -> {
+                    String initData = req.getText(UTF_8_CHARSET);
+                    sendResponseData(ctx, handleInit(ctx, initData));
+                });
+            });
     protected final Action<Chain> handlerGetData =  chain ->
             chain.get(getPathForGetData(), ctx -> {
                 logger.trace("Received GET");
-                ctx.getResponse().contentType("application/json");
-                ctx.render(handleGetData(getDataApi(ctx)));
+                sendResponseData(ctx, handleGetData(ctx));
             });
 
     protected final Action<Chain> handlerPostInput =  chain ->
             chain.post(getPathForPostInput(), ctx -> {
                 logger.trace("Received POST");
-                DataApi dataApi = getDataApi(ctx);
                 Request request = ctx.getRequest();
                 boolean userInterrupt = Boolean.parseBoolean(request.getHeaders().get("textio-user-interrupt"));
                 request.getBody().then(req -> {
-                    String result = handlePostInput(dataApi, req.getText(Charset.forName("UTF-8")), userInterrupt);
-                    ctx.getResponse().send(result);
+                    String text = req.getText(UTF_8_CHARSET);
+                    sendResponseData(ctx, handlePostInput(ctx, text, userInterrupt));
                 });
             });
 
@@ -88,13 +113,14 @@ public class RatpackDataServer extends AbstractDataServer {
             });
 
     private final List<Action<Chain>> handlers = new ArrayList<>(Arrays.asList(
+            handlerPostInit,
             handlerGetData,
             handlerPostInput,
             handlerTexttermAssets,
             handlerStaticAssets
     ));
 
-    private final List<Action<BindingsSpec>> bindings = new ArrayList<>(Arrays.asList(
+    private final List<Action<BindingsSpec>> bindings = new ArrayList<>(Collections.singletonList(
             b -> b.module(SessionModule.class)
     ));
 
@@ -116,23 +142,24 @@ public class RatpackDataServer extends AbstractDataServer {
             baseDirConfigurator
     ));
 
-    public RatpackDataServer(Function<String, DataApi> dataApiProvider) {
-        this.dataApiProvider = dataApiProvider;
+    public RatpackDataServer(BiFunction<String, String, DataApi> dataApiCreator, Function<String, DataApi> dataApiGetter) {
+        this.dataApiCreator = dataApiCreator;
+        this.dataApiGetter = dataApiGetter;
     }
 
-    public List<Action<Chain>> getHandlers() {
+    protected List<Action<Chain>> getHandlers() {
         return handlers;
     }
 
-    public List<Action<BindingsSpec>> getBindings() {
+    protected List<Action<BindingsSpec>> getBindings() {
         return bindings;
     }
 
-    public List<Action<ServerConfigBuilder>> getConfigurators() {
+    protected List<Action<ServerConfigBuilder>> getConfigurators() {
         return configurators;
     }
 
-    public RatpackDataServer withBaseDir(String baseDir) {
+    protected RatpackDataServer withBaseDir(String baseDir) {
         this.baseDir = baseDir;
         return this;
     }
@@ -171,6 +198,13 @@ public class RatpackDataServer extends AbstractDataServer {
         }
     }
 
+    protected void sendResponseData(Context ctx, ResponseData r) {
+        ctx.getResponse()
+                .status(r.status)
+                .contentType(r.contentType)
+                .send(r.text);
+    }
+
     protected Optional<String> getResourceContent(String resourceName) {
         URL url = getClass().getResource(resourceName);
         if(url == null) return Optional.empty();
@@ -178,7 +212,7 @@ public class RatpackDataServer extends AbstractDataServer {
     }
 
     protected Optional<String> getUrlContent(URL url) {
-        try(Scanner scanner = new Scanner(url.openStream(), "UTF-8")) {
+        try(Scanner scanner = new Scanner(url.openStream(), UTF_8_CHARSET.name())) {
             return Optional.of(scanner.useDelimiter("\\A").next());
         } catch (IOException e) {
             return Optional.empty();
@@ -193,10 +227,5 @@ public class RatpackDataServer extends AbstractDataServer {
         }
         logger.trace("id: {}", id);
         return id;
-    }
-
-    protected DataApi getDataApi(Context ctx) {
-        String id = getId(ctx);
-        return dataApiProvider.apply(id);
     }
 }

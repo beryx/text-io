@@ -290,8 +290,11 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     }
 
     @Override
-    public void dispose() {
+    public void dispose(String resultData) {
         frame.dispose();
+        if(resultData != null && !resultData.isEmpty()) {
+            logger.info("Disposed with resultData: {}.", resultData);
+        }
     }
 
     @Override
@@ -425,7 +428,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
             javafx.scene.paint.Color fxColor = javafx.scene.paint.Color.web(colorName);
             return Optional.of(new Color((float)fxColor.getRed(), (float)fxColor.getGreen(), (float)fxColor.getBlue(), (float)fxColor.getOpacity()));
         } catch (Exception e) {
-            logger.warn("Invalid color: " + colorName);
+            logger.warn("Invalid color: {}", colorName);
             return Optional.empty();
         }
     }
