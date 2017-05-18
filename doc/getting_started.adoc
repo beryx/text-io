@@ -5,7 +5,11 @@ CAUTION: You need Java 8 or newer in order to use Text-IO.
 
 Text-IO is available in Maven Central and JCenter.
 
-[subs="attributes",options="nowrap",title="Maven"]
+
+|===
+|Maven |Gradle
+
+a| [subs="attributes",options="nowrap"]
 ----
 &lt;dependency&gt;
     &lt;groupId&gt;{project-group}&lt;/groupId&gt;
@@ -14,14 +18,20 @@ Text-IO is available in Maven Central and JCenter.
 &lt;/dependency&gt;
 ----
 
-[subs="attributes",options="nowrap",title="Gradle"]
+a| [subs="attributes",options="nowrap"]
 ----
 compile '{project-group}:text-io:{project-version}'
 ----
+|===
 
-In order to use the WebTextTerminal, you have to include the `text-io-web` artifact:
+{nbsp} +
 
-[subs="attributes",options="nowrap",title="Maven"]
+In order to use the link:javadoc/org/beryx/textio/web/WebTextTerminal.html[WebTextTerminal],
+you have to include the `text-io-web` artifact:
+|===
+|Maven |Gradle
+
+a| [subs="attributes",options="nowrap"]
 ----
 &lt;dependency&gt;
     &lt;groupId&gt;{project-group}&lt;/groupId&gt;
@@ -30,7 +40,54 @@ In order to use the WebTextTerminal, you have to include the `text-io-web` artif
 &lt;/dependency&gt;
 ----
 
-[subs="attributes",options="nowrap",title="Gradle"]
+a| [subs="attributes",options="nowrap"]
 ----
 compile '{project-group}:text-io-web:{project-version}'
 ----
+|===
+
+Additionally, you have to include the artifacts needed by the link:javadoc/org/beryx/textio/web/DataServer.html[DataServer] implementation you want to use.
+
+For link:javadoc/org/beryx/textio/web/RatpackDataServer.html[RatpackDataServer]:
+|===
+|Maven |Gradle
+
+a| [subs="attributes",options="nowrap"]
+----
+&lt;dependency&gt;
+    &lt;groupId&gt;io.ratpack&lt;/groupId&gt;
+    &lt;artifactId&gt;ratpack-core&lt;/artifactId&gt;
+    &lt;version&gt;1.4.6&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;io.ratpack&lt;/groupId&gt;
+    &lt;artifactId&gt;ratpack-session&lt;/artifactId&gt;
+    &lt;version&gt;1.4.6&lt;/version&gt;
+&lt;/dependency&gt;
+----
+
+a| [subs="attributes",options="nowrap"]
+----
+compile 'io.ratpack:ratpack-core:1.4.6'
+compile 'io.ratpack:ratpack-session:1.4.6'
+----
+|===
+
+For link:javadoc/org/beryx/textio/web/SparkDataServer.html[SparkDataServer]:
+|===
+|Maven |Gradle
+
+a| [subs="attributes",options="nowrap"]
+----
+&lt;dependency&gt;
+    &lt;groupId&gt;com.sparkjava&lt;/groupId&gt;
+    &lt;artifactId&gt;spark-core&lt;/artifactId&gt;
+    &lt;version&gt;2.6.0&lt;/version&gt;
+&lt;/dependency&gt;
+----
+
+a| [subs="attributes",options="nowrap"]
+----
+compile 'com.sparkjava:spark-core:2.6.0'
+----
+|===

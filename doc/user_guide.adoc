@@ -32,44 +32,7 @@ http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#in[System.in] and
 http://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html[Scanner].
 It is not capable to mask input strings, therefore not recommended when reading sensitive data.
 - link:javadoc/org/beryx/textio/web/WebTextTerminal.html[WebTextTerminal], which allows accessing
-your application via a browser. See details below.
-
-=== Using the WebTextTerminal
-
-The WebTextTerminal works only in conjunction with a web server supporting the
-link:javadoc/org/beryx/textio/web/DataApi.html[DataApi]
-(such as the link:javadoc/org/beryx/textio/web/SparkDataServer.html[SparkDataServer]
-or the link:javadoc/org/beryx/textio/web/RatpackDataServer.html[RatpackDataServer])
-and a web page that contains code for accessing this API.
-Typically, the web server is managed by an implementation of
-link:javadoc/org/beryx/textio/web/TextIoApp.html[TextIoApp] (such as
-link:javadoc/org/beryx/textio/web/SparkTextIoApp.html[SparkTextIoApp] or
-link:javadoc/org/beryx/textio/web/RatpackTextIoApp.html[RatpackTextIoApp]),
-while the web page makes use of the library
-link:{blob-root}/text-io-web/src/main/resources/public-html/textterm/textterm.js[textterm.js],
-as shown in the code snippet below.
-
-[source, html]
-----
-<div id="textterm">
-    <span class="textterm-pair" class="textterm-pane">
-        <span class="textterm-prompt"></span>
-        <span contenteditable="true" class="textterm-input"></span>
-    </span>
-</div>
-
-<script src="textterm/textterm.js"></script>
-<script>
-    var textTerm = TextTerm.init(document.getElementById("textterm"));
-</script>
-----
-TIP: Run the link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/TextIoDemo.java[demo application] and select the _Web terminal_ option to see a WebTextTerminal in action.
-Look at the source code of link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/WebTextIoExecutor.java[WebTextIoExecutor.java]
-and link:{blob-root}/text-io-demo/src/main/resources/public-html/web-demo.html[web-demo.html] for more usage details.
-
-Currently, only WebKit-based browsers (such as Chrome, Opera or Safari) are able to mask input strings.
-Keep this in mind when working with sensitive data.
-
+your application via a browser. See <<web_text_term>> for more details.
 
 == Input Readers
 
@@ -155,7 +118,7 @@ link:javadoc/org/beryx/textio/console/ConsoleTextTerminal.html[ConsoleTextTermin
 - else, a link:javadoc/org/beryx/textio/system/SystemTextTerminal.html[SystemTextTerminal] is provided.
 
 TIP: Look at the source code of
-link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/SimpleApp.java[SimpleApp.java]
+link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/app/UserDataCollector.java[UserDataCollector.java]
 for an example of using the default TextTerminal provided by TextIofactory,
 and link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/TextIoDemo.java[TextIoDemo.java]
 for examples of using custom TextTerminals.
@@ -275,7 +238,7 @@ The properties of a TextTerminal can be accessed at runtime through the method
 link:javadoc/org/beryx/textio/TextTerminal.html#getProperties--[getProperties()],
 which returns a link:javadoc/org/beryx/textio/TerminalProperties.html[TerminalProperties] instance.
 Using this TerminalProperties, you can dynamically configure properties by calling the
-link:javadoc/org/beryx/textio/TerminalProperties.html#put-java.lang.String-java.lang.Object-[put(String key, Object value)] method.
+link:javadoc/org/beryx/textio/TerminalProperties.html#put-java.lang.String-java.lang.Object-['put(String key, Object value)'] method.
 Additionally, convenience methods are available for frequently used properties (for example:
 link:javadoc/org/beryx/textio/TerminalProperties.html#setInputBold-boolean-[setInputBold(boolean bold)] or
 link:javadoc/org/beryx/textio/TerminalProperties.html#setPromptColor-javafx.scene.paint.Color-[setPromptColor(Color color)]).
@@ -285,3 +248,216 @@ TIP: You can learn how to configure and use terminal properties by looking at th
 link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo[source code]
 and the link:{blob-root}/dist/xbin[configuration files]
 of the https://github.com/beryx/text-io/releases/download/v{project-version}/textio-demo-{project-version}.zip[demo application].
+
+[[web_text_term]]
+== Using the WebTextTerminal
+
+The WebTextTerminal works only in conjunction with a web server supporting the
+link:javadoc/org/beryx/textio/web/DataApi.html[DataApi]
+(such as the link:javadoc/org/beryx/textio/web/SparkDataServer.html[SparkDataServer]
+or the link:javadoc/org/beryx/textio/web/RatpackDataServer.html[RatpackDataServer])
+and a web page that contains code for accessing this API.
+Typically, the web server is managed by an implementation of
+link:javadoc/org/beryx/textio/web/TextIoApp.html[TextIoApp] (such as
+link:javadoc/org/beryx/textio/web/SparkTextIoApp.html[SparkTextIoApp] or
+link:javadoc/org/beryx/textio/web/RatpackTextIoApp.html[RatpackTextIoApp]),
+while the web page makes use of the link:{blob-root}/text-io-web/src/main/resources/public-html/textterm/textterm.js[textterm.js]
+library included in the https://www.npmjs.com/package/text-io[text-io npm package],
+as shown in the code snippet below.
+
+[source, html]
+----
+<div id="textterm">
+    <span class="textterm-pair" class="textterm-pane">
+        <span class="textterm-prompt"></span>
+        <span contenteditable="true" class="textterm-input"></span>
+    </span>
+</div>
+<script>
+    var textTerm = createTextTerm(document.getElementById("textterm"));
+    textTerm.execute();
+</script>
+----
+TIP: Run the link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/TextIoDemo.java[demo application] and select the _Web terminal_ option to see a WebTextTerminal in action.
+Look at the source code of link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/WebTextIoExecutor.java[WebTextIoExecutor.java]
+and link:{blob-root}/text-io-demo/src/main/resources/public-html/web-demo.html[web-demo.html] for more usage details.
+
+Currently, only WebKit-based browsers (such as Chrome, Opera or Safari) are able to mask input strings.
+Keep this in mind when working with sensitive data.
+
+[[client_side_library]]
+=== The client-side library
+
+The link:{blob-root}/text-io-web/src/main/resources/public-html/textterm/textterm.js[textterm.js]
+client-side library provides the JavaScript functionality needed to connect your web page to a
+link:javadoc/org/beryx/textio/web/DataServer.html[DataServer].
+The simplest way to use this library is to install the https://www.npmjs.com/package/text-io[text-io npm package]:
+[source]
+----
+npm install text-io
+----
+
+*Library API*:
+
+- <<createTextTerm>>
+- <<Class-TextTerm>>
+  * <<execute>>
+  * <<onDispose>>
+  * <<onAbort>>
+  * <<onSessionExpired>>
+  * <<onServerError>>
+  * <<displayMessage>>
+  * <<displayError>>
+  * <<resetTextTerm>>
+  * <<restart>>
+  * <<specialKeyPressHandler>>
+  * <<textTerminalInitPath>>
+  * <<textTerminalDataPath>>
+  * <<textTerminalInputPath>>
+  * <<settings>>
+
+[[createTextTerm]]
+#### createTextTerm(textTermElement)
+Creates and returns a `TextTerm` object for the given DOM element.
+
+  - `textTermElement` _(DOM Element)_
+
+
+[[Class-TextTerm]]
+#### Class: TextTerm
+
+[[execute]]
+##### execute([initData])
+Executes the server-side Text-IO application.
+
+- `initData` - the data used to initialize the server-side Text-IO application.
+
+[[onDispose]]
+##### onDispose(resultData)
+This method is usually triggered by the termination of the server-side Text-IO application.
+
+- `resultData` - the result of the server-side Text-IO application.
+
+By default, this method does nothing more than logging the `resultData`.
+You may assign a custom implementation. Example:
+[source, html]
+----
+<div id="textterm" class="textterm-pane">
+    <span class="textterm-pair">
+        <span class="textterm-prompt"></span>
+        <span contenteditable="true" class="textterm-input"></span>
+    </span>
+</div>
+<h3 id="app-done"> </h3>
+<script>
+    var textTerm = createTextTerm(document.getElementById("textterm"));
+    textTerm.onDispose = function(resultData) {
+        document.getElementById("app-done").textContent =
+            "Result: " + resultData + ". You can now close this window.";
+    }
+    textTerm.onAbort = function() {
+        document.getElementById("app-done").textContent =
+            "Program aborted by the user. You can now close this window.";
+    }
+    textTerm.execute();
+</script>
+----
+
+[[onAbort]]
+##### onAbort()
+This method is usually triggered when the user aborts the server-side Text-IO application.
+
+By default, this method does nothing more than logging the abort operation.
+You may assign a custom implementation similar to the one given in the above example.
+
+[[onSessionExpired]]
+##### onSessionExpired()
+This method is usually triggered when the session has expired.
+By default, this method restarts the server-side Text-IO application with the `initData` used by the previous call of `execute`.
+You may change this default behavior by assigning a custom implementation.
+
+[[onServerError]]
+##### onServerError()
+This method is usually triggered when the server encountered an unexpected condition.
+By default, this method restarts the server-side Text-IO application with the `initData` used by the previous call of `execute`.
+You may change this default behavior by assigning a custom implementation.
+
+[[displayMessage]]
+##### displayMessage(message[, specialPromptStyleClass])
+Displays a prompt message.
+
+- `message` _(String)_ - the message to be displayed.
+- `specialPromptStyleClass` _(String)_ - if provided, represents the CSS class used to style this message.
+
+
+[[displayError]]
+##### displayError(message)
+Displays an error message.
+
+- `message` _(String)_ - the error message to be displayed.
+
+The error message is styled using the CSS class `textterm-error-prompt`.
+
+[[resetTextTerm]]
+##### resetTextTerm()
+Resets the text terminal. All content will be erased.
+
+[[restart]]
+##### restart()
+Restarts the server-side Text-IO application with the `initData` used by the previous call of `execute`.
+
+[[specialKeyPressHandler]]
+##### specialKeyPressHandler(event)
+Default value: null.
+If a custom implementation is provided, it will be used instead of the default keyPress handler.
+
+- `event` _(KeyboardEvent)_ - the keypress event.
+
+[[textTerminalInitPath]]
+##### textTerminalInitPath
+The `pathForInitData` used by the link:javadoc/org/beryx/textio/web/DataServer.html[DataServer].
+Default value: '/textTerminalInit'.
+
+[[textTerminalDataPath]]
+##### textTerminalDataPath
+The `pathForGetData` used by the link:javadoc/org/beryx/textio/web/DataServer.html[DataServer].
+Default value: '/textTerminalData'.
+
+[[textTerminalInputPath]]
+##### textTerminalInputPath
+The `pathForInputData` used by the link:javadoc/org/beryx/textio/web/DataServer.html[DataServer].
+Default value: '/textTerminalInput'.
+
+[[settings]]
+##### settings
+The `settings` object exposes a series of properties for configuring the text terminal.
+
+Properties affecting the DOM Element with class `textterm-pane`:
+
+- `paneBackgroundColor` _(String)_
+- `paneStyleClass` _(String)_
+
+Properties affecting the DOM Element with class `textterm-prompt`:
+
+- `promptBackgroundColor` _(String)_
+- `promptBold` _(Boolean)_
+- `promptColor` _(String)_
+- `promptItalic` _(Boolean)_
+- `promptStyleClass` _(String)_
+- `promptUnderline` _(Boolean)_
+
+Properties affecting the DOM Element with class `textterm-input`:
+
+- `inputBackgroundColor` _(String)_
+- `inputColor` _(String)_
+- `inputBold` _(Boolean)_
+- `inputItalic` _(Boolean)_
+- `inputStyleClass` _(String)_
+- `inputUnderline` _(Boolean)_
+
+Properties affecting the userInterrupt key combination:
+
+- `userInterruptKeyCode` _(String)_: defaultValue = 'Q'
+- `userInterruptKeyCtrl` _(Boolean)_: defaultValue = true
+- `userInterruptKeyShift` _(Boolean)_: defaultValue = false
+- `userInterruptKeyAlt` _(Boolean)_: defaultValue = false
