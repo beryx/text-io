@@ -103,18 +103,18 @@ subprojects {
     }
 
     dependencies {
-      compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
+      compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
       provided 'com.google.code.findbugs:findbugs-annotations:3.0.1'
 
       testCompile "org.codehaus.groovy:groovy-all:$groovyVersion"
-      testCompile('org.spockframework:spock-core:1.1-groovy-2.4-rc-2') {
+      testCompile('org.spockframework:spock-core:1.1-groovy-2.4') {
           exclude module: 'groovy-all'
       }
-      testCompile 'cglib:cglib-nodep:3.2.4'
-      testCompile 'org.objenesis:objenesis:2.4'
-      testCompile('com.athaydes:spock-reports:1.2.13') { transitive = false}
+      testCompile 'cglib:cglib-nodep:3.2.5'
+      testCompile 'org.objenesis:objenesis:2.5.1'
+      testCompile('com.athaydes:spock-reports:1.3.0') { transitive = false}
 
-      testCompile('ch.qos.logback:logback-classic:1.1.7')
+      testCompile('ch.qos.logback:logback-classic:1.2.2')
     }
 
     sourceSets.main.compileClasspath += configurations.provided
@@ -262,7 +262,7 @@ gitPublish {
 
 project('text-io') {
     dependencies {
-      compile 'jline:jline:2.14.2'
+      compile 'jline:jline:2.14.3'
     }
 }
 
@@ -271,10 +271,10 @@ project('text-io-web') {
         compile project(':text-io')
         compile 'com.google.code.gson:gson:2.8.0'
         compile 'org.apache.commons:commons-lang3:3.5'
-        compileOnly 'com.sparkjava:spark-core:2.5.4'
-        compileOnly 'io.ratpack:ratpack-core:1.4.5'
-        compileOnly 'io.ratpack:ratpack-session:1.4.5'
-        testCompile 'io.ratpack:ratpack-test:1.4.5'
+        compileOnly 'com.sparkjava:spark-core:2.6.0'
+        compileOnly 'io.ratpack:ratpack-core:1.4.6'
+        compileOnly 'io.ratpack:ratpack-session:1.4.6'
+        testCompile 'io.ratpack:ratpack-test:1.4.6'
     }
 }
 
@@ -283,10 +283,10 @@ project('text-io-demo') {
     dependencies {
         compile project(':text-io')
         compile project(':text-io-web')
-        compile 'com.sparkjava:spark-core:2.5.4'
-        compile 'io.ratpack:ratpack-core:1.4.5'
-        compile 'io.ratpack:ratpack-session:1.4.5'
-        runtime ('ch.qos.logback:logback-classic:1.1.7')
+        compile 'com.sparkjava:spark-core:2.6.0'
+        compile 'io.ratpack:ratpack-core:1.4.6'
+        compile 'io.ratpack:ratpack-session:1.4.6'
+        runtime ('ch.qos.logback:logback-classic:1.2.2')
     }
     artifacts {
         (System.getenv("TRAVIS") == "true") ? archives(sourcesJar) : archives(sourcesJar, javadocJar)
