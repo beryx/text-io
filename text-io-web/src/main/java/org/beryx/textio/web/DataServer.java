@@ -19,9 +19,7 @@ package org.beryx.textio.web;
  * The interface implementetd by a web server that allows clients to access the {@link DataApi}.
  */
 public interface DataServer {
-    public static final String DEFAULT_PATH_FOR_GET_DATA = "/textTerminalData";
-    public static final String DEFAULT_PATH_FOR_POST_INPUT  = "/textTerminalInput";
-
+    public DataServer withPathForInitData(String pathForInitData);
     public DataServer withPathForGetData(String pathForGetData);
     public DataServer withPathForPostInput(String pathForPostInput);
 

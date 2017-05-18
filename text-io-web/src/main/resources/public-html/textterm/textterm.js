@@ -42,7 +42,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-var TextTerm = function(ttElem) {
+var createTextTerm = function TextTerm(ttElem) {
     "use strict";
     console.log("Creating new terminal.");
 
@@ -132,7 +132,7 @@ var TextTerm = function(ttElem) {
     };
 
 
-    var displayMessageGroups = function(messageGroups) {
+    var displayMessageGroups = function(messageGroups, specialPromptStyleClass) {
         var groupCount = messageGroups.length;
         console.log("groupCount: " + groupCount);
         for(var k = 0; k < groupCount; k++) {
@@ -144,13 +144,17 @@ var TextTerm = function(ttElem) {
                 for (var i = 0; i < msgCount; i++) {
                     newPrompt += messageGroups[k].messages[i];
                 }
-                if(settingsCount > 0) {
-                    createNewTextTermPair("");
+                if(specialPromptStyleClass || settingsCount > 0) {
+                    createNewTextTermPair("", specialPromptStyleClass);
                 }
                 promptElem.innerHTML += newPrompt;
                 textTermElem.scrollTop = textTermElem.scrollHeight;
                 inputElem.focus();
             }
+        }
+        if(specialPromptStyleClass) {
+            createNewTextTermPair("", null);
+            inputElem.focus();
         }
     };
 
@@ -185,7 +189,7 @@ var TextTerm = function(ttElem) {
                 if (data.resetRequired) {
                     self.resetTextTerm();
                 }
-                displayMessageGroups(data.messageGroups);
+                displayMessageGroups(data.messageGroups, null);
                 console.log("action: " + data.action);
                 if (data.action != 'NONE') {
                     action = data.action;
@@ -258,7 +262,7 @@ var TextTerm = function(ttElem) {
         return color;
     };
 
-    var createNewTextTermPair = function(initialInnerHTML) {
+    var createNewTextTermPair = function(initialInnerHTML, specialPromptStyleClass) {
         var newParentElem = inputElem.parentNode.cloneNode(true);
         if(inputElem.textContent) {
             inputElem.setAttribute("contenteditable", false);
@@ -279,20 +283,25 @@ var TextTerm = function(ttElem) {
         inputElem.textContent = "";
 
         promptElem = newParentElem.querySelector(".textterm-prompt");
-        promptElem.style.color = getColor(self.settings.promptColor);
-        promptElem.style.backgroundColor = getColor(self.settings.promptBackgroundColor);
-        promptElem.style.fontWeight = (self.settings.promptBold) ? 'bold' : null;
-        promptElem.style.fontStyle = (self.settings.promptItalic) ? 'italic' : null;
-        promptElem.style.textDecoration = (self.settings.promptUnderline) ? 'underline' : null;
         promptElem.className = "textterm-prompt";
-        if(self.settings.promptStyleClass) {
-            promptElem.classList.add(self.settings.promptStyleClass);
+        if(specialPromptStyleClass) {
+            promptElem.style = null;
+            promptElem.classList.add(specialPromptStyleClass);
+        } else {
+            promptElem.classList.add('textterm-normal-prompt');
+            promptElem.style.color = getColor(self.settings.promptColor);
+            promptElem.style.backgroundColor = getColor(self.settings.promptBackgroundColor);
+            promptElem.style.fontWeight = (self.settings.promptBold) ? 'bold' : null;
+            promptElem.style.fontStyle = (self.settings.promptItalic) ? 'italic' : null;
+            promptElem.style.textDecoration = (self.settings.promptUnderline) ? 'underline' : null;
+            if(self.settings.promptStyleClass) {
+                promptElem.classList.add(self.settings.promptStyleClass);
+            }
         }
         promptElem.textContent = "";
         if(initialInnerHTML) {
             promptElem.innerHTML = initialInnerHTML;
         }
-
         if(self.settings.paneBackgroundColor) {
             textTermElem.style.backgroundColor = self.settings.paneBackgroundColor;
         }
@@ -300,7 +309,6 @@ var TextTerm = function(ttElem) {
             textTermElem.className = "textterm-pane";
             textTermElem.classList.add(self.settings.paneStyleClass);
         }
-
         textTermElem.appendChild(newParentElem);
     };
 
@@ -360,15 +368,16 @@ var TextTerm = function(ttElem) {
 
         self.specialKeyPressHandler = null;
 
-        self.displayMessage = function(message, styleClass) {
+        self.displayMessage = function(message, specialPromptStyleClass) {
             var messageGroup = {
                 messages: [message],
                 settings: []
             };
-            if(styleClass) {
-                messageGroup.settings = [{key: "promptStyleClass", value: styleClass}];
-            }
-            displayMessageGroups([messageGroup]);
+            displayMessageGroups([messageGroup], specialPromptStyleClass);
+        }
+
+        self.displayError = function(message) {
+            self.displayMessage(message, 'textterm-error-prompt');
         }
 
         self.onDispose = function(resultData) {
@@ -390,14 +399,14 @@ var TextTerm = function(ttElem) {
         self.onSessionExpired = function() {
             console.log("onSessionExpired() called.");
             self.resetTextTerm();
-            self.displayMessage("<h2>Session expired.</h2><br/>Press enter to restart.", null);
+            self.displayError("<h2>Session expired.</h2><br/>Press enter to restart.");
             self.specialKeyPressHandler = waitForEnterToRestart;
         };
 
         self.onServerError = function() {
             console.log("onServerError() called.");
             self.resetTextTerm();
-            self.displayMessage("<h2>Session expired.</h2><br/>Press enter to restart.", null);
+            self.displayError("<h2>Server error.</h2><br/>Press enter to restart.");
             self.specialKeyPressHandler = waitForEnterToRestart;
         };
 
@@ -432,7 +441,7 @@ var TextTerm = function(ttElem) {
         ttElem.onmouseup = function(event) {
             var inputHasFocus = (document.activeElement == inputElem);
             var sel = window.getSelection();
-            var selRange = sel.getRangeAt(sel.rangeCount - 1);
+            var selRange = sel.getRangeAt(Math.max(sel.rangeCount, 1) - 1);
             var count = selRange.endOffset - selRange.startOffset;
             if(!count && !inputHasFocus) {
                 inputElem.focus();

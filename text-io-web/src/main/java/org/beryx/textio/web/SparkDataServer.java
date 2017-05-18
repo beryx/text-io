@@ -75,10 +75,12 @@ public class SparkDataServer extends AbstractDataServer<Request> {
         this.dataApiGetter = dataApiGetter;
     }
 
+    @Override
     public SparkDataServer withPort(int portNumber) {
         port(portNumber);
         return this;
     }
+    @Override
     public int getPort() {
         return port();
     }
@@ -101,6 +103,7 @@ public class SparkDataServer extends AbstractDataServer<Request> {
         return r.text;
     }
 
+    @Override
     public void init() {
         post("/" + getPathForPostInit(), (request, response) -> {
             logger.trace("Received INIT");

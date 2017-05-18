@@ -19,7 +19,7 @@
 
 <script src="textterm/textterm.js"></script>
 <script>
-    var textTerm = TextTerm(document.getElementById("textterm"));
+    var textTerm = createTextTerm(document.getElementById("textterm"));
     textTerm.onDispose = function(resultData) {
         var message = "You can now close this window.";
         if(resultData) {

@@ -54,6 +54,7 @@ public abstract class AbstractDataServer<CTX> implements DataServer {
         }
     }
 
+    @Override
     public AbstractDataServer withPathForInitData(String pathForInitData) {
         this.pathForInitData = pathForInitData;
         return this;
@@ -62,6 +63,7 @@ public abstract class AbstractDataServer<CTX> implements DataServer {
         return pathForInitData;
     }
 
+    @Override
     public AbstractDataServer withPathForGetData(String pathForGetData) {
         this.pathForGetData = pathForGetData;
         return this;
@@ -70,6 +72,7 @@ public abstract class AbstractDataServer<CTX> implements DataServer {
         return pathForGetData;
     }
 
+    @Override
     public AbstractDataServer withPathForPostInput(String pathForPostInput) {
         this.pathForPostInput = pathForPostInput;
         return this;

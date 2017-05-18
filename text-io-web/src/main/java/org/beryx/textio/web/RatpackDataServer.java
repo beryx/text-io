@@ -60,6 +60,7 @@ public class RatpackDataServer extends AbstractDataServer<Context> {
         }
     };
 
+    @Override
     public DataApiProvider<Context> getDataApiProvider() {
         return dataApiProvider;
     }
@@ -164,15 +165,17 @@ public class RatpackDataServer extends AbstractDataServer<Context> {
         return this;
     }
 
+    @Override
     public RatpackDataServer withPort(int portNumber) {
         this.port = portNumber;
         return this;
     }
+    @Override
     public int getPort() {
         return port;
     }
 
-
+    @Override
     public void init() {
         try {
             RatpackServer.start(server -> {

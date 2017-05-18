@@ -1,16 +1,23 @@
 #textterm {
     font-family:    'courier', monospace;
-    height:         100%;
     background:     black;
-    color:          lightgreen;
 
     height:         480px;
     resize:         both;
     overflow:       auto;
     margin:         40px;
-    margin-right:   40px;
     padding:        20px;
     word-wrap: break-word;
+}
+
+.textterm-normal-prompt {
+    color:          lightgreen;
+    font-weight:    normal;
+}
+
+.textterm-error-prompt {
+    color:          red;
+    font-weight:    bold;
 }
 
 /**
@@ -18,6 +25,8 @@
 * Also applied to the previous inputs made in the current session.
 */
 #textterm .textterm-input {
+    color:          yellow;
+
     height:         1em;
     min-width:      1em;
     outline-color:  transparent;
