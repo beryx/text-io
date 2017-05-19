@@ -407,9 +407,6 @@ task prepareNpm(type: Copy) {
     from "text-io-web/src/main/resources/public-html/textterm"
     into "build/npm"
     filter(ReplaceTokens, tokens:[textIoVersion : textIoVersion])
-    filesMatching('*.js') {
-        filter { String line -> line.replace("var createTextTerm =", "exports.createTextTerm =") }
-    }
     filteringCharset = 'UTF-8'
 }
 
