@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.3">
+<meta name="author" content="Serban Iordache">
+<title>Text IO</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+<!-- Histats.com  START  (aync)-->
+<script type="text/javascript">var _Hasync= _Hasync|| [];
+_Hasync.push(['Histats.start', '1,3473102,4,0,0,0,00010000']);
+_Hasync.push(['Histats.fasi', '1']);
+_Hasync.push(['Histats.track_hits', '']);
+(function() {
+var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async = true;
+hs.src = ('//s10.histats.com/js15_as.js');
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+})();</script>
+<noscript><a href="/" target="_blank"><img  src="//sstatic1.histats.com/0.gif?3473102&101" alt="free html hit counter" border="0"></a></noscript>
+<!-- Histats.com  END  -->
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>Text IO</h1>
+<div class="details">
+<span id="author" class="author">Serban Iordache</span><br>
+<span id="revnumber">version 2.3.0</span>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#introduction">Introduction</a>
+<ul class="sectlevel2">
+<li><a href="#_demo">Demo</a></li>
+</ul>
+</li>
+<li><a href="#getting_started">Getting Started</a></li>
+<li><a href="#user_guide">User Guide</a>
+<ul class="sectlevel2">
+<li><a href="#_text_terminals">Text Terminals</a></li>
+<li><a href="#_input_readers">Input Readers</a></li>
+<li><a href="#_textio">TextIO</a></li>
+<li><a href="#_textiofactory">TextIoFactory</a></li>
+<li><a href="#_terminal_properties">Terminal properties</a></li>
+<li><a href="#web_text_term">Using the WebTextTerminal</a>
+<ul class="sectlevel3">
+<li><a href="#client_side_library">The client-side library</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The source code is available on <a href="https://github.com/beryx/text-io">GitHub</a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Text-IO is a library for creating Java console applications.
+It can be used in applications that need to read interactive input from the user.</p>
+</div>
+<div class="paragraph">
+<p><strong>Features</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>supports reading values with various data types.</p>
+</li>
+<li>
+<p>allows masking the input when reading sensitive data.</p>
+</li>
+<li>
+<p>allows selecting a value from a list.</p>
+</li>
+<li>
+<p>allows to specify constraints on the input values (format patterns, value ranges, length constraints etc.).</p>
+</li>
+<li>
+<p>provides different terminal implementations and offers a Service Provider Interface (SPI) for configuring additional text terminals.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>By default, Text-IO tries to use text terminals backed by <a href="http://docs.oracle.com/javase/8/docs/api/java/io/Console.html">java.io.Console</a>.
+If no console device is present (which may happen, for example, when running the application in your IDE),
+a Swing-based terminal is used instead.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">TextIO textIO = TextIoFactory.getTextIO();
+
+<span class="predefined-type">String</span> user = textIO.newStringInputReader()
+        .withDefaultValue(<span class="string"><span class="delimiter">&quot;</span><span class="content">admin</span><span class="delimiter">&quot;</span></span>)
+        .read(<span class="string"><span class="delimiter">&quot;</span><span class="content">Username</span><span class="delimiter">&quot;</span></span>);
+
+<span class="predefined-type">String</span> password = textIO.newStringInputReader()
+        .withMinLength(<span class="integer">6</span>)
+        .withInputMasking(<span class="predefined-constant">true</span>)
+        .read(<span class="string"><span class="delimiter">&quot;</span><span class="content">Password</span><span class="delimiter">&quot;</span></span>);
+
+<span class="type">int</span> age = textIO.newIntInputReader()
+        .withMinVal(<span class="integer">13</span>)
+        .read(<span class="string"><span class="delimiter">&quot;</span><span class="content">Age</span><span class="delimiter">&quot;</span></span>);
+
+Month month = textIO.newEnumInputReader(Month.class)
+        .read(<span class="string"><span class="delimiter">&quot;</span><span class="content">What month were you born in?</span><span class="delimiter">&quot;</span></span>);
+
+TextTerminal terminal = textIO.getTextTerminal();
+terminal.printf(<span class="string"><span class="delimiter">&quot;</span><span class="char">\n</span><span class="content">User %s is %d years old, was born in %s and has the password %s.</span><span class="char">\n</span><span class="delimiter">&quot;</span></span>,
+        user, age, month, password);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Click on the image below to see the output of the above example in a Swing-based terminal.</p>
+</div>
+<div class="imageblock thumb">
+<div class="content">
+<a class="image" href="https://github.com/beryx/text-io/raw/master/doc/img/swing-terminal-animated.gif"><img src="data:image/gif;base64,R0lGODdh6gDOAOf/AAABAAIABQcAAAABDgADBgEEAAIFAQAGEAQHAwoIAAMJDRoEAAAMBQkMCAAODwYOAQ0MAQMPCQkQAwITBAATDBQQAAUVBwoVAAEYCgAYEQYYBAAcEAQcCQ4aARcZAAodBAEfDiIXAAAgFCYXAAchCQwiBAIlDgclBwAmFRkhACscAAkoDAIqDighAAsoGA4qByYkAAMtERErAQgtCw0vBjMlACQqAAswDwMzEAoyFhMzAwk1DQU2GRE0DA02BhQzGEEpAAg4FQA7Fw45ERE5CjIyAxU7BQc+FCw2AAw/DwhBHDc2ABJBCgFFGg1CGAZFFApFDRFDEhdDBRJGHAhKHhFJEShEABRKCg1LGRpIEQhOFQ9PEAdRHhROHBlQGA9TGQNXHBdTCwlXFhVUFA5XDgtaHw9aGUpMABVbEwRgHjpTAAtgFxpdDBVeHRFfJBlfFltGTwxkIRhhIRxhGRJkGjxbAAloFgBqJhhlFBVnHQprIU9bABVpJhppIBJsGkxeACJqEVBgABJvJBtvFQ5zGBhwHgV2Kgx1IkRoABd1ERxzIRR2GxN4JRl5Hl1fXAV/KmFoABd7KA5/Ix17IRV/GyF8GWFjYG1qAByBExWCJgeJLBqFKh6FIRCJJCOFGRmKHX5vAHpxAHR1ABmNKSCOIROTJhqSLGaAAFB3o1V3nRKWMJVuXxyYKoJyemyFACGYIXxxm3uBAIGBABWeJhGfMCabJSOcLhyhKiOiIQ2oL35/fReoJyOlLpGJAJ17fIOAqBmsNA6yMCKtLZOHh4uKiHWQpiC2K5eZAK6HfZCTkaqaAIyUm6qSiR7GNKySl7eYkaqdi6Gdun2mzbyoAJWotJmtusSmosK5AIy76Mqzrsy1n629yOuzeorF/rrCysDE0+y/lrHN5bLO2arP8qLR/7/S0MjQ2NTQwrna3dLW1vTRsLfc/9XbvdXe5sni8ezc19vg49/h3ufh4vjj0vHk5efp6+jp897t/+3wy/bt5u3w8/Dy7/b18vb6/f//9v7//CwAAAAA6gDOAAAI/gC7rRtIsKDBgwgTKlzIsKHDhxAjSpxIsaLFdeTW/dvIsaPHjyBDihxJsqTJkyhTqlzJsqXLf/c0/mtHk2a/lzhz6tzJs6fPljH/9avXT908fu3+QSN2b+NNpUw9+vvWcd/Tn1izat1q0lEyYulIJttIzGNQffDycQOnz9w/eu7y1ZOHD9bbuHPlwYsHb25YeefscR1MuPDJeIj3if23L15JXbo+noXnLdk2b27hriqmjd2vf+/cbX6GbJs4Zr+e+SoHp1w9w7Bjw0Ycj9/ixo8jm9WoL126at4o39VGzRm6Yf3gEs9mrZ27bNGYl2tVTp/s69iz/7P0NezIsf/K/nYM2s9btfPVXmtfz7691qDu48ufrxM+/fv484e8Jy3Zsv8ABijggAQWaOCBCCao4IIMNujggxBGKKE7qBRg4YUYZqjhhhx26OGHIIYo4ogklmjiiSimWEA4FaqYIQEaZMgAhgxcgKEGCLio44489ujjjxayOAEnaeChYwBoZGjCjBYSwKSFCmwB5JRUVmmljiwWgAcFTBSyCQelkKLBKH2cwMsoE0hyCBXCKLIGJY1McOEAZBTwyC0G4DEJF21e0UUYBtwyCgQDhFFAEExcqeiijF6Z5SGZlMBJnKOM8gIrY0TAiiF4HMJKHLX88Aolk8hpIZ0BlNJMD3ZIwkio/qR8UQsFpDxyRQB1HnFFo7z26uuJWfYYwCIkdkHEr8gmq6yGwS7r7LPQKtosik9mKICFEFh4bbTcditthY8w8sKJJJiK4R5AtDBCKAWgG4K38MbbY5ZYYCBGI4wg0ActLxyyyQy7yEEJHXRc4MYiSdDRiAUxQIFhHdMU4EosAkAs78UYA1uhKmNM4GkJtJRCwqQP6BGMBIX4EcEji0zghyRQxCBlxjTXnOK0Nues87c79+zzlDhzqIEBBTDwgYUTEM0hBz83TXOWcTAiQYcnWFAAATkWIMKxHMYwtdNgw5vlBBAwcIsZFoxCSxKTNPIABxIQQAUaATTyiA8WBjDK/ixDUMIIAyRAQMIVX1BQCpphJ55slnpMQkItQyRhAhsUfBwJIyd8cQsDmWgyyIUxoGHBIbZ8IIkiI48yAyejdCAEJ4rH3mjQstfuNO22574z7iNWO+IEWX/IQIwWMhD8h0yXeMLxRTOv++ypFMCKHg5/uIaG5YIYxLYlYl3AEAVgwLWG4GN4hPMYln+hFr4XwAHeIar//I5ZZsIEB6wcsgMvdEAB5wOMiEMVWPEEAxzuBGs4hNWu5jcmEaARo8BAJ5JUijZooA0QoAAu1sCAReSCBhbCwC3iMAcqbIEAnTDDBD5Bh6wp4BOKYEAnxMC9GwiAA5yYBAEkMYsCbIIU/gzgBA0vJAgxPOBCfqDDE0hhBwJMohYCuEUbJhCJWkTAD41oACfGQIJPTKIAkcDDmFgxvxKFI3rC0AMhdhEHGuRCEUmQxCQkEIlD9EAPhZBApWjgh0xUwUIcIF0JkEYKtzWBEy+ghRkKkAlF4AAXXXiBJIIRvD6czA21MEAXMvEETJRhXAUwwSJucQEuZOJoFtKEH1YwCkowYBTNGAIpvvgFSRCvAGbIhI0sdIhDtKESemBlM14AjDG8shkrkITbzDCJGJCCE6migwlKIYkC8GFXZQRR0Ahgh14xYA3cy6Y4mdUiDBmgfVdiADrHOU7esfOdynInPOfZK3nS8548/sOnPn1lz336c17l/KdAqdRPD0VAadbClrYUWoBtZWug88vSJiYByhJlL0OBSJcKQmGAjMJgowXw6EbRB1HFZYkLJBgDvh5AB355KQa4iEMlzGAGDZTBD0RAQyEssIIkYEgNyijAKUQhAKBKjKhGdYUoEFrS2mVJFVvwGCtKwAuRjWIRD7AkBAhRiAhMdAJeqsINDNVUiBa0rGjt0FnTylYMrfUCMAhnW81aoUjUCUSg8EAF5lrWk36CAWYoxAxYMQoNmMBIF/qDKGDA16ayiAWv6AIpCMGJIY3iAzzwBIYgIYuHNnag08LADr722cZOCwEkLS1a+0mCHDFgkO5L/i0JmKpa3TGuVB0ywQIvJAIjdGgFpK2tbSs0gQYw4BVjsEAmWDGESTDiARqYWhDoNghBwC8AkqjFDhpIggaAwE8TIOwuhZu4LAlCEiWYhRMkhwYKKGKqcnyBG3CBANZ9zkIxIAMGFFG6TDSCBKMoxQwy0TohfIK8YVsrgv+p4AXvs8EZShqIMJDaE51gURNYp45WIFcOIWBGILhl085YgFsconoe6gP2zDWiI7gIBw1QkU895FMQ+HZKTwjnjGXkBxCe4A4JAFuWHpGECRRyBrcQgxaUCcAvJKEUQzAAYV8gBj8sEAGUOISmJHFEC30hg7UQQwQkoQUNTCoChaBF/hYmhQA3rIEETWLELVZ3CAPEQAAskIIxD2cqbt6iBKzwggZIMQoOwBABkqjCyL6oBzQkD9FVwIAn8IDdWUQAF3S4EAnEQIcHFJF4r+TEDsQwih08YRMfIEUhCpDjCzFAElEwgRjscLwdhO8QFa4ZiYWBRWG4oQfAiAQR2kbHSPggDouQwCZUF1ZA8ncGpbDVhTbRiB1AkgZNsBSpEJAJYwxJh1flXhC2AAJFkFITigCTLU4gicJeSBLGuEAu0EAAAkdBEbyQwBc4wUpKpKoQ3AMDJ7SACT28gBPNcAIu9ADnAkRgUgFghR+41+4ZNKIWBTgEMOiwCGE8oBR9MBcd/iRhghxeCAGHOLAiRlGAMmDTZ0EzgB96NQFw9sgCNnfWF1isT9rRVlE/d1HQkTV0ekLYwfc8OtLnqfSlv7PpTm9nQKPe16lTvaRrZcC7kLCEDl/dqRWSBBtAZIBLXKIAS0DEAr4e0QqBgRQPGEMfBltYE5D1QuwqgCjY3vYYvIIKpFgEJyRA4A8E4cAXgsQ1KpCCGvD9edMiwRGC+3imW73yPQ8oz0vEAMrziALj/RAFYBvCC2N+RCwquRNKkSgMdTNETjAAl6gkhhMRIBFHKPrpM5QlSphBDIRgXyZuIQBS7EBpOABVAwpRhSqUQgtUrAIDGjGGr5mgEZ2Adicu/jCKKmigFNsnIhfQoAUu9sEQ4x24FrQghgm4QQw3eIUZlEaAIFQBAZ2IxBGfsHsRZYkVm3AFnrBeo2AML4BsxHMEU7ALWcAInDADuPAEPqAEoxAFntAF8EMAuMAFnDMKK0ALc8BIrXMhKzAIBEAJi2AAkgAMrWcCwtAJJ4CCBHBVJIALZgBKE8AHr0ABnPAIRsADldB/IQJ1OxIAX0B6QshPl5eE7OROBiBiTAh2HWIAaJAkGqIBtIAGo4AHFpBGpPAJWpAEm0AGFMAKhQBg1xSF3SJPRsIBtpY3JZAGAtAIZiAAkgAGWyADHIAAZVAKAjAIXcAAMfBHasgt7mQG/rggATdghRbyQzHgB07QB9FGBIzgB0rwCVRQCnPGBGXwRYUYLUT4ibuzhKI4XB7CATNQirHDOwywBTMAhQUwCn4QYCR3JpdSCCxQCoIwCFuIALxACivwCUcAQqr4K+6EAUxgABxAjBbCBXhwRWNQAILQBTvgB11QAGiQAT4gCXWIRwiAAoxYjPVEihNwCzu1iBiiCkwwAbUwCUSQC3Y1Z0mgB6PwBHjQBGZQCyCAB25ACrkmjkBDigBpUgI5kAkmkBhwAwY5YgLJBCsAhRxQC0HgCbLoi6QwAY2wCT1ACpvQegu5OAIZAO2nAcwYAKQgB1tAhwWgB4eQig11CIIQ/nofqYQdggCNoAgXgI4WkgOkMAXCgAdHkI8cQAiM0Ag3wJEvN5M0qZSyE4pMaYgFCQJPmTPuxAKZpCGawAYEMAuLwAG5UAoXIAevAAKsMD5TOTsCWQidhgEuaSFu4IeNMAQSwJIJEACGkgMFoJBniZYeEnGKyIg58AlTwAmzUAUEcAscsAhtMJalcAiItZeL4pSQGU8FOZkZ404zEGWWKS+8EwCPiSEbgAtCQJEqQwp3MDObyZe55X1seSEm2QZbIAltgAAmEAWpOY5TiC8ToJMFEJg+CZRjUEted5sEVZnE6S2SeZyMIk9HoGHKuZQcIgiwWAAawAuKQApakAbC/iAIlFALmTCdz0k/pEgApdADEmABFRUAL5AGDSADQzMJbUAEfkCI4Qkk7gQGCsSbjHRgh7BK0XYFrCAJzFifAEWgl2mcBkqZHnIESfCPCVolrCgBJrB51XmdWmAGqkAEGEAKRwA/D4olBZkGBYCerjkD7OmeD4CXO7AB1/Oh4ukhBFAn+klgGecHAKYIdFAG/uiiIMqjyImgPqqaHEIC8hOk+bQhBhAGJgCLm4AHIICdTOAvhBArSSAIqkAGkSAMMmmkakWKVDgEEzABpmchcfAKEyADGCACVxADZqCHDPAETcAEDrAFuselF+JOhYAHf3khOcAJSpBlfmAAk2Bd/v1ZAMLACRCgB5xQp3a6IkDaqBD6qJAakB5CAjs2qZTKIQSABxgAi4LACldQC4OnCpIwBln6AcDwCIQACEOgBVX1ArfACSBQVZ4XpJipaGKKIU/gBDtgB3/0BVGQBHMqAIdAAyTQBpwgAH3AoHbAf3qQCZjKOwRgBoRgAPopDJtAAqXQCC+gCURAAHzACRRwC3pQCnPgBGZAC5GwBaUwCTtQChjweo2anJhqRpJarwWqIQgwNRhwqfiarxmiBzpAAGwQYgXAVIbggYyQCVEgDIZABpmwCCAADKUAq7L6lbUKqbTzWgzABBagARNAegcwdixXNDtAAFoQN0yQBkMQ/gXNKo3Q+q9BcnlxwAkXEAedpp9xUGi99AFxQAkCwAiKIEKMwK7VBq8zJ7P0KrPadK9MqyK0gwByAjhPC7AYIrAFIAYtGjwYYAx6MAhqMgQAOEqcwAO4sHq30AgbkKpoUAuK0GXRenmvZSFGMgENZyGNEAdoMAEEIAUxQAjcBAUB8AlmsAV2MAQXIAgz8ECzia+0U7MckI97GkKkYAg+cAh5tAJEYDiLYAaVoASk0JgrYAtfWwon4JGTurRVyyGqu7rktCFSG0r+6roasyECywBrGiPBEwC8kAlDEKsTwAiSQLY8MAtNoIlqy7a1UAhwm7qXFwGDZAIOIwGo5GUF/pCnUXAAuxIBeBAFg1u4drADifsCJ5gGjOqij/uArGAHFzADd1UAAWALkbADpCAucRAJVUAKh+C5oKu/J2ALfVAIpju7dtq6tHunTnvAqJfAJEIBFWUhK9C8HmIDBLprj7AFDzAjXBAj6lQ0D4BQH6xOM9LBGUwjR6QHR9TBWcMAKXxEH4YhVqAMw7mZjzID07cDExAHM4ABk9AyPJAE4/UFLncDO1ACflAGHsAIJdBlGsAELCAAhdBGM3AEH3AEDdCvMxABtWBLuVo8vRALQRaeJDYLfTClQ0AEOWApfmAHr9YIGMIBlEYIfoAAaTYGozAHwdNLM0AJhnAFixCo/qdDAr2UuJJwAUqQCBlyDJ6lnA0WAHQwoArMugwcyR9iwApsyQeMybSrya7LyavryVV7dDdAWieweQWwAah7IRHwwVrgBef7IQUEwSYCAtX7ISgAyT0yBEzSqSECXEAiPxjwAATwBIMUBEdDAIsLBsfCAGPwj0JyC3eQCCxcABIwNRMgASA8IxKQA1cQpkVjIRbQvEzCABJmIYLwAgyQADHwJEljAA8wNRKgzUlTzRhCzzOQIxPwBM4DPJ03wizWfgVwzdScYRogzkjDYrZAp8EgCRgwCqSAAX1ACRxgC0jYeU94RA8gBGP6BHwbz0VjLgZgTCZwBTPyzicn0B5N/s4D7c7GI9DXbAASkLQOZwelPDoTkAQz5weDEAB2YAAIQCxDWCFbwgTMBAKzYEuH8AFdNn1DGwZKgAc88AkSgAMQ8NNyeSEUYChaUDoXogGotEhNMgomYAKsMAkxqAgG4AQ2rKhMQgI91QFPfAIroAUawgDtqgWcoAgFAAasMF50QAJ0cAJPcAFdcAIcQAl0fSEbQAQGsAZxALd6gHGjMAYGQAcsNwC25lMuuUOzoACUIAYUQARUcLdaEAcm0Amr1galsNRzoAEgwAbZOAqH0GUc4IpO8AmFQABpwHKRcJGj0AhoQAJmIAF98AFaQAKrdnJwVgXjwk2AxXIaoDJo/oADGetWFZIGlICRdMAAetAIJaAJaMAkFjAHqMYIPxQErHcIinCUTkCMDNAGpFAAquA2FxIHk3ABBIBiBeAAmtXdOzAHo0B4haABA5M1DzRzkrBKvLgDDIchWkALJADgD/DbYcwCAYoBlOAHAdAJNvoKbYBKE9AHnIABfhAJxKgEZEAFa8AKJ4ABi2ABWtAHjcABZMI1aJYLTkAKevABhVBqFmICWGoGdFAKEiAJhYBQbdAIXzAIjPABdDDbFvJwzEcHrBC8foADlGAkUDAKDEAJuU0KZgACo9RwDHAIhIABrqIBmfA5JhBBTVoAdDBxOuwhoAwigKXfKZI89DQD/tEoNpNMyV0K6Pb554L+uoVutYfuInXOtIv+K2cgjo1OIiKQyiciC5BeIbK9jhZgAN7szRKAAQgVpsooJ2DANC5NYRcCBjHizRfCCfgsJxhgARLAARaAAB9MnRgQ0FMjBqte3Rdi6cWYJWBgBicQkxQwC5PwAW1QyFjACqikAO14AoQwWmlAAhzQCLOdAzPwNQTQBiSgASdQxK3OAA7QjhfACBeAApzgAlfgALviB21QApSA1mnAASvQCCn4IcCuivXjAwawCYvEki+wCHNgAKoA5RYi8MJIAzmQCSdgBy00CcltIUEQKYPQB09SBrjWB4dQApPdBZzwA42ArBgphwho0Abb5wSSgNx9YABYYChK8Dld0OcFsO+lGOm9YvOiiPO8UgSXnug8wvNxC/QvSvSKTuhEL/TOa/RHz/RQi/RAr/QaC/WJLvXzSvWHbvUFjPWFrvVc6vVGCva2yvWCHg7YEA5on/Zqv/Zs3/Zu//ZwH/dyP/d0X/d2f/d4n/d6v/fhMA4BAQA7" alt="swing terminal thumb"></a>
+</div>
+</div>
+<div class="paragraph">
+<p>You can also use a web-based terminal, which allows you to access your application via a browser, as shown in the image below.</p>
+</div>
+<div class="imageblock thumb">
+<div class="content">
+<a class="image" href="https://github.com/beryx/text-io/raw/master/doc/img/web-terminal-animated.gif"><img src="data:image/gif;base64,R0lGODdh6gDNAOf/AAABAAABBQYAAAAAEwEEAAMGAiAAAAcJBQIIKQsKAAENBwUOAAoMCAYOExANBAUQCwoRBA0TCA0UABEQJAgWChAXAAwYDRAYFggbEBIZCA4cDBMeCAogEBEfEA8hCwMlFBwgABQiBSIfAA4jFAslDxEkDw4oExEnFxEoDhQnExcoDiokACEiOSUoABsqChEsFhQsEislICgoMD4jJBYwGhowEBAyGxkwFjonDxwyCRQzFx4wGBYzEhE6Hhk4HBw5GBY7GSE4Gxo8EyE8FTw2AhY/ITc6ABxAHRhCFyI/HRZDHyBBGCFAIzg3QjtAASo9UhlHIyNHIxdLIB9JHxtMGiNKGilJGChJIBxMJz0+UTJIJkxEAkVIADhMAjdDXxpRKyNQKh5SJhtUHyRSGydQJiNSIUZESCpRITxJTFlGLi9VHixVKiRZLCNbIilZJyNbKCxZIkxOSzNdHClhIVlQQEhSYTBfLlVZAChiLixiKCVkKXNWAVxVUzZlMihqNTdoIjVoKC1rKTFpNSxrMDRpL2pZP2xcTi1zMDBzKTNyNzZyMFRjeFtkbmZjYTN6PDZ7NzF9Mjx+NHN1ADqCLzWEODiDP2JyfGJxhmxxc29xbntvYG1xf3txdEGORD2QPHl7eDmVOHd+ho18cJZ6bIR/dYaLAHSClIKGh5CFboiKh0upRJuTh4OYp46WnpaXlZifo5+fm5ajsLGgjKmilaSjqbSfr56nraiopJ+qxZyvwqOxvrCvrLmvoruwm7WxuLW0pay2vq+2uMGyrbm3s7y+wbDA2su7vcS+t7/Avc/DtcbIxb7J09PEx8XJzM7Ix87Jwc3R1NHSz8vV393Tw9rUzPHQw7vb+tjZ1tXa3M3e8dDg9N/g3ejg1eXg5d3j5dfl89zl7eTl4u3m0djo/NPr/drq/u3n5tjt7Nvr/+jq5/Lo3ufq7fzr0uzu6+ru8ePv/u7w7fXv7u3x8+709vfy8PH08Ov2/vP28vr19Pb49Pv58Pj69//59/b7/vr+//7//CwAAAAA6gDNAAAI/gCtlRtHsKDBgwgTKlzIsKHDhxAjSpxIESK5YrkyatyYKxs5i+RCJvz4cVw5gf9SqlzJsqXLlzBjypxJs6bNmzhz3lS269atXT2BCg13c9++mh91Kl3KtKnTp1Bd8ryVqicsV1d/El2Zr97RltGUKdvK8lq7ayoHrjTKtq3bt3Djvo1Kt65dujxhXcUK61bfXWT/7bs21iWyfOGiudzmiqxawfDaRW5HubLly5gza26X7t7dz6BDyyQstrRpZOlsRlu9zWW0xGnHpURcL1y7erjv5a43TzdufLiDC693j97w47WP7svHPN9X0dCjN13evHrz53UfUw6nDFm42tC2/vXrVi8auH310jWTlw9fvnvs8ckzdw3bPff3g3NO1+577W0AbvOddAQWaKBOau2zzT3bELZNPs3wAgwvtYgViy/JKBMMLMQoc0wzxhDTjC/MXEMMLR4q0ww2uMGDzDDw1HbPNTTWGNiBOOaYo1qU1RNgOPdwAw0xvPjiHTAYrnhLh840wwwxvvhCmi3KOOPMLiymJ1Y6teXTYI3XbFOPjmSWKV055PwjZnphfRePO+mYs8469bTjjp1wSvZmPO2s4w485nAmWX/ytAjPobiFkw+YNLZj5qOQ1oVONrbpdxty9dBjHKacdlpbOqCGyt+hpJZq6qmopqrqqqy26uqr/rDGKuusptaTTTae5qrrrrz26uuvwAYr7LDEdkrPrcGGI+qyzDbr7LPQRivttNRWa+212FYbjn/F4nYsri0OF6NwiVWazlHbpsRPS/5E6u67Lo2ZkpjphLnNpS1yW881yCATDb71jPttovrWuWZttwzjSjT3pNYdMsr8w409+fTDDz7TSHNPPvzUw80/7UATzjbmbOONOftYXI85/vTzTzjxsMWPUfq4Q888RnXjMrw811TPLa2pCU80/g7DcHCr6TcMULBw6+J3A5+17bjphHMNl7UBNlZ6/yhDY8TTELMLMMf48osuvZDdyi/d1LeNM9hss4831DTjTDDOXLPO/jXQHBNNk9FAc406zQTuTDQ696y4TLdc48qYYkYzTDrRXBMcd9Ho568ytzi99cB1Yh0cPNymM0y/XKa2jVitqYNNfdBAQ807Qm7DTDjdhOONO3K6o8485oQzzzrmpBbPyffEk143lAHvDp/rLC79S6TNW94uYlmOW4OiDw0UasJdnSmymI5L7uVegbpcPymzxT77R1kMP/v8zOOcW/cvJxdb1vXv//8ADKAAB0jAAhrwgNRhUMAiI7qAHac/yhpOOmIEul/xZzMYzKAGN8jBDnrwgyAMoQgvw59uBedbk/ngoUbIwha68IUwjGEGVxjDeGRD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" alt="web terminal thumb"></a>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_demo">Demo</h3>
+<div class="paragraph">
+<p>Download the <a href="https://github.com/beryx/text-io-root/releases/download/v2.3.0/textio-demo-2.3.0.zip">binary distribution</a> and unzip it into a directory of your choice.</p>
+</div>
+<div class="paragraph">
+<p>Make sure your JAVA_HOME environment variable correctly points to a JDK 8u40 or later.</p>
+</div>
+<div class="paragraph">
+<p>Start the demo by executing 'textio-demo' or 'textio-demo.bat' in the bin directory.</p>
+</div>
+<div class="paragraph">
+<p>Change the configuration by editing the properties files and see how your changes affect the behavior and the visual appearance of the application.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="getting_started">Getting Started</h2>
+<div class="sectionbody">
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+You need Java 8 or newer in order to use Text-IO.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Text-IO is available in Maven Central and JCenter.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Maven</th>
+<th class="tableblock halign-left valign-top">Gradle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="nowrap">&lt;dependency&gt;
+    &lt;groupId&gt;org.beryx&lt;/groupId&gt;
+    &lt;artifactId&gt;text-io&lt;/artifactId&gt;
+    &lt;version&gt;2.3.0&lt;/version&gt;
+&lt;/dependency&gt;</pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="nowrap">compile 'org.beryx:text-io:2.3.0'</pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>&#160;<br></p>
+</div>
+<div class="paragraph">
+<p>In order to use the <a href="javadoc/org/beryx/textio/web/WebTextTerminal.html">WebTextTerminal</a>,
+you have to include the <code>text-io-web</code> artifact:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Maven</th>
+<th class="tableblock halign-left valign-top">Gradle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="nowrap">&lt;dependency&gt;
+    &lt;groupId&gt;org.beryx&lt;/groupId&gt;
+    &lt;artifactId&gt;text-io-web&lt;/artifactId&gt;
+    &lt;version&gt;2.3.0&lt;/version&gt;
+&lt;/dependency&gt;</pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="nowrap">compile 'org.beryx:text-io-web:2.3.0'</pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Additionally, you have to include the artifacts needed by the <a href="javadoc/org/beryx/textio/web/DataServer.html">DataServer</a> implementation you want to use.</p>
+</div>
+<div class="paragraph">
+<p>For <a href="javadoc/org/beryx/textio/web/RatpackDataServer.html">RatpackDataServer</a>:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Maven</th>
+<th class="tableblock halign-left valign-top">Gradle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="nowrap">&lt;dependency&gt;
+    &lt;groupId&gt;io.ratpack&lt;/groupId&gt;
+    &lt;artifactId&gt;ratpack-core&lt;/artifactId&gt;
+    &lt;version&gt;1.4.6&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;io.ratpack&lt;/groupId&gt;
+    &lt;artifactId&gt;ratpack-session&lt;/artifactId&gt;
+    &lt;version&gt;1.4.6&lt;/version&gt;
+&lt;/dependency&gt;</pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="nowrap">compile 'io.ratpack:ratpack-core:1.4.6'
+compile 'io.ratpack:ratpack-session:1.4.6'</pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>For <a href="javadoc/org/beryx/textio/web/SparkDataServer.html">SparkDataServer</a>:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Maven</th>
+<th class="tableblock halign-left valign-top">Gradle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="nowrap">&lt;dependency&gt;
+    &lt;groupId&gt;com.sparkjava&lt;/groupId&gt;
+    &lt;artifactId&gt;spark-core&lt;/artifactId&gt;
+    &lt;version&gt;2.6.0&lt;/version&gt;
+&lt;/dependency&gt;</pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="listingblock">
+<div class="content">
+<pre class="nowrap">compile 'com.sparkjava:spark-core:2.6.0'</pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="user_guide">User Guide</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The JavaDoc is available <a href="javadoc/">here</a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_text_terminals">Text Terminals</h3>
+<div class="paragraph">
+<p>A text terminal is an abstraction layer used by the Text-IO library in order to provide device independence.
+Text terminals must implement the
+<a href="javadoc/org/beryx/textio/TextTerminal.html">TextTerminal</a>
+interface, which requires to allow at least:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>reading a one-line text, optionally masking the input.</p>
+</li>
+<li>
+<p>writing a one-line text.</p>
+</li>
+<li>
+<p>writing a line separator.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The following concrete implementations are provided by the Text-IO library:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="javadoc/org/beryx/textio/console/ConsoleTextTerminal.html">ConsoleTextTerminal</a>, which is backed by a
+<a href="http://docs.oracle.com/javase/8/docs/api/java/io/Console.html">java.io.Console</a>.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/jline/JLineTextTerminal.html">JLineTextTerminal</a>, which is backed by a
+<a href="https://github.com/jline/jline2">JLine</a> ReadConsole.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/mock/MockTextTerminal.html">MockTextTerminal</a>, which simulates
+a terminal session by providing preconfigured values for the input
+and stores the output in a string buffer.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/swing/SwingTextTerminal.html">SwingTextTerminal</a>, which uses a
+<a href="http://docs.oracle.com/javase/8/docs/api/javax/swing/JTextPane.html">JTextPane</a> inside a
+<a href="http://docs.oracle.com/javase/8/docs/api/javax/swing/JFrame.html">JFrame</a>.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/system/SystemTextTerminal.html">SystemTextTerminal</a>, which uses
+<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#out">System.out</a>,
+<a href="http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#in">System.in</a> and
+<a href="http://docs.oracle.com/javase/8/docs/api/java/util/Scanner.html">Scanner</a>.
+It is not capable to mask input strings, therefore not recommended when reading sensitive data.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/web/WebTextTerminal.html">WebTextTerminal</a>, which allows accessing
+your application via a browser. See <a href="#web_text_term">Using the WebTextTerminal</a> for more details.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_input_readers">Input Readers</h3>
+<div class="paragraph">
+<p>Input readers are able to read values of a specific type.
+They are subclasses of <a href="javadoc/org/beryx/textio/InputReader.html">InputReader</a>,
+which offers (via methods with names of the form <em>withXXX()</em>) a fluent interface for configuring various settings such as:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="javadoc/org/beryx/textio/InputReader.html#withInputMasking-boolean-">input masking</a> - useful when reading sensitive data such as passwords.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/InputReader.html#withDefaultValue-T-">defaultValue</a> - the value to be used if the user pressed Enter.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/InputReader.html#withPossibleValues-java.util.List-">possible values</a> - necessary if the value to be read must be chosen from a list of allowed values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/InputReader.html#withParseErrorMessagesProvider-org.beryx.textio.InputReader.ErrorMessagesProvider-">parse error messages</a> - used to provide custom parse error messages.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/InputReader.html#withValueChecker-org.beryx.textio.InputReader.ValueChecker-">value checkers</a> - used to check for constraint violations.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/InputReader.html#withItemName-java.lang.String-">item name</a> - if configured, the name of the item to be read will appear in error messages.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>See the <a href="javadoc/org/beryx/textio/InputReader.html">javadoc</a> for more configuration methods.</p>
+</div>
+<div class="paragraph">
+<p>The following concrete implementations are available:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="javadoc/org/beryx/textio/BooleanInputReader.html">BooleanInputReader</a> - A reader for boolean values. Allows configuring which string value should be interpreted as <em>true</em> and which as <em>false</em>.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/ByteInputReader.html">ByteInputReader</a> - A reader for byte values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/CharInputReader.html">CharInputReader</a> - A reader for char values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/DoubleInputReader.html">DoubleInputReader</a> - A reader for double values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/EnumInputReader.html">EnumInputReader</a> - A reader for enum values. It allows selecting one of the constants defined by the given enum type.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/FloatInputReader.html">FloatInputReader</a> - A reader for float values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/GenericInputReader.html">GenericInputReader</a> - A reader for values of a given type, for which a parser is passed as constructor argument.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/IntInputReader.html">IntInputReader</a> - A reader for int values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/LongInputReader.html">LongInputReader</a> - A reader for long values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/ShortInputReader.html">ShortInputReader</a> - A reader for short values. Allows configuring the minimum and maximum permitted values.</p>
+</li>
+<li>
+<p><a href="javadoc/org/beryx/textio/StringInputReader.html">StringInputReader</a> - A reader for string values. Allows configuring the minimum and maximum permitted length, as well as a regex pattern.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Reading values</strong></p>
+</div>
+<div class="paragraph">
+<p>After configuring an input reader, you can use
+<a href="javadoc/org/beryx/textio/InputReader.html#read-java.lang.String.%2e.-"> read(String&#8230;&#8203; prompt)</a>
+or
+<a href="javadoc/org/beryx/textio/InputReader.html#read-java.util.List-">read(List&lt;String&gt; prompt)</a>
+to read a single value and
+<a href="javadoc/org/beryx/textio/InputReader.html#readList-java.lang.String.%2e.-"> readList(String&#8230;&#8203; prompt)</a>
+or
+<a href="javadoc/org/beryx/textio/InputReader.html#readList-java.util.List-">readList(List&lt;String&gt; prompt)</a>
+to read a comma-separated list of values.
+These methods repeatedly prompt the user to enter a value or a comma-separated list of values, until a valid input is provided.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Look at the source code of
+<a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io/src/test/groovy/org/beryx/textio/TextIoReadSpec.groovy">TextIoReadSpec.groovy</a>
+and <a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io/src/test/groovy/org/beryx/textio/TextIoReadListSpec.groovy">TextIoReadListSpec.groovy</a>
+for examples of using the input readers.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_textio">TextIO</h3>
+<div class="paragraph">
+<p>The <a href="javadoc/org/beryx/textio/TextIO.html">TextIO</a> class provides factory methods for creating input readers.
+These methods have names of the form <code>newXXXInputReader()</code>, such as
+<a href="javadoc/org/beryx/textio/TextIO.html#newIntInputReader--">newIntInputReader()</a>.</p>
+</div>
+<div class="paragraph">
+<p>All InputReaders created by the same TextIO instance share the same <a href="javadoc/org/beryx/textio/TextTerminal.html">TextTerminal</a>,
+which can be retrieved by calling the
+<a href="javadoc/org/beryx/textio/TextIO.html#getTextTerminal--">getTextTerminal()</a> method.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_textiofactory">TextIoFactory</h3>
+<div class="paragraph">
+<p>Although you can create yourself a <a href="javadoc/org/beryx/textio/TextIO.html">TextIO</a> instance by passing the desired
+<a href="javadoc/org/beryx/textio/TextTerminal.html">TextTerminal</a> as constructor argument, it is preferable to use the
+<a href="javadoc/org/beryx/textio/TextIoFactory.html">TextIoFactory</a> for this task.</p>
+</div>
+<div class="paragraph">
+<p>The TextIoFactory takes the following steps in order to choose the TextTerminal associated with the TextIO instance to be created:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>If the system property <code>org.beryx.textio.TextTerminal</code> is defined, then it is
+taken to be the fully-qualified name of a concrete TextTerminal class.
+The class is loaded and instantiated. If this process fails, then the next step is executed.</p>
+</li>
+<li>
+<p>A <a href="http://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html">ServiceLoader</a>
+loads the configured <a href="javadoc/org/beryx/textio/TextTerminalProvider.html">TextTerminalProviders</a>
+and searches for the first one capable to provide a TextTerminal instance.
+If none is found, then the next step is executed.</p>
+</li>
+<li>
+<p>A default implementation is provided as follows:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>if <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--">System.console()</a> is not null,
+and a <a href="https://github.com/jline/jline2">JLine</a> ConsoleReader can be created, then a
+<a href="javadoc/org/beryx/textio/jline/JLineTextTerminal">JLineTextTerminal</a> is provided;</p>
+</li>
+<li>
+<p>else, if <a href="http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#console--">System.console()</a> is not null, a
+<a href="javadoc/org/beryx/textio/console/ConsoleTextTerminal.html">ConsoleTextTerminal</a> is provided;</p>
+</li>
+<li>
+<p>else, if the system is not headless, a <a href="javadoc/org/beryx/textio/swing/SwingTextTerminal.html">SwingTextTerminal</a> is provided;</p>
+</li>
+<li>
+<p>else, a <a href="javadoc/org/beryx/textio/system/SystemTextTerminal.html">SystemTextTerminal</a> is provided.</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Look at the source code of
+<a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io-demo/src/main/java/org/beryx/textio/demo/app/UserDataCollector.java">UserDataCollector.java</a>
+for an example of using the default TextTerminal provided by TextIofactory,
+and <a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io-demo/src/main/java/org/beryx/textio/demo/TextIoDemo.java">TextIoDemo.java</a>
+for examples of using custom TextTerminals.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_terminal_properties">Terminal properties</h3>
+<div class="paragraph">
+<p>TextIO uses the
+<a href="javadoc/org/beryx/textio/TextTerminal.html">TextTerminal</a>
+interface as an abstraction layer that provides device independence.
+However, some terminals may have capabilities beyond those exposed by the TextTerminal API.
+Such capabilities include the possibility to use colors or emphasis (bold, underline, italic).
+TextIO lets you make use of these capabilities through <em>terminal properties</em>.</p>
+</div>
+<div class="paragraph">
+<p>Terminal properties can be statically configured in a properties file or dynamically set at runtime.
+You can also combine these two techniques.
+TextIO uses the following strategy for locating the file containing terminal properties:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>search for a file at the location given by the value of the system property <code>textio.properties.location</code>.</p>
+</li>
+<li>
+<p>search for a file named <code>textio.properties</code> located in the current directory.</p>
+</li>
+<li>
+<p>search for a file named <code>textio.properties</code> in the classpath.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For a given property, you may configure the same value for all terminal types,
+or you may assign different values to different terminal types.
+This is possible by using <em>property prefixes</em>.
+Each terminal has a list of accepted prefixes, as in the table below:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Property prefixes</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Terminal type</th>
+<th class="tableblock halign-left valign-top">Property prefix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;generic&gt;</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">textio</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ConsoleTextTerminal</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">console</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">JLineTextTerminal</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">jline</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MockTerminal</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mock</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SwingTextTerminal</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">swing</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SystemTextTerminal</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">system</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">WebTextTerminal</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">web</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>A terminal accepts the generic prefix <code>textio</code> and the prefix corresponding to its type.
+For example, a SwingTextTerminal accepts the prefixes <code>textio</code> and <code>swing</code>.
+Consider, for example, the following configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="properties">textio.input.color = yellow
+textio.prompt.color = cyan
+swing.prompt.color = #2bf3c5</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The property <code>input.color</code> will have the value <code>yellow</code>, irrespective of the terminal type.
+For <code>prompt.color</code>, the actual value depends on the type of terminal used:
+it will be <code>#2bf3c5</code> for a SwingTextTerminal, and <code>cyan</code> for any other type.</p>
+</div>
+<div class="paragraph">
+<p>Each terminal type has its own set of supported properties.
+The behavior of a terminal is not affected by the values of the properties it does not support.
+It is therefore safe to configure the value of a certain property for all terminals
+(that is, using the generic prefix <code>textio</code>), even if it is not supported by all terminal types.</p>
+</div>
+<div class="paragraph">
+<p>Currently, only the JLineTextTerminal, SwingTextTerminal and WebTextTerminal types have a non-empty set of supported properties,
+which are shown in the table below:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Supported properties</caption>
+<colgroup>
+<col style="width: 21%;">
+<col style="width: 7%;">
+<col style="width: 7%;">
+<col style="width: 7%;">
+<col style="width: 57%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Property name</th>
+<th class="tableblock halign-left valign-top">JLine</th>
+<th class="tableblock halign-left valign-top">Swing</th>
+<th class="tableblock halign-left valign-top">Web</th>
+<th class="tableblock halign-left valign-top">Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ansi.color.mode</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The <a href="https://en.wikipedia.org/wiki/ANSI_escape_code#Colors">ANSI color mode</a>.<br>
+Accepted values: <code>standard</code>, <code>indexed</code>, <code>rgb</code>.<br>
+Default value: <code>standard</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">input.bgcolor</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The background color of the input text.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">input.bold</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code>, if the input text should be bold.<br>
+Default value: <code>false</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">input.color</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The color of the input text.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">input.font.family</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The font family of the input text.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">input.font.size</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The font size  of the input text.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">input.italic</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code>, if the input text should be italic.<br>
+Default value: <code>false</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">input.style.class</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The CSS class used for styling the input text.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">input.subscript</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code>, if the input text should be displayed as a subscript.<br>
+Default value: <code>false</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">input.superscript</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code>, if the input text should be displayed as a superscript.<br>
+Default value: <code>false</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">input.underline</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code>, if the input text should be underlined.<br>
+Default value: <code>false</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pane.bgcolor</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The background color of the terminal pane.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pane.style.class</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The CSS style class of the terminal pane.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prompt.bgcolor</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The background color of the prompt text.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prompt.bold</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code>, if the prompt text should be bold.<br>
+Default value: <code>false</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prompt.color</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The color of the prompt text.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prompt.font.family</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The font family of the prompt text.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prompt.font.size</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The font size of the prompt text.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prompt.italic</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code>, if the prompt text should be italic.<br>
+Default value: <code>false</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prompt.style.class</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The CSS class used for styling the prompt text.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prompt.subscript</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code>, if the prompt text should be displayed as a subscript.<br>
+Default value: <code>false</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prompt.superscript</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code>, if the prompt text should be displayed as a superscript.<br>
+Default value: <code>false</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prompt.underline</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code>, if the prompt text should be underlined.<br>
+Default value: <code>false</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">user.interrupt.key</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#x2713;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The key combination used to interrupt the program.<br>
+Default value: <code>Ctrl C</code>.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The values of the color properties are interpreted using the
+<a href="https://docs.oracle.com/javase/8/javafx/api/javafx/scene/paint/Color.html#web-java.lang.String-">Color.web(String colorString)</a>.
+method.
+This means that you can specify colors in various ways, such as: <code>red</code>, <code>#aa38e0</code>, <code>0x40A8CC</code>, <code>rgba(112,36,228,0.9)</code>, <code>hsla(270,100%,100%,1.0)</code> etc.</p>
+</div>
+<div class="paragraph">
+<p>In the <code>standard</code> and <code>indexed</code> mode, JLineTextTerminal has a limited number of colors available.
+Therefore, it tries to map the provided value to the nearest available color.</p>
+</div>
+<div class="paragraph">
+<p>The properties of a TextTerminal can be accessed at runtime through the method
+<a href="javadoc/org/beryx/textio/TextTerminal.html#getProperties--">getProperties()</a>,
+which returns a <a href="javadoc/org/beryx/textio/TerminalProperties.html">TerminalProperties</a> instance.
+Using this TerminalProperties, you can dynamically configure properties by calling the
+<a href="javadoc/org/beryx/textio/TerminalProperties.html#put-java.lang.String-java.lang.Object-">put(String key, Object value)</a> method.
+Additionally, convenience methods are available for frequently used properties (for example:
+<a href="javadoc/org/beryx/textio/TerminalProperties.html#setInputBold-boolean-">setInputBold(boolean bold)</a> or
+<a href="javadoc/org/beryx/textio/TerminalProperties.html#setPromptColor-javafx.scene.paint.Color-">setPromptColor(Color color)</a>).</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+You can learn how to configure and use terminal properties by looking at the
+<a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io-demo/src/main/java/org/beryx/textio/demo">source code</a>
+and the <a href="https://github.com/beryx/text-io/blob/v2.3.0/dist/xbin">configuration files</a>
+of the <a href="https://github.com/beryx/text-io/releases/download/v2.3.0/textio-demo-2.3.0.zip">demo application</a>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="web_text_term">Using the WebTextTerminal</h3>
+<div class="paragraph">
+<p>The WebTextTerminal works only in conjunction with a web server supporting the
+<a href="javadoc/org/beryx/textio/web/DataApi.html">DataApi</a>
+(such as the <a href="javadoc/org/beryx/textio/web/SparkDataServer.html">SparkDataServer</a>
+or the <a href="javadoc/org/beryx/textio/web/RatpackDataServer.html">RatpackDataServer</a>)
+and a web page that contains code for accessing this API.
+Typically, the web server is managed by an implementation of
+<a href="javadoc/org/beryx/textio/web/TextIoApp.html">TextIoApp</a> (such as
+<a href="javadoc/org/beryx/textio/web/SparkTextIoApp.html">SparkTextIoApp</a> or
+<a href="javadoc/org/beryx/textio/web/RatpackTextIoApp.html">RatpackTextIoApp</a>),
+while the web page makes use of the <a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io-web/src/main/resources/public-html/textterm/textterm.js">textterm.js</a>
+library included in the <a href="https://www.npmjs.com/package/text-io">text-io npm package</a>,
+as shown in the code snippet below.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="html"><span class="tag">&lt;div</span> <span class="attribute-name">id</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>
+    <span class="tag">&lt;span</span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm-pair</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm-pane</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>
+        <span class="tag">&lt;span</span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm-prompt</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span><span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;span</span> <span class="attribute-name">contenteditable</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">true</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm-input</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span><span class="tag">&lt;/span&gt;</span>
+    <span class="tag">&lt;/span&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;script&gt;</span>
+<span class="inline">    <span class="keyword">var</span> textTerm = createTextTerm(document.getElementById(<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm</span><span class="delimiter">&quot;</span></span>));
+    textTerm.execute();</span>
+<span class="tag">&lt;/script&gt;</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Run the <a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io-demo/src/main/java/org/beryx/textio/demo/TextIoDemo.java">demo application</a> and select the <em>Web terminal</em> option to see a WebTextTerminal in action.
+Look at the source code of <a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io-demo/src/main/java/org/beryx/textio/demo/WebTextIoExecutor.java">WebTextIoExecutor.java</a>
+and <a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io-demo/src/main/resources/public-html/web-demo.html">web-demo.html</a> for more usage details.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Currently, only WebKit-based browsers (such as Chrome, Opera or Safari) are able to mask input strings.
+Keep this in mind when working with sensitive data.</p>
+</div>
+<div class="sect3">
+<h4 id="client_side_library">The client-side library</h4>
+<div class="paragraph">
+<p>The <a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io-web/src/main/resources/public-html/textterm/textterm.js">textterm.js</a>
+client-side library provides the JavaScript functionality needed to connect your web page to a
+<a href="javadoc/org/beryx/textio/web/DataServer.html">DataServer</a>.
+The simplest way to use this library is to install the <a href="https://www.npmjs.com/package/text-io">text-io npm package</a>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>npm install text-io</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Library API</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#createTextTerm">createTextTerm(textTermElement)</a></p>
+</li>
+<li>
+<p><a href="#Class-TextTerm">Class: TextTerm</a></p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#execute">execute([initData])</a></p>
+</li>
+<li>
+<p><a href="#onDispose">onDispose(resultData)</a></p>
+</li>
+<li>
+<p><a href="#onAbort">onAbort()</a></p>
+</li>
+<li>
+<p><a href="#onSessionExpired">onSessionExpired()</a></p>
+</li>
+<li>
+<p><a href="#onServerError">onServerError()</a></p>
+</li>
+<li>
+<p><a href="#displayMessage">displayMessage(message[, specialPromptStyleClass])</a></p>
+</li>
+<li>
+<p><a href="#displayError">displayError(message)</a></p>
+</li>
+<li>
+<p><a href="#resetTextTerm">resetTextTerm()</a></p>
+</li>
+<li>
+<p><a href="#restart">restart()</a></p>
+</li>
+<li>
+<p><a href="#specialKeyPressHandler">specialKeyPressHandler(event)</a></p>
+</li>
+<li>
+<p><a href="#textTerminalInitPath">textTerminalInitPath</a></p>
+</li>
+<li>
+<p><a href="#textTerminalDataPath">textTerminalDataPath</a></p>
+</li>
+<li>
+<p><a href="#textTerminalInputPath">textTerminalInputPath</a></p>
+</li>
+<li>
+<p><a href="#settings">settings</a></p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="sect4">
+<h5 id="createTextTerm">createTextTerm(textTermElement)</h5>
+<div class="paragraph">
+<p>Creates and returns a <code>TextTerm</code> object for the given DOM element.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>textTermElement</code> <em>(DOM Element)</em></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="Class-TextTerm">Class: TextTerm</h5>
+<div class="sect5">
+<h6 id="execute">execute([initData])</h6>
+<div class="paragraph">
+<p>Executes the server-side Text-IO application.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>initData</code> - the data used to initialize the server-side Text-IO application.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect5">
+<h6 id="onDispose">onDispose(resultData)</h6>
+<div class="paragraph">
+<p>This method is usually triggered by the termination of the server-side Text-IO application.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>resultData</code> - the result of the server-side Text-IO application.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>By default, this method does nothing more than logging the <code>resultData</code>.
+You may assign a custom implementation. Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="html"><span class="tag">&lt;div</span> <span class="attribute-name">id</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm-pane</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>
+    <span class="tag">&lt;span</span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm-pair</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>
+        <span class="tag">&lt;span</span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm-prompt</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span><span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;span</span> <span class="attribute-name">contenteditable</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">true</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">class</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm-input</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span><span class="tag">&lt;/span&gt;</span>
+    <span class="tag">&lt;/span&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;h3</span> <span class="attribute-name">id</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">app-done</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span> <span class="tag">&lt;/h3&gt;</span>
+<span class="tag">&lt;script&gt;</span>
+<span class="inline">    <span class="keyword">var</span> textTerm = createTextTerm(document.getElementById(<span class="string"><span class="delimiter">&quot;</span><span class="content">textterm</span><span class="delimiter">&quot;</span></span>));
+    textTerm.<span class="function">onDispose</span> = <span class="keyword">function</span>(resultData) {
+        document.getElementById(<span class="string"><span class="delimiter">&quot;</span><span class="content">app-done</span><span class="delimiter">&quot;</span></span>).textContent =
+            <span class="string"><span class="delimiter">&quot;</span><span class="content">Result: </span><span class="delimiter">&quot;</span></span> + resultData + <span class="string"><span class="delimiter">&quot;</span><span class="content">. You can now close this window.</span><span class="delimiter">&quot;</span></span>;
+    }
+    textTerm.<span class="function">onAbort</span> = <span class="keyword">function</span>() {
+        document.getElementById(<span class="string"><span class="delimiter">&quot;</span><span class="content">app-done</span><span class="delimiter">&quot;</span></span>).textContent =
+            <span class="string"><span class="delimiter">&quot;</span><span class="content">Program aborted by the user. You can now close this window.</span><span class="delimiter">&quot;</span></span>;
+    }
+    textTerm.execute();</span>
+<span class="tag">&lt;/script&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="onAbort">onAbort()</h6>
+<div class="paragraph">
+<p>This method is usually triggered when the user aborts the server-side Text-IO application.</p>
+</div>
+<div class="paragraph">
+<p>By default, this method does nothing more than logging the abort operation.
+You may assign a custom implementation similar to the one given in the above example.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="onSessionExpired">onSessionExpired()</h6>
+<div class="paragraph">
+<p>This method is usually triggered when the session has expired.
+By default, this method restarts the server-side Text-IO application with the <code>initData</code> used by the previous call of <code>execute</code>.
+You may change this default behavior by assigning a custom implementation.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="onServerError">onServerError()</h6>
+<div class="paragraph">
+<p>This method is usually triggered when the server encountered an unexpected condition.
+By default, this method restarts the server-side Text-IO application with the <code>initData</code> used by the previous call of <code>execute</code>.
+You may change this default behavior by assigning a custom implementation.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="displayMessage">displayMessage(message[, specialPromptStyleClass])</h6>
+<div class="paragraph">
+<p>Displays a prompt message.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>message</code> <em>(String)</em> - the message to be displayed.</p>
+</li>
+<li>
+<p><code>specialPromptStyleClass</code> <em>(String)</em> - if provided, represents the CSS class used to style this message.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect5">
+<h6 id="displayError">displayError(message)</h6>
+<div class="paragraph">
+<p>Displays an error message.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>message</code> <em>(String)</em> - the error message to be displayed.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The error message is styled using the CSS class <code>textterm-error-prompt</code>.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="resetTextTerm">resetTextTerm()</h6>
+<div class="paragraph">
+<p>Resets the text terminal. All content will be erased.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="restart">restart()</h6>
+<div class="paragraph">
+<p>Restarts the server-side Text-IO application with the <code>initData</code> used by the previous call of <code>execute</code>.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="specialKeyPressHandler">specialKeyPressHandler(event)</h6>
+<div class="paragraph">
+<p>Default value: null.
+If a custom implementation is provided, it will be used instead of the default keyPress handler.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>event</code> <em>(KeyboardEvent)</em> - the keypress event.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect5">
+<h6 id="textTerminalInitPath">textTerminalInitPath</h6>
+<div class="paragraph">
+<p>The <code>pathForInitData</code> used by the <a href="javadoc/org/beryx/textio/web/DataServer.html">DataServer</a>.
+Default value: '/textTerminalInit'.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="textTerminalDataPath">textTerminalDataPath</h6>
+<div class="paragraph">
+<p>The <code>pathForGetData</code> used by the <a href="javadoc/org/beryx/textio/web/DataServer.html">DataServer</a>.
+Default value: '/textTerminalData'.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="textTerminalInputPath">textTerminalInputPath</h6>
+<div class="paragraph">
+<p>The <code>pathForInputData</code> used by the <a href="javadoc/org/beryx/textio/web/DataServer.html">DataServer</a>.
+Default value: '/textTerminalInput'.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="settings">settings</h6>
+<div class="paragraph">
+<p>The <code>settings</code> object exposes a series of properties for configuring the text terminal.</p>
+</div>
+<div class="paragraph">
+<p>Properties affecting the DOM Element with class <code>textterm-pane</code>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>paneBackgroundColor</code> <em>(String)</em></p>
+</li>
+<li>
+<p><code>paneStyleClass</code> <em>(String)</em></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Properties affecting the DOM Element with class <code>textterm-prompt</code>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>promptBackgroundColor</code> <em>(String)</em></p>
+</li>
+<li>
+<p><code>promptBold</code> <em>(Boolean)</em></p>
+</li>
+<li>
+<p><code>promptColor</code> <em>(String)</em></p>
+</li>
+<li>
+<p><code>promptItalic</code> <em>(Boolean)</em></p>
+</li>
+<li>
+<p><code>promptStyleClass</code> <em>(String)</em></p>
+</li>
+<li>
+<p><code>promptUnderline</code> <em>(Boolean)</em></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Properties affecting the DOM Element with class <code>textterm-input</code>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>inputBackgroundColor</code> <em>(String)</em></p>
+</li>
+<li>
+<p><code>inputColor</code> <em>(String)</em></p>
+</li>
+<li>
+<p><code>inputBold</code> <em>(Boolean)</em></p>
+</li>
+<li>
+<p><code>inputItalic</code> <em>(Boolean)</em></p>
+</li>
+<li>
+<p><code>inputStyleClass</code> <em>(String)</em></p>
+</li>
+<li>
+<p><code>inputUnderline</code> <em>(Boolean)</em></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Properties affecting the userInterrupt key combination:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>userInterruptKeyCode</code> <em>(String)</em>: defaultValue = 'Q'</p>
+</li>
+<li>
+<p><code>userInterruptKeyCtrl</code> <em>(Boolean)</em>: defaultValue = true</p>
+</li>
+<li>
+<p><code>userInterruptKeyShift</code> <em>(Boolean)</em>: defaultValue = false</p>
+</li>
+<li>
+<p><code>userInterruptKeyAlt</code> <em>(Boolean)</em>: defaultValue = false</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 2.3.0<br>
+</div>
+</div>
+</body>
+</html>
