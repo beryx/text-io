@@ -1,0 +1,11 @@
+{
+  "name": "text-io",
+  "version": "@textIoVersion@",
+  "description": "The client-side library required by a Text-IO application that uses the WebTextTerminal.",
+  "main": "textterm.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Serban Iordache (http://www.beryx.org)",
+  "license": "Apache-2.0"
+}
