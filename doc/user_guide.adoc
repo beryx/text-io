@@ -162,7 +162,7 @@ A terminal accepts the generic prefix `textio` and the prefix corresponding to i
 For example, a SwingTextTerminal accepts the prefixes `textio` and `swing`.
 Consider, for example, the following configuration:
 
-[source, properties]
+[source,properties]
 ----
 textio.input.color = yellow
 textio.prompt.color = cyan
@@ -265,7 +265,7 @@ while the web page makes use of the link:{blob-root}/text-io-web/src/main/resour
 library included in the https://www.npmjs.com/package/text-io[text-io npm package],
 as shown in the code snippet below.
 
-[source, html]
+[source,html]
 ----
 <div id="textterm">
     <span class="textterm-pair" class="textterm-pane">
@@ -291,11 +291,31 @@ Keep this in mind when working with sensitive data.
 The link:{blob-root}/text-io-web/src/main/resources/public-html/textterm/textterm.js[textterm.js]
 client-side library provides the JavaScript functionality needed to connect your web page to a
 link:javadoc/org/beryx/textio/web/DataServer.html[DataServer].
-The simplest way to use this library is to install the https://www.npmjs.com/package/text-io[text-io npm package]:
+You can integrate this library in your web applications in several ways:
+
+- make link:{blob-root}/text-io-web/src/main/resources/public-html/textterm/textterm.js[textterm.js]
+and link:{blob-root}/text-io-web/src/main/resources/public-html/textterm/textterm.css[textterm.css]
+available as local resources and reference them in your web page.
+This approach is used by the link:{blob-root}/text-io-demo/src/main/resources/public-html/web-demo.html[demo]
+application.
+
+- use the https://unpkg.com/[unpkg] CDN:
+
+[source,html,subs="normal"]
+----
+<link rel="stylesheet" href="https://unpkg.com/text-io@{project-version}/textterm.css">
+<script src="https://unpkg.com/text-io@{project-version}/textterm.js"></script>
+----
+
+
+- install the https://www.npmjs.com/package/text-io[text-io npm package]:
 [source]
 ----
 npm install text-io
 ----
+
+The https://github.com/beryx/text-io-web-example[text-io-web-example] uses this approach.
+
 
 *Library API*:
 
@@ -340,7 +360,7 @@ This method is usually triggered by the termination of the server-side Text-IO a
 
 By default, this method does nothing more than logging the `resultData`.
 You may assign a custom implementation. Example:
-[source, html]
+[source,html]
 ----
 <div id="textterm" class="textterm-pane">
     <span class="textterm-pair">
