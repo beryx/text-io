@@ -976,12 +976,42 @@ Keep this in mind when working with sensitive data.</p>
 <p>The <a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io-web/src/main/resources/public-html/textterm/textterm.js">textterm.js</a>
 client-side library provides the JavaScript functionality needed to connect your web page to a
 <a href="javadoc/org/beryx/textio/web/DataServer.html">DataServer</a>.
-The simplest way to use this library is to install the <a href="https://www.npmjs.com/package/text-io">text-io npm package</a>:</p>
+You can integrate this library in your web applications in several ways:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>make <a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io-web/src/main/resources/public-html/textterm/textterm.js">textterm.js</a>
+and <a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io-web/src/main/resources/public-html/textterm/textterm.css">textterm.css</a>
+available as local resources and reference them in your web page.
+This approach is used by the <a href="https://github.com/beryx/text-io/blob/v2.3.0/text-io-demo/src/main/resources/public-html/web-demo.html">demo</a>
+application.</p>
+</li>
+<li>
+<p>use the <a href="https://unpkg.com/">unpkg</a> CDN:</p>
+</li>
+</ul>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code>npm install text-io</code></pre>
+<pre class="CodeRay highlight"><code data-lang="html"><span class="tag">&lt;link</span> <span class="attribute-name">rel</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">stylesheet</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">href</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content"><a href="https://unpkg.com/text-io@2.3.0/textterm.css" class="bare">https://unpkg.com/text-io@2.3.0/textterm.css</a></span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>
+<span class="tag">&lt;script</span> <span class="attribute-name">src</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content"><a href="https://unpkg.com/text-io@2.3.0/textterm.js" class="bare">https://unpkg.com/text-io@2.3.0/textterm.js</a></span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span><span class="tag">&lt;/script&gt;</span></code></pre>
 </div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>install the <a href="https://www.npmjs.com/package/text-io">text-io npm package</a>:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>npm install text-io</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <a href="https://github.com/beryx/text-io-web-example">text-io-web-example</a> uses this approach.</p>
 </div>
 <div class="paragraph">
 <p><strong>Library API</strong>:</p>
