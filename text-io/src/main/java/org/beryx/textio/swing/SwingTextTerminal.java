@@ -22,6 +22,7 @@ import org.beryx.textio.TextTerminal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
@@ -30,6 +31,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -168,6 +173,10 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         props.addStringListener(PROP_USER_INTERRUPT_KEY, null, (term, newVal) -> setUserInterruptKey(newVal));
 
         props.addStringListener(PROP_PANE_BGCOLOR, null, (term, newVal) -> setPaneBackgroundColor(newVal));
+        props.addStringListener(PROP_PANE_TITLE, null, (term, newVal) -> setPaneTitle(newVal));
+        props.addStringListener(PROP_PANE_ICON_URL, null, (term, newVal) -> setPaneIconUrl(newVal));
+        props.addStringListener(PROP_PANE_ICON_FILE, null, (term, newVal) -> setPaneIconFile(newVal));
+        props.addStringListener(PROP_PANE_ICON_RESOURCE, null, (term, newVal) -> setPaneIconResource(newVal));
 
         props.addStringListener(PROP_PROMPT_COLOR, null, (term, newVal) -> setPromptColor(newVal));
         props.addStringListener(PROP_PROMPT_BGCOLOR, null, (term, newVal) -> setPromptBackgroundColor(newVal));
@@ -420,6 +429,39 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
 
     public void setPaneBackgroundColor(String colorName) {
         getColor(colorName).ifPresent(col -> textPane.setBackground(col));
+    }
+
+    public void setPaneTitle(String newTitle) {
+        frame.setTitle(newTitle);
+    }
+
+    public void setPaneIconUrl(String url) {
+        try {
+            frame.setIconImage(ImageIO.read(new URL(url)));
+        } catch (IOException e) {
+            logger.warn("Cannot set icon from URL " + url, e);
+        }
+    }
+
+    public void setPaneIconFile(String filePath) {
+        try {
+            frame.setIconImage(ImageIO.read(new File(filePath)));
+        } catch (IOException e) {
+            logger.warn("Cannot set icon from file " + filePath, e);
+        }
+    }
+
+    public void setPaneIconResource(String res) {
+        InputStream istream = getClass().getResourceAsStream(res);
+        if(istream == null) {
+            logger.warn("Cannot find icon resource " + res);
+        } else {
+            try {
+                frame.setIconImage(ImageIO.read(istream));
+            } catch (IOException e) {
+                logger.warn("Cannot set icon from resource " + res, e);
+            }
+        }
     }
 
 

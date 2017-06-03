@@ -26,6 +26,11 @@ public class PropertiesConstants {
     public static final String PROP_PANE_BGCOLOR = "pane.bgcolor";
     public static final String PROP_PANE_STYLE_CLASS = "pane.style.class";
 
+    public static final String PROP_PANE_TITLE = "pane.title";
+    public static final String PROP_PANE_ICON_URL = "pane.icon.url";
+    public static final String PROP_PANE_ICON_FILE = "pane.icon.file";
+    public static final String PROP_PANE_ICON_RESOURCE = "pane.icon.resource";
+
     public static final String PROP_ANSI_COLOR_MODE = "ansi.color.mode";
 
     public static final String PROP_USER_INTERRUPT_KEY = "user.interrupt.key";
