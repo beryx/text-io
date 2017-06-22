@@ -148,19 +148,19 @@ public class RatpackDataServer extends AbstractDataServer<Context> {
         this.dataApiGetter = dataApiGetter;
     }
 
-    protected List<Action<Chain>> getHandlers() {
+    public List<Action<Chain>> getHandlers() {
         return handlers;
     }
 
-    protected List<Action<BindingsSpec>> getBindings() {
+    public List<Action<BindingsSpec>> getBindings() {
         return bindings;
     }
 
-    protected List<Action<ServerConfigBuilder>> getConfigurators() {
+    public List<Action<ServerConfigBuilder>> getConfigurators() {
         return configurators;
     }
 
-    protected RatpackDataServer withBaseDir(String baseDir) {
+    public RatpackDataServer withBaseDir(String baseDir) {
         this.baseDir = baseDir;
         return this;
     }

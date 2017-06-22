@@ -338,6 +338,7 @@ The https://github.com/beryx/text-io-web-example[text-io-web-example] uses this 
   * <<textTerminalInitPath>>
   * <<textTerminalDataPath>>
   * <<textTerminalInputPath>>
+  * <<uuid>>
   * <<settings>>
 
 [[createTextTerm]]
@@ -451,6 +452,10 @@ Default value: '/textTerminalData'.
 ##### textTerminalInputPath
 The `pathForInputData` used by the link:javadoc/org/beryx/textio/web/DataServer.html[DataServer].
 Default value: '/textTerminalInput'.
+
+[[uuid]]
+##### uuid
+The `uuid` that uniquely identifies this text terminal.
 
 [[settings]]
 ##### settings

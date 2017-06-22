@@ -79,7 +79,7 @@
             return uuid;
         };
 
-        var uuid = generateUUID();
+        self.uuid = generateUUID();
 
         var history = [];
         try {
@@ -231,7 +231,7 @@
             xhr.onreadystatechange = handleXhrStateChange(xhr);
             var rnd = generateUUID();
             xhr.open("GET", self.textTerminalDataPath + "?rnd=" + rnd, true);
-            xhr.setRequestHeader("uuid", uuid);
+            xhr.setRequestHeader("uuid", self.uuid);
             xhr.send(null);
         };
 
@@ -243,7 +243,7 @@
             xhr.onreadystatechange = handleXhrStateChange(xhr);
             xhr.open("POST", self.textTerminalInitPath, true);
             xhr.setRequestHeader("Content-type", "application/json");
-            xhr.setRequestHeader("uuid", uuid);
+            xhr.setRequestHeader("uuid", self.uuid);
             xhr.send(JSON.stringify(initData));
         };
 
@@ -252,7 +252,7 @@
             xhr.onreadystatechange = handleXhrError(xhr);
             xhr.open("POST", self.textTerminalInputPath, true);
             xhr.setRequestHeader("Content-type", "text/plain");
-            xhr.setRequestHeader("uuid", uuid);
+            xhr.setRequestHeader("uuid", self.uuid);
 
             var input = inputElem.textContent;
 
