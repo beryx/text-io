@@ -22,8 +22,11 @@ import org.slf4j.LoggerFactory;
 import spark.Session;
 
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static spark.Spark.staticFiles;
 
@@ -32,14 +35,16 @@ public class SparkTextIoApp implements TextIoApp<SparkTextIoApp> {
 
     private final WebTextTerminal termTemplate;
 
-    private final BiConsumer<TextIO, String> textIoRunner;
+    private final BiConsumer<TextIO, RunnerData> textIoRunner;
     private final SparkDataServer server;
     private Integer maxInactiveSeconds = null;
 
     private Consumer<String> onDispose;
     private Consumer<String> onAbort;
 
-    public SparkTextIoApp(BiConsumer<TextIO, String> textIoRunner, WebTextTerminal termTemplate) {
+    private Function<Session, Map<String,String>> sessionDataProvider = session -> Collections.emptyMap();
+
+    public SparkTextIoApp(BiConsumer<TextIO, RunnerData> textIoRunner, WebTextTerminal termTemplate) {
         this.textIoRunner = textIoRunner;
         this.termTemplate = termTemplate;
         this.server = new SparkDataServer(this::create, this::get);
@@ -88,6 +93,11 @@ public class SparkTextIoApp implements TextIoApp<SparkTextIoApp> {
         return server.getPort();
     }
 
+    public SparkTextIoApp withSessionDataProvider(Function<Session, Map<String,String>> provider) {
+        this.sessionDataProvider = provider;
+        return this;
+    }
+
     protected WebTextTerminal create(SessionHolder sessionHolder, String initData) {
         String sessionId = sessionHolder.sessionId;
         Session session = sessionHolder.session;
@@ -112,11 +122,19 @@ public class SparkTextIoApp implements TextIoApp<SparkTextIoApp> {
         }
 
         TextIO textIO = new TextIO(terminal);
-
-        Thread thread = new Thread(() -> textIoRunner.accept(textIO, initData));
+        RunnerData runnerData = createRunnerData(initData, sessionHolder);
+        Thread thread = new Thread(() -> textIoRunner.accept(textIO, runnerData));
         thread.setDaemon(true);
         thread.start();
         return terminal;
+    }
+
+    private RunnerData createRunnerData(String initData, SessionHolder sessionHolder) {
+        RunnerData runnerData = new RunnerData(initData);
+        Session session = sessionHolder.session;
+        Map<String, String> sessionData = sessionDataProvider.apply(session);
+        runnerData.getSessionData().putAll(sessionData);
+        return runnerData;
     }
 
     protected WebTextTerminal get(SessionHolder sessionHolder) {

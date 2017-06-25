@@ -15,7 +15,9 @@
  */
 package org.beryx.textio.web;
 
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public interface TextIoApp<APP extends TextIoApp> {
     void init();

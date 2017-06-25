@@ -15,15 +15,15 @@
  */
 package org.beryx.textio.demo.app;
 
-import com.google.gson.Gson;
 import org.beryx.textio.*;
+import org.beryx.textio.web.RunnerData;
 
 import java.util.function.BiConsumer;
 
 /**
  * A simple application illustrating the use of TextIO.
  */
-public class Cuboid implements BiConsumer<TextIO, String> {
+public class Cuboid implements BiConsumer<TextIO, RunnerData> {
     public static void main(String[] args) {
         TextIO textIO = TextIoFactory.getTextIO();
         new Cuboid().accept(textIO, null);
@@ -83,8 +83,9 @@ public class Cuboid implements BiConsumer<TextIO, String> {
     }
 
     @Override
-    public void accept(TextIO textIO, String initData) {
+    public void accept(TextIO textIO, RunnerData runnerData) {
         TextTerminal terminal = textIO.getTextTerminal();
+        String initData = (runnerData == null) ? null : runnerData.getInitData();
         AppUtil.printGsonMessage(terminal, initData);
 
         TerminalProperties props = terminal.getProperties();

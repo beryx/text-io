@@ -19,19 +19,24 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import org.beryx.textio.TextIO;
+import org.beryx.textio.web.RatpackDataServer.ContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ratpack.session.Session;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class RatpackTextIoApp implements TextIoApp<RatpackTextIoApp> {
     private static final Logger logger =  LoggerFactory.getLogger(RatpackTextIoApp.class);
 
     private final WebTextTerminal termTemplate;
 
-    private final BiConsumer<TextIO, String> textIoRunner;
+    private final BiConsumer<TextIO, RunnerData> textIoRunner;
     private final RatpackDataServer server;
 
     private Consumer<String> onDispose;
@@ -40,7 +45,9 @@ public class RatpackTextIoApp implements TextIoApp<RatpackTextIoApp> {
     private Cache<String, WebTextTerminal> webTextTerminalCache;
     private int maxInactiveSeconds = 600;
 
-    public RatpackTextIoApp(BiConsumer<TextIO, String> textIoRunner, WebTextTerminal termTemplate) {
+    private Function<Session, Map<String,String>> sessionDataProvider = session -> Collections.emptyMap();
+
+    public RatpackTextIoApp(BiConsumer<TextIO, RunnerData> textIoRunner, WebTextTerminal termTemplate) {
         this.textIoRunner = textIoRunner;
         this.termTemplate = termTemplate;
         this.server = new RatpackDataServer(this::create, this::get);
@@ -97,7 +104,14 @@ public class RatpackTextIoApp implements TextIoApp<RatpackTextIoApp> {
         return server.getPort();
     }
 
-    protected DataApi create(String textTermSessionId, String initData) {
+    public RatpackTextIoApp withSessionDataProvider(Function<Session, Map<String,String>> provider) {
+        this.sessionDataProvider = provider;
+        return this;
+    }
+
+    protected DataApi create(RatpackDataServer.ContextHolder ctxHolder, String initData) {
+        String textTermSessionId = ctxHolder.contextId;
+
         logger.debug("Creating terminal for textTermSessionId: {}", textTermSessionId);
         WebTextTerminal terminal = termTemplate.createCopy();
         String mapKey = getSessionIdMapKey(textTermSessionId);
@@ -116,14 +130,24 @@ public class RatpackTextIoApp implements TextIoApp<RatpackTextIoApp> {
         webTextTerminalCache.put(mapKey, terminal);
         TextIO textIO = new TextIO(terminal);
 
-        Thread thread = new Thread(() -> textIoRunner.accept(textIO, initData));
+        RunnerData runnerData = createRunnerData(initData, ctxHolder);
+        Thread thread = new Thread(() -> textIoRunner.accept(textIO, runnerData));
         thread.setDaemon(true);
         thread.start();
         webTextTerminalCache.cleanUp();
         return terminal;
     }
 
-    protected DataApi get(String textTermSessionId) {
+    private RunnerData createRunnerData(String initData, ContextHolder ctxHolder) {
+        RunnerData runnerData = new RunnerData(initData);
+        Session session = ctxHolder.context.get(Session.class);
+        Map<String, String> sessionData = sessionDataProvider.apply(session);
+        runnerData.getSessionData().putAll(sessionData);
+        return runnerData;
+    }
+
+    protected DataApi get(ContextHolder ctxHolder) {
+        String textTermSessionId = ctxHolder.contextId;
         String mapKey = getSessionIdMapKey(textTermSessionId);
         WebTextTerminal terminal = webTextTerminalCache.getIfPresent(mapKey);
         if(terminal == null) {

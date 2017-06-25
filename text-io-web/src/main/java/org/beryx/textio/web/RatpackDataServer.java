@@ -45,20 +45,34 @@ public class RatpackDataServer extends AbstractDataServer<Context> {
     private int port;
     private String baseDir;
 
-    private final BiFunction<String, String, DataApi> dataApiCreator;
-    private final Function<String, DataApi> dataApiGetter;
+    private final BiFunction<ContextHolder, String, DataApi> dataApiCreator;
+    private final Function<ContextHolder, DataApi> dataApiGetter;
 
     private final DataApiProvider<Context> dataApiProvider = new DataApiProvider<Context>() {
         @Override
         public DataApi create(Context context, String initData) {
-            return dataApiCreator.apply(getId(context), initData);
+            return dataApiCreator.apply(getContextHolder(context), initData);
         }
 
         @Override
         public DataApi get(Context context) {
-            return dataApiGetter.apply(getId(context));
+            return dataApiGetter.apply(getContextHolder(context));
         }
     };
+
+    public static class ContextHolder {
+        public final String contextId;
+        public final Context context;
+
+        public ContextHolder(String contextId, Context context) {
+            this.contextId = contextId;
+            this.context = context;
+        }
+    }
+
+    private static ContextHolder getContextHolder(Context ctx) {
+        return new ContextHolder(getId(ctx), ctx);
+    }
 
     @Override
     public DataApiProvider<Context> getDataApiProvider() {
@@ -143,7 +157,7 @@ public class RatpackDataServer extends AbstractDataServer<Context> {
             baseDirConfigurator
     ));
 
-    public RatpackDataServer(BiFunction<String, String, DataApi> dataApiCreator, Function<String, DataApi> dataApiGetter) {
+    public RatpackDataServer(BiFunction<ContextHolder, String, DataApi> dataApiCreator, Function<ContextHolder, DataApi> dataApiGetter) {
         this.dataApiCreator = dataApiCreator;
         this.dataApiGetter = dataApiGetter;
     }

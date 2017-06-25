@@ -18,6 +18,7 @@ package org.beryx.textio.demo.app;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.TextIoFactory;
 import org.beryx.textio.TextTerminal;
+import org.beryx.textio.web.RunnerData;
 
 import java.time.Month;
 import java.util.function.BiConsumer;
@@ -25,15 +26,16 @@ import java.util.function.BiConsumer;
 /**
  * A simple application illustrating the use of TextIO.
  */
-public class UserDataCollector implements BiConsumer<TextIO, String> {
+public class UserDataCollector implements BiConsumer<TextIO, RunnerData> {
     public static void main(String[] args) {
         TextIO textIO = TextIoFactory.getTextIO();
         new UserDataCollector().accept(textIO, null);
     }
 
     @Override
-    public void accept(TextIO textIO, String initData) {
+    public void accept(TextIO textIO, RunnerData runnerData) {
         TextTerminal terminal = textIO.getTextTerminal();
+        String initData = (runnerData == null) ? null : runnerData.getInitData();
         AppUtil.printGsonMessage(terminal, initData);
 
         String user = textIO.newStringInputReader()

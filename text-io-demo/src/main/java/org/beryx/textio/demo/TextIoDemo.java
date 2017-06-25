@@ -24,15 +24,11 @@ import org.beryx.textio.jline.JLineTextTerminalProvider;
 import org.beryx.textio.swing.SwingTextTerminalProvider;
 import org.beryx.textio.system.SystemTextTerminal;
 import org.beryx.textio.system.SystemTextTerminalProvider;
-import org.beryx.textio.web.RatpackTextIoApp;
-import org.beryx.textio.web.SparkTextIoApp;
-import org.beryx.textio.web.TextIoApp;
-import org.beryx.textio.web.WebTextTerminal;
+import org.beryx.textio.web.*;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -63,7 +59,7 @@ public class TextIoDemo {
         TextTerminal sysTerminal = new SystemTextTerminal();
         TextIO sysTextIO = new TextIO(sysTerminal);
 
-        BiConsumer<TextIO, String> app = chooseApp(sysTextIO);
+        BiConsumer<TextIO, RunnerData> app = chooseApp(sysTextIO);
         TextIO textIO = chooseTextIO();
 
         // Uncomment the line below to ignore user interrupts.
@@ -80,7 +76,7 @@ public class TextIoDemo {
         }
     }
 
-    private static TextIoApp createTextIoApp(TextIO textIO, BiConsumer<TextIO, String> app, WebTextTerminal webTextTerm) {
+    private static TextIoApp createTextIoApp(TextIO textIO, BiConsumer<TextIO, RunnerData> app, WebTextTerminal webTextTerm) {
         class Provider {
             private final String name;
             private final Supplier<TextIoApp> supplier;
@@ -112,10 +108,10 @@ public class TextIoDemo {
         webTextIoExecutor.withPort(port);
     }
 
-    private static BiConsumer<TextIO, String> chooseApp(TextIO textIO) {
-        List<BiConsumer<TextIO, String>> apps = Arrays.asList(new UserDataCollector(), new ECommerce(), new Cuboid());
+    private static BiConsumer<TextIO, RunnerData> chooseApp(TextIO textIO) {
+        List<BiConsumer<TextIO, RunnerData>> apps = Arrays.asList(new UserDataCollector(), new ECommerce(), new Cuboid());
 
-        BiConsumer<TextIO, String> app = textIO.<BiConsumer<TextIO, String>>newGenericInputReader(null)
+        BiConsumer<TextIO, RunnerData> app = textIO.<BiConsumer<TextIO, RunnerData>>newGenericInputReader(null)
             .withNumberedPossibleValues(apps)
             .read("Choose the application to be run");
         String propsFileName = app.getClass().getSimpleName() + ".properties";
