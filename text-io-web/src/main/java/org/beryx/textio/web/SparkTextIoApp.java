@@ -133,7 +133,7 @@ public class SparkTextIoApp implements TextIoApp<SparkTextIoApp> {
         RunnerData runnerData = new RunnerData(initData);
         Session session = sessionHolder.session;
         Map<String, String> sessionData = sessionDataProvider.apply(session);
-        runnerData.getSessionData().putAll(sessionData);
+        runnerData.setSessionData(sessionData);
         return runnerData;
     }
 

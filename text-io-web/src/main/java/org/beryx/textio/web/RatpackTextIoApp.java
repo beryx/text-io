@@ -142,7 +142,7 @@ public class RatpackTextIoApp implements TextIoApp<RatpackTextIoApp> {
         RunnerData runnerData = new RunnerData(initData);
         Session session = ctxHolder.context.get(Session.class);
         Map<String, String> sessionData = sessionDataProvider.apply(session);
-        runnerData.getSessionData().putAll(sessionData);
+        runnerData.setSessionData(sessionData);
         return runnerData;
     }
 
