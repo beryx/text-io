@@ -71,6 +71,7 @@ subprojects {
 
     apply plugin: 'findbugs'
     apply plugin: 'signing'
+    apply plugin: 'com.github.hierynomus.license'
 
     repositories {
         jcenter()
@@ -91,6 +92,7 @@ subprojects {
         header rootProject.file("license-header.txt")
         skipExistingHeaders true
         ignoreFailures false
+        excludes (["**/*.properties", "**/*.html", "**/*.css", "**/*.json"])
     }
 
 
