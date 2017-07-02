@@ -337,6 +337,12 @@ The https://github.com/beryx/text-io-web-example[text-io-web-example] uses this 
   * <<restart>>
   * <<sendUserInterrupt>>
   * <<specialKeyPressHandler>>
+  * <<setLogLevelOff>>
+  * <<setLogLevelError>>
+  * <<setLogLevelWarn>>
+  * <<setLogLevelInfo>>
+  * <<setLogLevelDebug>>
+  * <<setLogLevelTrace>>
   * <<textTerminalInitPath>>
   * <<textTerminalDataPath>>
   * <<textTerminalInputPath>>
@@ -452,6 +458,30 @@ Default value: null.
 If a custom implementation is provided, it will be used instead of the default keyPress handler.
 
 - `event` _(KeyboardEvent)_ - the keypress event.
+
+[[setLogLevelOff]]
+##### setLogLevelOff()
+Turns off the console logging.
+
+[[setLogLevelError]]
+##### setLogLevelError()
+Allows logging messages with level ERROR or higher.
+
+[[setLogLevelWarn]]
+##### setLogLevelWarn()
+Allows logging messages with level WARN or higher.
+
+[[setLogLevelInfo]]
+##### setLogLevelInfo()
+Allows logging messages with level INFO or higher.
+
+[[setLogLevelDebug]]
+##### setLogLevelDebug()
+Allows logging messages with level DEBUG or higher.
+
+[[setLogLevelTrace]]
+##### setLogLevelError()
+Allows logging messages with level TRACE or higher.
 
 [[textTerminalInitPath]]
 ##### textTerminalInitPath

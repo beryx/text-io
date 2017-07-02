@@ -452,7 +452,7 @@
             };
 
             self.onServerError = function() {
-                logWarn("onServerError() called.");
+                logError("onServerError() called.");
                 self.resetTextTerm();
                 self.displayError("<h2>Server error.</h2><br/>Press enter to restart.");
                 self.specialKeyPressHandler = waitForEnterToRestart;
