@@ -198,6 +198,7 @@
             return (function() {
                 if((xhr.readyState == XMLHttpRequest.DONE) && (xhr.status == 200)) {
                     var data = JSON.parse(xhr.responseText);
+                    self.onDataReceived(data);
                     if (data.resetRequired) {
                         self.resetTextTerm();
                     }
@@ -388,11 +389,15 @@
                     settings: []
                 };
                 displayMessageGroups([messageGroup], specialPromptStyleClass);
-            }
+            };
 
             self.displayError = function(message) {
                 self.displayMessage(message, 'textterm-error-prompt');
-            }
+            };
+
+            self.onDataReceived = function(data) {
+                console.log("onDataReceived: data = " + JSON.stringify(data));
+            };
 
             self.onDispose = function(resultData) {
                 console.log("onDispose: resultData = " + resultData);
