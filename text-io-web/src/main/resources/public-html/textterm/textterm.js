@@ -56,8 +56,6 @@
     }
 }(this, function () {
     var createTextTerm = function TextTerm(ttElem) {
-        console.log("Creating new terminal.");
-
         var self = {};
         self.textTerminalInitPath = "/textTerminalInit";
         self.textTerminalDataPath = "/textTerminalData";
@@ -68,6 +66,30 @@
         var promptElem;
 
         var action;
+
+
+        var LEVEL = {
+            OFF: 0,
+            ERROR: 1,
+            WARN: 2,
+            INFO: 3,
+            DEBUG: 4,
+            TRACE: 5
+        };
+        var logLevel = LEVEL.INFO;
+
+        var rawLog = function(level, message) {
+            if(level <= logLevel) {
+                console.log(message);
+            }
+        };
+        var logError = function(message) {rawLog(LEVEL.ERROR, message);};
+        var logWarn = function(message) {rawLog(LEVEL.WARN, message);};
+        var logInfo = function(message) {rawLog(LEVEL.INFO, message);};
+        var logDebug = function(message) {rawLog(LEVEL.DEBUG, message);};
+        var logTrace = function(message) {rawLog(LEVEL.TRACE, message);};
+
+        logDebug("Creating new terminal.");
 
         var generateUUID = function() {
             var d = new Date().getTime();
@@ -85,13 +107,12 @@
         try {
             if(localStorage.getItem("history")) {
                 history = localStorage.getItem("history").split(",");
-                console.log("history retrieved from localStorage.");
+                logDebug("history retrieved from localStorage.");
             } else {
-                console.log("history not available.");
+                logInfo("history not available.");
             }
         } catch(e) {
-            console.log("Cannot use localStorage");
-            console.log("Error: " + e);
+            logWarn("Cannot use localStorage. Error: " + e);
         }
 
         var historyIndex = history.length;
@@ -101,7 +122,7 @@
             try{
                 localStorage.setItem("history", history);
             } catch(e) {
-                console.log("Cannot update localStorage. " * e);
+                logWarn("Cannot update localStorage. " * e);
             }
             historyIndex = history.length;
         };
@@ -146,11 +167,11 @@
 
         var displayMessageGroups = function(messageGroups, specialPromptStyleClass) {
             var groupCount = messageGroups.length;
-            console.log("groupCount: " + groupCount);
+            logTrace("groupCount: " + groupCount);
             for(var k = 0; k < groupCount; k++) {
                 var settingsCount = applySettings(messageGroups[k].settings);
                 var msgCount = messageGroups[k].messages.length;
-                console.log("msgCount: " + msgCount);
+                logTrace("msgCount: " + msgCount);
                 if (msgCount > 0) {
                     var newPrompt = "";
                     for (var i = 0; i < msgCount; i++) {
@@ -179,7 +200,8 @@
                     self.onServerError();
                     break;
                 default:
-                    console.log("xhr: readyState = " + xhr.readyState + ", status = " + xhr.status);
+                    var level = (xhr.status >= 400) ? LEVEL.WARN : (xhr.status >= 300) ? LEVEL.INFO : LEVEL.DEBUG;
+                    rawLog(level, "xhr: readyState = " + xhr.readyState + ", status = " + xhr.status);
                     if(xhr.status > 200) {
                         setTimeout(requestData, 2000);
                     }
@@ -203,7 +225,7 @@
                         self.resetTextTerm();
                     }
                     displayMessageGroups(data.messageGroups, null);
-                    console.log("action: " + data.action);
+                    logTrace("action: " + data.action);
                     if (data.action != 'NONE') {
                         action = data.action;
                     }
@@ -256,7 +278,7 @@
             xhr.setRequestHeader("uuid", self.uuid);
 
             if(userInterrupt) {
-                console.log("User interrupt!");
+                logInfo("User interrupt!");
                 xhr.setRequestHeader("textio-user-interrupt", "true");
             } else {
                 createNewTextTermPair("<br/>");
@@ -369,7 +391,7 @@
                 var key = settings[i].key;
                 var value = settings[i].value;
                 self.settings[key] = value;
-                console.log("settings: " + key + " = " + value);
+                logTrace("settings: " + key + " = " + value);
             }
             return count;
         };
@@ -382,6 +404,13 @@
             initSettings();
 
             self.specialKeyPressHandler = null;
+
+            self.setLogLevelOff = function() {logLevel = LEVEL.OFF;};
+            self.setLogLevelError = function() {logLevel = LEVEL.ERROR;};
+            self.setLogLevelWarn = function() {logLevel = LEVEL.WARN;};
+            self.setLogLevelInfo = function() {logLevel = LEVEL.INFO;};
+            self.setLogLevelDebug = function() {logLevel = LEVEL.DEBUG;};
+            self.setLogLevelTrace = function() {logLevel = LEVEL.TRACE;};
 
             self.displayMessage = function(message, specialPromptStyleClass) {
                 var messageGroup = {
@@ -396,15 +425,15 @@
             };
 
             self.onDataReceived = function(data) {
-                console.log("onDataReceived: data = " + JSON.stringify(data));
+                logTrace("onDataReceived: data = " + JSON.stringify(data));
             };
 
             self.onDispose = function(resultData) {
-                console.log("onDispose: resultData = " + resultData);
+                logDebug("onDispose: resultData = " + resultData);
             };
 
             self.onAbort = function() {
-                console.log("onAbort: default empty implementation");
+                logDebug("onAbort: default empty implementation");
             };
 
             var waitForEnterToRestart = function(event) {
@@ -416,14 +445,14 @@
             }
 
             self.onSessionExpired = function() {
-                console.log("onSessionExpired() called.");
+                logInfo("onSessionExpired() called.");
                 self.resetTextTerm();
                 self.displayError("<h2>Session expired.</h2><br/>Press enter to restart.");
                 self.specialKeyPressHandler = waitForEnterToRestart;
             };
 
             self.onServerError = function() {
-                console.log("onServerError() called.");
+                logWarn("onServerError() called.");
                 self.resetTextTerm();
                 self.displayError("<h2>Server error.</h2><br/>Press enter to restart.");
                 self.specialKeyPressHandler = waitForEnterToRestart;
@@ -435,7 +464,7 @@
             };
 
             self.resetTextTerm = function() {
-                console.log("Resetting terminal.");
+                logInfo("Resetting terminal.");
                 var pairs = textTermElem.querySelectorAll(".textterm-pair");
                 for (var i = 0; i < pairs.length - 1; i++) {
                     textTermElem.removeChild(pairs[i]);
