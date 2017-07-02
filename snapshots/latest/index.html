@@ -1057,6 +1057,9 @@ application.</p>
 <p><a href="#execute">execute([initData])</a></p>
 </li>
 <li>
+<p><a href="#onDataReceived">onDataReceived(data)</a></p>
+</li>
+<li>
 <p><a href="#onDispose">onDispose(resultData)</a></p>
 </li>
 <li>
@@ -1132,6 +1135,23 @@ application.</p>
 <p><code>initData</code> - the data used to initialize the server-side Text-IO application.</p>
 </li>
 </ul>
+</div>
+</div>
+<div class="sect5">
+<h6 id="onDataReceived">onDataReceived(data)</h6>
+<div class="paragraph">
+<p>The TextTerminal calls this method each time it receives ne data.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>data</code> - the data sent by the Text-IO application.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>By default, this method does nothing more than logging the <code>data</code>.
+You may assign a custom implementation.</p>
 </div>
 </div>
 <div class="sect5">
