@@ -209,7 +209,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
         try {
             if(data.getAction() != ABORT) {
                 String escapedMessage = data.addMessage(message);
-                logger.trace("rawPrint(): signaling data: {}", escapedMessage);
+                logger.trace("rawPrint(): signalling data: {}", escapedMessage);
             }
             dataNotEmpty.signalAll();
             if(data.hasAction()) {

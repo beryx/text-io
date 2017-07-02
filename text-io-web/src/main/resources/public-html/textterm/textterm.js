@@ -247,14 +247,12 @@
             xhr.send(JSON.stringify(initData));
         };
 
-        var postInput = function(userInterrupt) {
+        var postAsInput = function(text, userInterrupt) {
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = handleXhrError(xhr);
             xhr.open("POST", self.textTerminalInputPath, true);
             xhr.setRequestHeader("Content-type", "text/plain");
             xhr.setRequestHeader("uuid", self.uuid);
-
-            var input = inputElem.textContent;
 
             if(userInterrupt) {
                 console.log("User interrupt!");
@@ -263,7 +261,11 @@
                 createNewTextTermPair("<br/>");
             }
             inputElem.focus();
-            xhr.send(input);
+            xhr.send(text);
+        };
+
+        var postInput = function(userInterrupt) {
+            postAsInput(inputElem.textContent, userInterrupt);
         };
 
         var getColor = function(colorName) {
@@ -420,6 +422,11 @@
                 self.resetTextTerm();
                 self.displayError("<h2>Server error.</h2><br/>Press enter to restart.");
                 self.specialKeyPressHandler = waitForEnterToRestart;
+            };
+
+
+            self.sendUserInterrupt = function() {
+                postAsInput("", true);
             };
 
             self.resetTextTerm = function() {
