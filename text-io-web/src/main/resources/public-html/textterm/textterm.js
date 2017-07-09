@@ -472,6 +472,7 @@
                 }
                 promptElem.textContent = "";
                 inputElem.textContent = "";
+                inputElem.setAttribute("contenteditable", true);
             };
 
             self.execute = postInitData;
