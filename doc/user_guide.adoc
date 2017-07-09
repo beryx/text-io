@@ -367,7 +367,7 @@ Executes the server-side Text-IO application.
 
 [[onDataReceived]]
 ##### onDataReceived(data)
-The TextTerminal calls this method each time it receives ne data.
+The TextTerminal calls this method each time it receives new data.
 
 - `data` - the data sent by the Text-IO application.
 
