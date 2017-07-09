@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -261,6 +261,7 @@
         var currentInitData = null;
 
         var postInitData = function(initData) {
+            action = undefined;
             currentInitData = initData;
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = handleXhrStateChange(xhr);
