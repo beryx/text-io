@@ -21,6 +21,7 @@ import spark.Request;
 import spark.Response;
 import spark.Session;
 
+import java.nio.charset.StandardCharsets;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -107,7 +108,7 @@ public class SparkDataServer extends AbstractDataServer<Request> {
     public void init() {
         post("/" + getPathForPostInit(), (request, response) -> {
             logger.trace("Received INIT");
-            String initData = new String(request.bodyAsBytes(), UTF_8_CHARSET);
+            String initData = new String(request.bodyAsBytes(), StandardCharsets.UTF_8);
             return configureResponseData(response, handleInit(request, initData));
         });
 
@@ -119,7 +120,7 @@ public class SparkDataServer extends AbstractDataServer<Request> {
         post("/" + getPathForPostInput(), (request, response) -> {
             logger.trace("Received POST");
             boolean userInterrupt = Boolean.parseBoolean(request.headers("textio-user-interrupt"));
-            String input = new String(request.body().getBytes(), UTF_8_CHARSET);
+            String input = new String(request.body().getBytes(), StandardCharsets.UTF_8);
             return configureResponseData(response, handlePostInput(request, input, userInterrupt));
         });
     }

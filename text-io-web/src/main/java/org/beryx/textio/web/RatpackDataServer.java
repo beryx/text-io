@@ -32,6 +32,7 @@ import ratpack.session.SessionModule;
 import javax.activation.MimetypesFileTypeMap;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -84,7 +85,7 @@ public class RatpackDataServer extends AbstractDataServer<Context> {
                 logger.trace("Received INIT");
                 Request request = ctx.getRequest();
                 request.getBody().then(req -> {
-                    String initData = req.getText(UTF_8_CHARSET);
+                    String initData = req.getText(StandardCharsets.UTF_8);
                     sendResponseData(ctx, handleInit(ctx, initData));
                 });
             });
@@ -100,7 +101,7 @@ public class RatpackDataServer extends AbstractDataServer<Context> {
                 Request request = ctx.getRequest();
                 boolean userInterrupt = Boolean.parseBoolean(request.getHeaders().get("textio-user-interrupt"));
                 request.getBody().then(req -> {
-                    String text = req.getText(UTF_8_CHARSET);
+                    String text = req.getText(StandardCharsets.UTF_8);
                     sendResponseData(ctx, handlePostInput(ctx, text, userInterrupt));
                 });
             });
@@ -229,7 +230,7 @@ public class RatpackDataServer extends AbstractDataServer<Context> {
     }
 
     protected Optional<String> getUrlContent(URL url) {
-        try(Scanner scanner = new Scanner(url.openStream(), UTF_8_CHARSET.name())) {
+        try(Scanner scanner = new Scanner(url.openStream(), StandardCharsets.UTF_8.name())) {
             return Optional.of(scanner.useDelimiter("\\A").next());
         } catch (IOException e) {
             return Optional.empty();

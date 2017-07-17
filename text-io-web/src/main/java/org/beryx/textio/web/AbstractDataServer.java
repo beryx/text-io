@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
 /**
@@ -27,8 +28,6 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractDataServer<CTX> implements DataServer {
     private static final Logger logger =  LoggerFactory.getLogger(WebTextTerminal.class);
-
-    public static final Charset UTF_8_CHARSET = Charset.forName("UTF-8");
 
     public static final String DEFAULT_PATH_FOR_INIT_DATA = "textTerminalInit";
     public static final String DEFAULT_PATH_FOR_GET_DATA = "textTerminalData";
