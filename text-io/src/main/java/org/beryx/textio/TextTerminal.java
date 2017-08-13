@@ -15,10 +15,6 @@
  */
 package org.beryx.textio;
 
-import javafx.collections.MapChangeListener;
-import javafx.collections.ObservableMap;
-
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
