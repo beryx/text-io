@@ -26,7 +26,12 @@ import java.awt.*;
 public class SwingTextTerminalProvider implements TextTerminalProvider {
     public TextTerminal getTextTerminal() {
         if (isHeadless()) return null;
-        return new SwingTextTerminal();
+        try {
+            getClass().getClassLoader().loadClass("javafx.scene.paint.Color");
+            return new SwingTextTerminal();
+        } catch(Exception e) {
+            return null;
+        }
     }
 
     private static boolean isHeadless() {
