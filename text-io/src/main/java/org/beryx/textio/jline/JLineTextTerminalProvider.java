@@ -19,8 +19,6 @@ import jline.console.ConsoleReader;
 import org.beryx.textio.TextTerminal;
 import org.beryx.textio.TextTerminalProvider;
 
-import java.io.IOException;
-
 /**
  * If {@link System#console()} is not null and a ConsoleReader can be created, it provides a {@link JLineTextTerminal}.
  */
