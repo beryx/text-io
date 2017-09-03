@@ -1087,6 +1087,9 @@ application.</p>
 <p><a href="#sendUserInterrupt">sendUserInterrupt()</a></p>
 </li>
 <li>
+<p><a href="#terminate">terminate()</a></p>
+</li>
+<li>
 <p><a href="#specialKeyPressHandler">specialKeyPressHandler(event)</a></p>
 </li>
 <li>
@@ -1286,6 +1289,12 @@ You may change this default behavior by assigning a custom implementation.</p>
 <h6 id="sendUserInterrupt">sendUserInterrupt()</h6>
 <div class="paragraph">
 <p>Sends a userInterrupt to the server, in order to abort the Text-IO application.</p>
+</div>
+</div>
+<div class="sect5">
+<h6 id="terminate">terminate()</h6>
+<div class="paragraph">
+<p>Removes the event listeners. The text terminal should no longer be used after calling this method.</p>
 </div>
 </div>
 <div class="sect5">
