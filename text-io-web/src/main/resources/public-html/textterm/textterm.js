@@ -504,7 +504,7 @@
                 }
             };
 
-            ttElem.addEventListener("keypress", function(event) {
+            var keyPressHandler = function(event) {
                 if(self.specialKeyPressHandler) {
                     self.specialKeyPressHandler(event);
                 } else {
@@ -516,7 +516,12 @@
                     postInput(false);
                     event.preventDefault();
                 }
-            });
+            };
+            ttElem.addEventListener("keypress", keyPressHandler);
+
+            self.terminate = function() {
+                ttElem.removeEventListener("keypress", keyPressHandler);
+            };
 
             return self;
         };

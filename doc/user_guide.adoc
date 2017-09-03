@@ -336,6 +336,7 @@ The https://github.com/beryx/text-io-web-example[text-io-web-example] uses this 
   * <<resetTextTerm>>
   * <<restart>>
   * <<sendUserInterrupt>>
+  * <<terminate>>
   * <<specialKeyPressHandler>>
   * <<setLogLevelOff>>
   * <<setLogLevelError>>
@@ -451,6 +452,10 @@ Restarts the server-side Text-IO application with the `initData` used by the pre
 [[sendUserInterrupt]]
 ##### sendUserInterrupt()
 Sends a userInterrupt to the server, in order to abort the Text-IO application.
+
+[[terminate]]
+##### terminate()
+Removes the event listeners. The text terminal should no longer be used after calling this method.
 
 [[specialKeyPressHandler]]
 ##### specialKeyPressHandler(event)
