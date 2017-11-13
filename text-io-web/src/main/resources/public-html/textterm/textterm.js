@@ -57,6 +57,7 @@
 }(this, function () {
     var createTextTerm = function TextTerm(ttElem) {
         var self = {};
+        self.terminated = false;
         self.textTerminalInitPath = "/textTerminalInit";
         self.textTerminalDataPath = "/textTerminalData";
         self.textTerminalInputPath = "/textTerminalInput";
@@ -218,6 +219,7 @@
 
         var handleXhrStateChange = function(xhr) {
             return (function() {
+                if(self.terminated) return;
                 if((xhr.readyState == XMLHttpRequest.DONE) && (xhr.status == 200)) {
                     var data = JSON.parse(xhr.responseText);
                     self.onDataReceived(data);
@@ -521,6 +523,7 @@
 
             self.terminate = function() {
                 ttElem.removeEventListener("keypress", keyPressHandler);
+                self.terminated = true;
             };
 
             return self;
