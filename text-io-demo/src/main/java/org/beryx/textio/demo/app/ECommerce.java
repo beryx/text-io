@@ -34,11 +34,11 @@ public class ECommerce implements BiConsumer<TextIO, RunnerData> {
 
     @Override
     public void accept(TextIO textIO, RunnerData runnerData) {
-        TextTerminal terminal = textIO.getTextTerminal();
+        TextTerminal<?> terminal = textIO.getTextTerminal();
         String initData = (runnerData == null) ? null : runnerData.getInitData();
         AppUtil.printGsonMessage(terminal, initData);
 
-        TerminalProperties props = terminal.getProperties();
+        TerminalProperties<?> props = terminal.getProperties();
 
         props.setPromptBold(true);
         props.setPromptUnderline(true);

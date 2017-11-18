@@ -31,7 +31,7 @@ import java.util.stream.IntStream;
 public abstract class InputReader<T, B extends InputReader<T, B>> {
     /** Functional interface for providing error messages */
     @FunctionalInterface
-    public static interface ErrorMessagesProvider {
+    public interface ErrorMessagesProvider {
         /**
          * Returns the list of error messages for the given string representation of the value
          * @param sVal the string representation of the value
@@ -43,7 +43,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
 
     /** Functional interface for checking value constraints */
     @FunctionalInterface
-    public static interface ValueChecker<T> {
+    public interface ValueChecker<T> {
         /**
          * Returns the list of error messages due to constraint violations caused by <tt>val</tt>
          * @param val the value for which constraint violations are checked
@@ -85,8 +85,8 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         }
     }
 
-    /** Supplier of {@ling TextTerminal}s */
-    protected final Supplier<TextTerminal> textTerminalSupplier;
+    /** Supplier of {@link TextTerminal}s */
+    protected final Supplier<TextTerminal<?>> textTerminalSupplier;
 
     /** null, if there is no default value */
     protected T defaultValue;
@@ -139,15 +139,17 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      */
     protected abstract ParseResult<T> parse(String s);
 
-    public InputReader(Supplier<TextTerminal> textTerminalSupplier) {
+    public InputReader(Supplier<TextTerminal<?>> textTerminalSupplier) {
         this.textTerminalSupplier = textTerminalSupplier;
     }
 
+    @SuppressWarnings("unchecked")
     public B withDefaultValue(T defaultValue) {
         this.defaultValue = defaultValue;
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withPossibleValues(T... possibleValues) {
         this.possibleValues = null;
         if(possibleValues.length > 0) {
@@ -159,6 +161,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withPossibleValues(List<T> possibleValues) {
         this.possibleValues = (possibleValues != null && possibleValues.isEmpty()) ? null : possibleValues;
         this.numberedPossibleValues = false;
@@ -166,72 +169,85 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withNumberedPossibleValues(T... possibleValues) {
         withPossibleValues(possibleValues);
         this.numberedPossibleValues = true;
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withNumberedPossibleValues(List<T> possibleValues) {
         withPossibleValues(possibleValues);
         this.numberedPossibleValues = true;
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withInlinePossibleValues(T... possibleValues) {
         withPossibleValues(possibleValues);
         this.inlinePossibleValues = true;
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withInlinePossibleValues(List<T> possibleValues) {
         withPossibleValues(possibleValues);
         this.inlinePossibleValues = true;
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withInputMasking(boolean inputMasking) {
         this.inputMasking = inputMasking;
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withInputTrimming(boolean inputTrimming) {
         this.inputTrimming = inputTrimming;
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withPromptAdjustments(boolean promptAdjustment) {
         this.promptAdjustments = promptAdjustment;
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withItemName(String itemName) {
         this.itemName = "".equals(itemName) ? null : itemName;
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withValueFormatter(Function<T, String> valueFormatter) {
         this.valueFormatter = valueFormatter;
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withEqualsFunc(BiFunction<T, T, Boolean> equalsFunc) {
         this.equalsFunc = equalsFunc;
         return (B)this;
     }
 
+    @SuppressWarnings("unchecked")
     public B withParseErrorMessagesProvider(ErrorMessagesProvider parseErrorMessagesProvider) {
         this.parseErrorMessagesProvider = parseErrorMessagesProvider;
         return (B)this;
     }
 
     /** Adds the valueChecker passed as argument. May be called multiple times. */
+    @SuppressWarnings("unchecked")
     public B withValueChecker(ValueChecker<T> valueChecker) {
         this.valueCheckers.add(valueChecker);
         return (B)this;
     }
 
     /** Adds the valueListChecker passed as argument. May be called multiple times. */
+    @SuppressWarnings("unchecked")
     public B withValueListChecker(ValueChecker<List<T>> valueListChecker) {
         this.valueListCheckers.add(valueListChecker);
         return (B)this;
@@ -315,7 +331,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     public T read(List<String> prompt) {
         valueListMode = false;
         checkConfiguration();
-        TextTerminal textTerminal = textTerminalSupplier.get();
+        TextTerminal<?> textTerminal = textTerminalSupplier.get();
         while(true) {
             printPrompt(prompt, textTerminal);
             String sVal = textTerminal.read(inputMasking);
@@ -335,7 +351,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     public List<T> readList(List<String> prompt) {
         valueListMode = true;
         checkConfiguration();
-        TextTerminal textTerminal = textTerminalSupplier.get();
+        TextTerminal<?> textTerminal = textTerminalSupplier.get();
         mainLoop:
         while(true) {
             printPrompt(prompt, textTerminal);
@@ -367,12 +383,12 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         }
     }
 
-    private T getValueFromStringOrIndex(String sVal, TextTerminal textTerminal) {
+    private T getValueFromStringOrIndex(String sVal, TextTerminal<?> textTerminal) {
         if(possibleValues == null || !numberedPossibleValues) return getValueFromString(sVal, textTerminal);
         else return getValueFromIndex(sVal, textTerminal);
     }
 
-    private T getValueFromString(String sVal, TextTerminal textTerminal) {
+    private T getValueFromString(String sVal, TextTerminal<?> textTerminal) {
         ParseResult<T> result = parseAndCheck(sVal);
         List<String> errMessages = result.getErrorMessages();
         if(errMessages == null) {
@@ -395,7 +411,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return null;
     }
 
-    private T getValueFromIndex(String sVal, TextTerminal textTerminal) {
+    private T getValueFromIndex(String sVal, TextTerminal<?> textTerminal) {
         try {
             int optIndex = Integer.parseInt(sVal);
             if(optIndex > 0 && optIndex <= possibleValues.size()) {
@@ -455,7 +471,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
      * @param prompt the list of prompt messages. May be null.
      * @param textTerminal the text terminal to which the messages are sent.
      */
-    protected void printPrompt(List<String> prompt, TextTerminal textTerminal) {
+    protected void printPrompt(List<String> prompt, TextTerminal<?> textTerminal) {
         textTerminal.print(prompt);
         boolean useColon = false;
         if(promptAdjustments && prompt != null && !prompt.isEmpty()) {

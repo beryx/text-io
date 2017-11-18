@@ -15,7 +15,6 @@
  */
 package org.beryx.textio.web;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.beryx.textio.AbstractTextTerminal;
 import org.beryx.textio.PropertiesPrefixes;
 import org.beryx.textio.TerminalProperties;
@@ -32,7 +31,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static org.beryx.textio.PropertiesConstants.*;
 import static org.beryx.textio.web.TextTerminalData.Action.*;
@@ -85,7 +83,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
     private boolean abortRead = true;
 
     public WebTextTerminal() {
-        TerminalProperties props = getProperties();
+        TerminalProperties<WebTextTerminal> props = getProperties();
         props.addStringListener(PROP_USER_INTERRUPT_KEY, null, (term, newVal) -> setUserInterruptKey(newVal));
 
         props.addStringListener(PROP_PROMPT_STYLE_CLASS, null, (term, newVal) -> addSetting("promptStyleClass", newVal));
@@ -111,8 +109,8 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
         copy.setOnDispose(this.onDispose);
         copy.setOnAbort(this.onAbort);
 
-        TerminalProperties props = copy.getProperties();
-        List<TerminalProperties.ExtendedChangeListener> listeners = getProperties().getListeners();
+        TerminalProperties<WebTextTerminal> props = copy.getProperties();
+        List<TerminalProperties.ExtendedChangeListener<WebTextTerminal>> listeners = getProperties().getListeners();
         listeners.forEach(listener -> props.addListener(listener));
 
         copy.setTimeoutNotEmpty(this.timeoutNotEmpty);

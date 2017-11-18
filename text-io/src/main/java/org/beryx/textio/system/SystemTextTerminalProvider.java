@@ -15,14 +15,13 @@
  */
 package org.beryx.textio.system;
 
-import org.beryx.textio.TextTerminal;
 import org.beryx.textio.TextTerminalProvider;
 
 /**
  * It provides a {@link SystemTextTerminal}.
  */
 public class SystemTextTerminalProvider implements TextTerminalProvider {
-    public TextTerminal getTextTerminal() {
+    public SystemTextTerminal getTextTerminal() {
         return new SystemTextTerminal();
     }
 

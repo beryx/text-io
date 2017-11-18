@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * A reader for float values.
  */
 public class FloatInputReader extends ComparableInputReader<Float, FloatInputReader> {
-    public FloatInputReader(Supplier<TextTerminal> textTerminalSupplier) {
+    public FloatInputReader(Supplier<TextTerminal<?>> textTerminalSupplier) {
         super(textTerminalSupplier);
     }
 

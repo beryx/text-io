@@ -53,11 +53,11 @@ public class TextIoFactory {
     private static class Holder {
         static Holder INSTANCE = new Holder();
 
-        final TextTerminal terminal;
+        final TextTerminal<?> terminal;
         final TextIO textIO;
 
         private Holder() {
-            TextTerminal t = getTerminalFromProperty();
+            TextTerminal<?> t = getTerminalFromProperty();
             if(t == null) {
                 t = getTerminalFromService();
             }
@@ -69,30 +69,30 @@ public class TextIoFactory {
             this.textIO = new TextIO(t);
         }
 
-        private TextTerminal getTerminalFromProperty() {
+        private TextTerminal<?> getTerminalFromProperty() {
             String clsName = System.getProperty(TEXT_TERMINAL_CLASS_PROPERTY, "").trim();
             if(clsName.isEmpty()) return null;
             try {
                 Class<?> cls = Class.forName(clsName);
-                return (TextTerminal) cls.newInstance();
+                return (TextTerminal<?>) cls.newInstance();
             } catch(Exception e) {
                 logger.warn("Unable to create a TextTerminal of type {}", clsName);
                 return null;
             }
         }
 
-        private TextTerminal getTerminalFromService() {
+        private TextTerminal<?> getTerminalFromService() {
             ServiceLoader<TextTerminalProvider> svcLoader = ServiceLoader.load(TextTerminalProvider.class);
             Iterator<TextTerminalProvider> it = svcLoader.iterator();
             while(it.hasNext()) {
-                TextTerminal t = it.next().getTextTerminal();
+                TextTerminal<?> t = it.next().getTextTerminal();
                 if(t != null) return t;
             }
             return null;
         }
 
-        private TextTerminal getDefaultTerminal() {
-            TextTerminal terminal = new JLineTextTerminalProvider().getTextTerminal();
+        private TextTerminal<?> getDefaultTerminal() {
+            TextTerminal<?> terminal = new JLineTextTerminalProvider().getTextTerminal();
             if(terminal != null) return terminal;
             terminal = new ConsoleTextTerminalProvider().getTextTerminal();
             if(terminal != null) return terminal;
@@ -103,7 +103,7 @@ public class TextIoFactory {
         }
     }
 
-    public static TextTerminal getTextTerminal() {
+    public static TextTerminal<?> getTextTerminal() {
         return Holder.INSTANCE.terminal;
     }
 

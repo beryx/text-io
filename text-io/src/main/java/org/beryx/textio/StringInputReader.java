@@ -30,7 +30,7 @@ public class StringInputReader extends InputReader<String, StringInputReader> {
     private int minLength = 1;
     private int maxLength = -1;
 
-    public StringInputReader(Supplier<TextTerminal> textTerminalSupplier) {
+    public StringInputReader(Supplier<TextTerminal<?>> textTerminalSupplier) {
         super(textTerminalSupplier);
         valueCheckers.add((val, propName) -> getLengthValidationErrors(val));
         valueCheckers.add((val, propName) -> getPatternValidationErrors(val));

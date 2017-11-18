@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * A reader for int values.
  */
 public class IntInputReader extends ComparableInputReader<Integer, IntInputReader> {
-    public IntInputReader(Supplier<TextTerminal> textTerminalSupplier) {
+    public IntInputReader(Supplier<TextTerminal<?>> textTerminalSupplier) {
         super(textTerminalSupplier);
     }
 

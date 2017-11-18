@@ -16,9 +16,6 @@
 package org.beryx.textio.web;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,8 +30,6 @@ import java.util.stream.Collectors;
  * </ul>
  */
 public class TextTerminalData {
-    private static final Logger logger =  LoggerFactory.getLogger(TextTerminalData.class);
-
     public enum Action {NONE, READ, READ_MASKED, DISPOSE, ABORT}
 
     /** A key-value pair */

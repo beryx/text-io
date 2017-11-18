@@ -27,7 +27,7 @@ public class BooleanInputReader extends InputReader<Boolean, BooleanInputReader>
     private String trueInput = "Y";
     private String falseInput = "N";
 
-    public BooleanInputReader(Supplier<TextTerminal> textTerminalSupplier) {
+    public BooleanInputReader(Supplier<TextTerminal<?>> textTerminalSupplier) {
         super(textTerminalSupplier);
         this.valueFormatter = bVal -> bVal ? trueInput : falseInput;
     }
@@ -61,7 +61,7 @@ public class BooleanInputReader extends InputReader<Boolean, BooleanInputReader>
     }
 
     @Override
-    protected void printPrompt(List<String> prompt, TextTerminal textTerminal) {
+    protected void printPrompt(List<String> prompt, TextTerminal<?> textTerminal) {
         List<String> boolPrompt = prompt;
         if(promptAdjustments && prompt != null && !prompt.isEmpty()) {
             String lastLine = prompt.get(prompt.size() - 1) + " (" + trueInput + "/" + falseInput + ")";

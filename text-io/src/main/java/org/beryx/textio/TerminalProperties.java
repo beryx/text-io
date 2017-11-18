@@ -37,7 +37,7 @@ public class TerminalProperties<T extends TextTerminal<T>> {
     private final T textTerminal;
 
     private final Map<String, String> props = new HashMap<>();
-    private final List<ExtendedChangeListener> listeners = new ArrayList<>();
+    private final List<ExtendedChangeListener<T>> listeners = new ArrayList<>();
 
 
     public interface ChangeListener<TT extends TextTerminal<TT>, V> {
@@ -126,7 +126,7 @@ public class TerminalProperties<T extends TextTerminal<T>> {
     /**
      * @return the list of {@link ExtendedChangeListener} for this instance of TerminalProperties.
      */
-    public List<ExtendedChangeListener> getListeners() {
+    public List<ExtendedChangeListener<T>> getListeners() {
         return listeners;
     }
 

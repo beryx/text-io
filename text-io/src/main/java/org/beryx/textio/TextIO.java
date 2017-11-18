@@ -23,15 +23,15 @@ import java.util.function.Supplier;
  * All InputReaders created by the same TextIO instance share the same {@link TextTerminal}.
  */
 public class TextIO {
-    private final TextTerminal textTerminal;
-    private final Supplier<TextTerminal> textTerminalSupplier;
+    private final TextTerminal<?> textTerminal;
+    private final Supplier<TextTerminal<?>> textTerminalSupplier;
 
-    public TextIO(TextTerminal textTerminal) {
+    public TextIO(TextTerminal<?> textTerminal) {
         this.textTerminal = textTerminal;
         this.textTerminalSupplier = () -> textTerminal;
     }
 
-    public TextTerminal getTextTerminal() {
+    public TextTerminal<?> getTextTerminal() {
         return textTerminal;
     }
 
@@ -80,10 +80,10 @@ public class TextIO {
     }
 
     public <T extends Enum<T>> EnumInputReader<T> newEnumInputReader(Class<T> enumClass) {
-        return new EnumInputReader(textTerminalSupplier, enumClass);
+        return new EnumInputReader<T>(textTerminalSupplier, enumClass);
     }
 
     public <T> GenericInputReader<T> newGenericInputReader(Function<String, InputReader.ParseResult<T>> parser) {
-        return new GenericInputReader(textTerminalSupplier, parser);
+        return new GenericInputReader<T>(textTerminalSupplier, parser);
     }
 }

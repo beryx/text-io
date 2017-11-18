@@ -207,7 +207,7 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
         reader.setHandleUserInterrupt(true);
         this.reader = reader;
 
-        TerminalProperties props = getProperties();
+        TerminalProperties<JLineTextTerminal> props = getProperties();
         props.addStringListener(PROP_PROMPT_COLOR, null, (term, newVal) -> setPromptColor(newVal));
         props.addStringListener(PROP_PROMPT_BGCOLOR, null, (term, newVal) -> setPromptBackgroundColor(newVal));
         props.addBooleanListener(PROP_PROMPT_BOLD, false, (term, newVal) -> setPromptBold(newVal));

@@ -16,6 +16,8 @@
 package org.beryx.textio.web;
 
 public class DataApiProviderException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
     public DataApiProviderException(String message) {
         super(message);
     }

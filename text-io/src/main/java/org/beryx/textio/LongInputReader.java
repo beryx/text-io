@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * A reader for long values.
  */
 public class LongInputReader extends ComparableInputReader<Long, LongInputReader> {
-    public LongInputReader(Supplier<TextTerminal> textTerminalSupplier) {
+    public LongInputReader(Supplier<TextTerminal<?>> textTerminalSupplier) {
         super(textTerminalSupplier);
     }
 

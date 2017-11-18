@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 public class GenericInputReader<T> extends InputReader<T, GenericInputReader<T>> {
     protected final Function<String, ParseResult<T>> parser;
 
-    public GenericInputReader(Supplier<TextTerminal> textTerminalSupplier, Function<String, ParseResult<T>> parser) {
+    public GenericInputReader(Supplier<TextTerminal<?>> textTerminalSupplier, Function<String, ParseResult<T>> parser) {
         super(textTerminalSupplier);
         this.parser = parser;
     }

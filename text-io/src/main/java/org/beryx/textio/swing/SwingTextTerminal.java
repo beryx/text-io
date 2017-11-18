@@ -68,6 +68,8 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     private Consumer<SwingTextTerminal> userInterruptHandler = textTerm -> System.exit(-1);
 
     private final Action userInterruptAction = new AbstractAction() {
+        private static final long serialVersionUID = 1L;
+
         @Override
         public void actionPerformed(ActionEvent e) {
             if(userInterruptHandler != null) {
@@ -168,7 +170,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     }
 
     public SwingTextTerminal() {
-        TerminalProperties props = getProperties();
+        TerminalProperties<SwingTextTerminal> props = getProperties();
 
         props.addStringListener(PROP_USER_INTERRUPT_KEY, null, (term, newVal) -> setUserInterruptKey(newVal));
 
@@ -428,7 +430,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     }
 
     public void setPaneBackgroundColor(String colorName) {
-        getColor(colorName).ifPresent(col -> textPane.setBackground(col));
+        getColor(colorName).ifPresent(textPane::setBackground);
     }
 
     public void setPaneTitle(String newTitle) {

@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * A reader for char values.
  */
 public class CharInputReader extends ComparableInputReader<Character, CharInputReader> {
-    public CharInputReader(Supplier<TextTerminal> textTerminalSupplier) {
+    public CharInputReader(Supplier<TextTerminal<?>> textTerminalSupplier) {
         super(textTerminalSupplier);
     }
 

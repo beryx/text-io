@@ -24,10 +24,11 @@ import java.util.function.Supplier;
  * It initializes {@link #possibleValues} with the constants returned by the <tt>values()</tt> method.
  * By default, it uses a numbered list for displaying the possible values.
  */
+@SuppressWarnings("unchecked")
 public class EnumInputReader<T extends Enum<T>> extends InputReader<T, EnumInputReader<T>> {
     private final Map<String, T> enumValues = new LinkedHashMap<String, T>();
 
-    public EnumInputReader(Supplier<TextTerminal> textTerminalSupplier, Class<T> enumClass) {
+    public EnumInputReader(Supplier<TextTerminal<?>> textTerminalSupplier, Class<T> enumClass) {
         super(textTerminalSupplier);
         try {
             Method mValues = enumClass.getMethod("values");

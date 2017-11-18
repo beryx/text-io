@@ -16,14 +16,13 @@
 package org.beryx.textio.jline;
 
 import jline.console.ConsoleReader;
-import org.beryx.textio.TextTerminal;
 import org.beryx.textio.TextTerminalProvider;
 
 /**
  * If {@link System#console()} is not null and a ConsoleReader can be created, it provides a {@link JLineTextTerminal}.
  */
 public class JLineTextTerminalProvider implements TextTerminalProvider {
-    public TextTerminal getTextTerminal() {
+    public JLineTextTerminal getTextTerminal() {
         if(System.console() == null) return null;
         try {
             getClass().getClassLoader().loadClass("javafx.scene.paint.Color");

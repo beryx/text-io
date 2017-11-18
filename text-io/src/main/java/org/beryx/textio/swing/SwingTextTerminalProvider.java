@@ -15,7 +15,6 @@
  */
 package org.beryx.textio.swing;
 
-import org.beryx.textio.TextTerminal;
 import org.beryx.textio.TextTerminalProvider;
 
 import java.awt.*;
@@ -24,7 +23,7 @@ import java.awt.*;
  * If the system is not headless, it provides a {@link SwingTextTerminal}.
  */
 public class SwingTextTerminalProvider implements TextTerminalProvider {
-    public TextTerminal getTextTerminal() {
+    public SwingTextTerminal getTextTerminal() {
         if (isHeadless()) return null;
         try {
             getClass().getClassLoader().loadClass("javafx.scene.paint.Color");

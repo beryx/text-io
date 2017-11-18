@@ -37,15 +37,15 @@ import java.util.function.Supplier;
 public class TextIoDemo {
     private static class NamedProvider implements TextTerminalProvider {
         final String name;
-        final Supplier<TextTerminal> supplier;
+        final Supplier<TextTerminal<?>> supplier;
 
-        NamedProvider(String name, Supplier<TextTerminal> supplier) {
+        NamedProvider(String name, Supplier<TextTerminal<?>> supplier) {
             this.name = name;
             this.supplier = supplier;
         }
 
         @Override
-        public TextTerminal getTextTerminal() {
+        public TextTerminal<?> getTextTerminal() {
             return supplier.get();
         }
 
@@ -56,7 +56,7 @@ public class TextIoDemo {
     }
 
     public static void main(String[] args) {
-        TextTerminal sysTerminal = new SystemTextTerminal();
+        SystemTextTerminal sysTerminal = new SystemTextTerminal();
         TextIO sysTextIO = new TextIO(sysTerminal);
 
         BiConsumer<TextIO, RunnerData> app = chooseApp(sysTextIO);
@@ -67,7 +67,7 @@ public class TextIoDemo {
 
         if(textIO.getTextTerminal() instanceof WebTextTerminal) {
             WebTextTerminal webTextTerm = (WebTextTerminal)textIO.getTextTerminal();
-            TextIoApp textIoApp = createTextIoApp(sysTextIO, app, webTextTerm);
+            TextIoApp<?> textIoApp = createTextIoApp(sysTextIO, app, webTextTerm);
             WebTextIoExecutor webTextIoExecutor = new WebTextIoExecutor();
             configurePort(sysTextIO, webTextIoExecutor, 8080);
             webTextIoExecutor.execute(textIoApp);
@@ -76,12 +76,12 @@ public class TextIoDemo {
         }
     }
 
-    private static TextIoApp createTextIoApp(TextIO textIO, BiConsumer<TextIO, RunnerData> app, WebTextTerminal webTextTerm) {
+    private static TextIoApp<?> createTextIoApp(TextIO textIO, BiConsumer<TextIO, RunnerData> app, WebTextTerminal webTextTerm) {
         class Provider {
             private final String name;
-            private final Supplier<TextIoApp> supplier;
+            private final Supplier<TextIoApp<?>> supplier;
 
-            private Provider(String name, Supplier<TextIoApp> supplier) {
+            private Provider(String name, Supplier<TextIoApp<?>> supplier) {
                 this.name = name;
                 this.supplier = supplier;
             }
@@ -121,7 +121,7 @@ public class TextIoDemo {
     }
 
     private static TextIO chooseTextIO() {
-        TextTerminal terminal = new SystemTextTerminal();
+        SystemTextTerminal terminal = new SystemTextTerminal();
         TextIO textIO = new TextIO(terminal);
         while(true) {
             TextTerminalProvider terminalProvider = textIO.<TextTerminalProvider>newGenericInputReader(null)
@@ -135,7 +135,7 @@ public class TextIoDemo {
                     )
                     .read("\nChoose the terminal to be used for running the demo");
 
-            TextTerminal chosenTerminal = null;
+            TextTerminal<?> chosenTerminal = null;
             String errMsg = null;
             try {
                 chosenTerminal = terminalProvider.getTextTerminal();

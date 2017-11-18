@@ -35,13 +35,14 @@ public abstract class AbstractTextTerminal<T extends AbstractTextTerminal<T>> im
 
     private boolean initialized = false;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public AbstractTextTerminal() {
         this.properties = new TerminalProperties(this);
         addDefaultProperty(PropertiesConstants.PROP_USER_INTERRUPT_KEY, DEFAULT_USER_INTERRUPT_KEY);
     }
 
     @Override
-    public TerminalProperties getProperties() {
+    public TerminalProperties<T> getProperties() {
         return properties;
     }
 

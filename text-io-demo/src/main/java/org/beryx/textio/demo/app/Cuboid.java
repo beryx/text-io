@@ -31,7 +31,7 @@ public class Cuboid implements BiConsumer<TextIO, RunnerData> {
 
     private static class TextProps {
         private final String prefix;
-        private final TerminalProperties props;
+        private final TerminalProperties<?> props;
 
         public final String color;
         public final String bgcolor;
@@ -40,7 +40,7 @@ public class Cuboid implements BiConsumer<TextIO, RunnerData> {
         public final boolean underline;
         public final String style;
 
-        public TextProps(TerminalProperties props, String prefix) {
+        public TextProps(TerminalProperties<?> props, String prefix) {
             this.props = props;
             this.prefix = prefix;
             color = props.getString(propName("color"));
@@ -84,11 +84,11 @@ public class Cuboid implements BiConsumer<TextIO, RunnerData> {
 
     @Override
     public void accept(TextIO textIO, RunnerData runnerData) {
-        TextTerminal terminal = textIO.getTextTerminal();
+        TextTerminal<?> terminal = textIO.getTextTerminal();
         String initData = (runnerData == null) ? null : runnerData.getInitData();
         AppUtil.printGsonMessage(terminal, initData);
 
-        TerminalProperties props = terminal.getProperties();
+        TerminalProperties<?> props = terminal.getProperties();
 
         new TextProps(props, "title").configurePrompt();
         terminal.println("Cuboid dimensions");

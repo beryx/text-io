@@ -19,8 +19,6 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
 /**
@@ -54,7 +52,7 @@ public abstract class AbstractDataServer<CTX> implements DataServer {
     }
 
     @Override
-    public AbstractDataServer withPathForInitData(String pathForInitData) {
+    public AbstractDataServer<CTX> withPathForInitData(String pathForInitData) {
         this.pathForInitData = pathForInitData;
         return this;
     }
@@ -63,7 +61,7 @@ public abstract class AbstractDataServer<CTX> implements DataServer {
     }
 
     @Override
-    public AbstractDataServer withPathForGetData(String pathForGetData) {
+    public AbstractDataServer<CTX> withPathForGetData(String pathForGetData) {
         this.pathForGetData = pathForGetData;
         return this;
     }
@@ -72,7 +70,7 @@ public abstract class AbstractDataServer<CTX> implements DataServer {
     }
 
     @Override
-    public AbstractDataServer withPathForPostInput(String pathForPostInput) {
+    public AbstractDataServer<CTX> withPathForPostInput(String pathForPostInput) {
         this.pathForPostInput = pathForPostInput;
         return this;
     }

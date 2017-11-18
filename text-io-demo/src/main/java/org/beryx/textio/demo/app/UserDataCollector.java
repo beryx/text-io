@@ -34,7 +34,7 @@ public class UserDataCollector implements BiConsumer<TextIO, RunnerData> {
 
     @Override
     public void accept(TextIO textIO, RunnerData runnerData) {
-        TextTerminal terminal = textIO.getTextTerminal();
+        TextTerminal<?> terminal = textIO.getTextTerminal();
         String initData = (runnerData == null) ? null : runnerData.getInitData();
         AppUtil.printGsonMessage(terminal, initData);
 

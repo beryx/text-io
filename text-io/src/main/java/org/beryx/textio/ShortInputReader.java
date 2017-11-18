@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * A reader for short values.
  */
 public class ShortInputReader extends ComparableInputReader<Short, ShortInputReader> {
-    public ShortInputReader(Supplier<TextTerminal> textTerminalSupplier) {
+    public ShortInputReader(Supplier<TextTerminal<?>> textTerminalSupplier) {
         super(textTerminalSupplier);
     }
 

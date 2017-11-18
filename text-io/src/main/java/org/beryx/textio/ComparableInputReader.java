@@ -30,19 +30,21 @@ public abstract class ComparableInputReader<T extends Comparable<T>, B extends C
 
     protected abstract String typeNameWithIndefiniteArticle();
 
-    public ComparableInputReader(Supplier<TextTerminal> textTerminalSupplier) {
+    public ComparableInputReader(Supplier<TextTerminal<?>> textTerminalSupplier) {
         super(textTerminalSupplier);
         parseErrorMessagesProvider = (val, propName) -> Arrays.asList(getDefaultErrorMessage(val), getStandardMinMaxErrorMessage());
         valueCheckers.add((val, propName) -> getMinMaxErrorMessage(val));
     }
 
     /** Configures the minimum allowed value */
+    @SuppressWarnings("unchecked")
     public B withMinVal(T minVal) {
         this.minVal = minVal;
         return (B)this;
     }
 
     /** Configures the maximum allowed value */
+    @SuppressWarnings("unchecked")
     public B withMaxVal(T maxVal) {
         this.maxVal = maxVal;
         return (B)this;

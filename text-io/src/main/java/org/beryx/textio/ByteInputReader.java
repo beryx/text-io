@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * A reader for byte values.
  */
 public class ByteInputReader extends ComparableInputReader<Byte, ByteInputReader> {
-    public ByteInputReader(Supplier<TextTerminal> textTerminalSupplier) {
+    public ByteInputReader(Supplier<TextTerminal<?>> textTerminalSupplier) {
         super(textTerminalSupplier);
     }
 

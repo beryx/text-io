@@ -22,7 +22,7 @@ import org.beryx.textio.TextTerminalProvider;
  * If {@link System#console()} is not null, it provides a {@link ConsoleTextTerminal}.
  */
 public class ConsoleTextTerminalProvider implements TextTerminalProvider {
-    public TextTerminal getTextTerminal() {
+    public TextTerminal<?> getTextTerminal() {
         if(System.console() == null) return null;
         return new ConsoleTextTerminal(System.console());
     }
