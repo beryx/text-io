@@ -281,6 +281,15 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     }
 
     @Override
+    public void resetLine() {
+        try {
+            reader.resetPromptLine("", "", 0);
+        } catch (IOException e) {
+            logger.error("resetLine error.", e);
+        }
+    }
+
+    @Override
     public boolean registerUserInterruptHandler(Consumer<JLineTextTerminal> handler, boolean abortRead) {
         this.userInterruptHandler = (handler != null) ? handler : DEFAULT_USER_INTERRUPT_HANDLER;
         this.abortRead = abortRead;

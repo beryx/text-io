@@ -90,6 +90,14 @@ public interface TextTerminal<T extends TextTerminal<T>> {
     default void abort() {}
 
     /**
+     * Clears the current line of text.
+     * Since not all terminals support this feature, the default implementation just calls {@link #println()}.
+     */
+    default void resetLine() {
+        println();
+    }
+
+    /**
      * Prints each message in the list in its raw form, inserting the line separator string between messages.
      * No separator string is printed after the last message.
      * The behavior is undefined if one or more strings in the list contain line separators.

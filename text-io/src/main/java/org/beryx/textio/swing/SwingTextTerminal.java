@@ -59,6 +59,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
 
     private String unmaskedInput = "";
     private int startReadLen;
+    private int startLineOffset;
 
     private final Object editLock = new Object();
     private volatile boolean readMode = false;
@@ -288,6 +289,23 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     @Override
     public void println() {
         rawPrint("\n");
+        startLineOffset = document.getLength();
+    }
+
+    @Override
+    public void resetLine() {
+        display();
+        synchronized (editLock) {
+            int len = document.getLength() - startLineOffset;
+            if(len > 0) {
+                try {
+                    document.remove(startLineOffset, len);
+                } catch (BadLocationException e) {
+                    logger.error("Cannot reset line", e);
+                }
+                textPane.setCaretPosition(document.getLength());
+            }
+        }
     }
 
     public void display() {
