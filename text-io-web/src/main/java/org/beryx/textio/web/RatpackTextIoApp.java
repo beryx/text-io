@@ -26,6 +26,7 @@ import ratpack.session.Session;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -116,16 +117,16 @@ public class RatpackTextIoApp implements TextIoApp<RatpackTextIoApp> {
         WebTextTerminal terminal = termTemplate.createCopy();
         String mapKey = getSessionIdMapKey(textTermSessionId);
         terminal.setOnDispose(() -> {
-            webTextTerminalCache.invalidate(mapKey);
             if(onDispose != null) {
                 onDispose.accept(textTermSessionId);
             }
+            Executors.newSingleThreadScheduledExecutor().schedule(() -> webTextTerminalCache.invalidate(mapKey), 5, TimeUnit.SECONDS);
         });
         terminal.setOnAbort(() -> {
-            webTextTerminalCache.invalidate(mapKey);
             if(onAbort != null) {
                 onAbort.accept(textTermSessionId);
             }
+            Executors.newSingleThreadScheduledExecutor().schedule(() -> webTextTerminalCache.invalidate(mapKey), 5, TimeUnit.SECONDS);
         });
         webTextTerminalCache.put(mapKey, terminal);
         TextIO textIO = new TextIO(terminal);

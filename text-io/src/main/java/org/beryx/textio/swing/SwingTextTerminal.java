@@ -35,6 +35,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -61,6 +63,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     private String unmaskedInput = "";
     private int startReadLen;
     private int startLineOffset;
+    private final Map<String, Integer> bookmarkOffsets = new HashMap<>();
 
     private final Object editLock = new Object();
     private volatile boolean readMode = false;
@@ -300,18 +303,47 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     }
 
     @Override
-    public void resetLine() {
+    public boolean resetLine() {
+        return resetToOffset(startLineOffset);
+    }
+
+    @Override
+    public boolean setBookmark(String bookmark) {
+        bookmarkOffsets.put(bookmark, document.getLength());
+        return true;
+    }
+
+    @Override
+    public boolean resetToBookmark(String bookmark) {
+        int offset = getBookmarkOffset(bookmark);
+        return resetToOffset(offset);
+    }
+
+    public int getBookmarkOffset(String bookmark) {
+        return bookmarkOffsets.getOrDefault(bookmark, -1);
+    }
+
+    public boolean resetToOffset(int offset) {
+        if(offset < 0) return false;
         display();
         synchronized (editLock) {
-            int len = document.getLength() - startLineOffset;
+            boolean result = true;
+            int len = document.getLength() - offset;
             if(len > 0) {
+                int oldStartReadLen = startReadLen;
+                if(startReadLen > offset) {
+                    startReadLen = offset;
+                }
                 try {
-                    document.remove(startLineOffset, len);
+                    document.remove(offset, len);
                 } catch (BadLocationException e) {
-                    logger.error("Cannot reset line", e);
+                    logger.error("Cannot reset to offset " + offset, e);
+                    startReadLen = oldStartReadLen;
+                    result = false;
                 }
                 textPane.setCaretPosition(document.getLength());
             }
+            return result;
         }
     }
 

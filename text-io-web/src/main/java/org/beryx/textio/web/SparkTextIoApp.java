@@ -24,6 +24,8 @@ import spark.Session;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -104,16 +106,16 @@ public class SparkTextIoApp implements TextIoApp<SparkTextIoApp> {
         logger.debug("Creating terminal for sessionId: {}", sessionId);
         WebTextTerminal terminal = termTemplate.createCopy();
         terminal.setOnDispose(() -> {
-            session.removeAttribute(getSessionIdAttribute(sessionId));
             if(onDispose != null) {
                 onDispose.accept(sessionId);
             }
+            Executors.newSingleThreadScheduledExecutor().schedule(() -> session.removeAttribute(getSessionIdAttribute(sessionId)), 5, TimeUnit.SECONDS);
         });
         terminal.setOnAbort(() -> {
-            session.removeAttribute(getSessionIdAttribute(sessionId));
             if(onAbort != null) {
                 onAbort.accept(sessionId);
             }
+            Executors.newSingleThreadScheduledExecutor().schedule(() -> session.removeAttribute(getSessionIdAttribute(sessionId)), 5, TimeUnit.SECONDS);
         });
         session.attribute(getSessionIdAttribute(sessionId), terminal);
 

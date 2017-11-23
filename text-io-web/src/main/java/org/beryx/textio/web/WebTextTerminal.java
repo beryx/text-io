@@ -111,7 +111,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
 
         TerminalProperties<WebTextTerminal> props = copy.getProperties();
         List<TerminalProperties.ExtendedChangeListener<WebTextTerminal>> listeners = getProperties().getListeners();
-        listeners.forEach(listener -> props.addListener(listener));
+        listeners.forEach(props::addListener);
 
         copy.setTimeoutNotEmpty(this.timeoutNotEmpty);
         copy.setTimeoutHasAction(this.timeoutHasAction);
@@ -124,14 +124,32 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
 
     @Override
     public void dispose(String resultData) {
-        setAction(DISPOSE, resultData);
         if(onDispose != null) onDispose.run();
+        setAction(DISPOSE, resultData);
     }
 
     @Override
     public void abort() {
-        setAction(ABORT);
         if(onAbort != null) onAbort.run();
+        setAction(ABORT);
+    }
+
+    @Override
+    public boolean resetLine() {
+        data.setLineResetRequired(true);
+        return true;
+    }
+
+    @Override
+    public boolean setBookmark(String bookmark) {
+        data.setBookmark(bookmark);
+        return true;
+    }
+
+    @Override
+    public boolean resetToBookmark(String bookmark) {
+        data.setResetToBookmark(bookmark);
+        return true;
     }
 
     public void setOnDispose(Runnable onDispose) {
@@ -189,8 +207,9 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
         }
         dataLock.lock();
         try {
-            if(data.getAction() != NONE) {
-                logger.warn("data.getAction() is not NONE");
+            TextTerminalData.Action currAction = data.getAction();
+            if(currAction != NONE && currAction != FLUSH) {
+                logger.warn("data.getAction() is " + currAction + " in setAction(" + action + ")");
             }
             data.setAction(action);
             data.setActionData(actionData);
@@ -220,6 +239,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
 
     @Override
     public void println() {
+        setAction(FLUSH);
         rawPrint("\n");
     }
 
@@ -235,8 +255,12 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
         dataLock.lock();
         try {
             try {
-                dataNotEmpty.await(timeoutNotEmpty, TimeUnit.MILLISECONDS);
-                dataHasAction.await(timeoutHasAction, TimeUnit.MILLISECONDS);
+                if(data.isEmpty()) {
+                    dataNotEmpty.await(timeoutNotEmpty, TimeUnit.MILLISECONDS);
+                }
+                if(!data.hasAction()) {
+                    dataHasAction.await(timeoutHasAction, TimeUnit.MILLISECONDS);
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

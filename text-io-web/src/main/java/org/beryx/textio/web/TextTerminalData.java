@@ -24,13 +24,13 @@ import java.util.stream.Collectors;
 /**
  * The data sent by the server to a polling web component.
  * Includes:<ul>
- *     <li>an action to be executed by the web component (NONE, READ, READ_MASKED, DISPOSE or ABORT).</li>
+ *     <li>an action to be executed by the web component (NONE, FLUSH, READ, READ_MASKED, DISPOSE or ABORT).</li>
  *     <li>a boolean value indicating whether the terminal should reset its settings before performing the specified action.</li>
  *     <li>a list of {@link MessageGroup}s, each one consisting of a list of settings (represented as {@link KeyValue}s) and a list of prompt messages.</li>
  * </ul>
  */
 public class TextTerminalData {
-    public enum Action {NONE, READ, READ_MASKED, DISPOSE, ABORT}
+    public enum Action {NONE, FLUSH, READ, READ_MASKED, DISPOSE, ABORT}
 
     /** A key-value pair */
     public static class KeyValue {
@@ -71,6 +71,9 @@ public class TextTerminalData {
     private Action action = Action.NONE;
     private String actionData = null;
     private boolean resetRequired = true;
+    private boolean lineResetRequired = false;
+    private String bookmark = null;
+    private String resetToBookmark = null;
 
     public TextTerminalData getCopy() {
         TextTerminalData data = new TextTerminalData();
@@ -84,6 +87,9 @@ public class TextTerminalData {
         data.action = action;
         data.actionData = actionData;
         data.resetRequired = resetRequired;
+        data.lineResetRequired = lineResetRequired;
+        data.bookmark = bookmark;
+        data.resetToBookmark = resetToBookmark;
         return data;
     }
 
@@ -160,9 +166,30 @@ public class TextTerminalData {
     public boolean isResetRequired() {
         return resetRequired;
     }
-
     public void setResetRequired(boolean resetRequired) {
         this.resetRequired = resetRequired;
+    }
+
+    public boolean isLineResetRequired() {
+        return lineResetRequired;
+    }
+    public void setLineResetRequired(boolean lineResetRequired) {
+        this.lineResetRequired = lineResetRequired;
+    }
+
+    public String getBookmark() {
+        return bookmark;
+    }
+    public void setBookmark(String bookmark) {
+        this.bookmark = bookmark;
+    }
+
+    public String getResetToBookmark() {
+        return resetToBookmark;
+    }
+
+    public void setResetToBookmark(String resetToBookmark) {
+        this.resetToBookmark = resetToBookmark;
     }
 
     public boolean isEmpty() {
@@ -178,11 +205,17 @@ public class TextTerminalData {
         action = Action.NONE;
         actionData = null;
         resetRequired = false;
+        lineResetRequired = false;
+        bookmark = null;
+        resetToBookmark = null;
     }
 
     @Override
     public String toString() {
         return "resetRequired: " + resetRequired +
+                ", lineResetRequired: " + lineResetRequired +
+                ", bookmark: " + bookmark +
+                ", resetToBookmark: " + resetToBookmark +
                 ", action: " + action +
                 ", actionData: " + actionData +
                 ", messageGroups: " + messageGroups;

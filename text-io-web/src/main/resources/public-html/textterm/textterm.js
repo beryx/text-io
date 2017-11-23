@@ -68,6 +68,7 @@
 
         var action;
 
+        var bookmarkOffsets = new Map();
 
         var LEVEL = {
             OFF: 0,
@@ -179,7 +180,7 @@
                         newPrompt += messageGroups[k].messages[i];
                     }
                     if(specialPromptStyleClass || settingsCount > 0) {
-                        createNewTextTermPair("", specialPromptStyleClass);
+                        createNewTextTermPair("", specialPromptStyleClass, true);
                     }
                     promptElem.innerHTML += newPrompt;
                     textTermElem.scrollTop = textTermElem.scrollHeight;
@@ -187,12 +188,13 @@
                 }
             }
             if(specialPromptStyleClass) {
-                createNewTextTermPair("", null);
+                createNewTextTermPair("", null, true);
                 inputElem.focus();
             }
         };
 
         var rawHandleXhrError = function(xhr) {
+            if(self.terminated) return;
             switch (xhr.status) {
                 case 403:
                     self.onSessionExpired();
@@ -216,20 +218,31 @@
             });
         };
 
-
         var handleXhrStateChange = function(xhr) {
             return (function() {
-                if(self.terminated) return;
                 if((xhr.readyState == XMLHttpRequest.DONE) && (xhr.status == 200)) {
                     var data = JSON.parse(xhr.responseText);
                     self.onDataReceived(data);
                     if (data.resetRequired) {
                         self.resetTextTerm();
                     }
+                    if (data.lineResetRequired) {
+                        self.lineReset();
+                    }
+                    if (data.bookmark) {
+                        self.setBookmark(data.bookmark);
+                    }
+                    if (data.resetToBookmark) {
+                        self.resetToBookmark(data.resetToBookmark);
+                    }
                     displayMessageGroups(data.messageGroups, null);
-                    logTrace("action: " + data.action);
+                    logTrace("data.action: " + data.action);
                     if (data.action != 'NONE') {
                         action = data.action;
+                    }
+                    if(action == 'FLUSH') {
+                        createNewTextTermPair("", null, true);
+                        inputElem.focus();
                     }
                     var textSecurity = (action == 'READ_MASKED') ? "disc" : "none";
                     inputElem.style["-webkit-text-security"] = textSecurity;
@@ -240,8 +253,8 @@
                         self.onDispose(data.actionData);
                     } else if (action == 'ABORT') {
                         inputElem.setAttribute("contenteditable", false);
+                        logTrace("Calling onAbort()...");
                         self.onAbort();
-
                     } else {
                         requestData();
                     }
@@ -252,6 +265,7 @@
         };
 
         var requestData = function() {
+            if(self.terminated) return;
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = handleXhrStateChange(xhr);
             var rnd = generateUUID();
@@ -284,7 +298,7 @@
                 logInfo("User interrupt!");
                 xhr.setRequestHeader("textio-user-interrupt", "true");
             } else {
-                createNewTextTermPair("<br/>");
+                createNewTextTermPair("<br/>", null, true);
             }
             inputElem.focus();
             xhr.send(text);
@@ -302,7 +316,7 @@
             return color;
         };
 
-        var createNewTextTermPair = function(initialInnerHTML, specialPromptStyleClass) {
+        var createNewTextTermPair = function(initialInnerHTML, specialPromptStyleClass, appendToTextTermElem) {
             var newParentElem = inputElem.parentNode.cloneNode(true);
             if(inputElem.textContent) {
                 inputElem.setAttribute("contenteditable", false);
@@ -349,7 +363,10 @@
                 textTermElem.className = "textterm-pane";
                 textTermElem.classList.add(self.settings.paneStyleClass);
             }
-            textTermElem.appendChild(newParentElem);
+            if(appendToTextTermElem) {
+                textTermElem.appendChild(newParentElem);
+            }
+            return newParentElem;
         };
 
         var isUserInterruptKey = function(event) {
@@ -433,10 +450,12 @@
 
             self.onDispose = function(resultData) {
                 logDebug("onDispose: resultData = " + resultData);
+                textTerm.terminate();
             };
 
             self.onAbort = function() {
-                logDebug("onAbort: default empty implementation");
+                logDebug("onAbort: default implementation");
+                textTerm.terminate();
             };
 
             var waitForEnterToRestart = function(event) {
@@ -475,6 +494,42 @@
                 promptElem.textContent = "";
                 inputElem.textContent = "";
                 inputElem.setAttribute("contenteditable", true);
+            };
+
+            self.lineReset = function() {
+                logDebug("Resetting line.");
+                promptElem.textContent = "";
+                inputElem.textContent = "";
+            };
+
+            self.setBookmark = function(bookmark) {
+                logDebug("Setting bookmark " + bookmark);
+                var pairs = textTermElem.querySelectorAll(".textterm-pair");
+                if(pairs.length > 0) {
+                    bookmarkOffsets.set(bookmark, pairs[pairs.length - 1]);
+                }
+            };
+
+            self.resetToBookmark = function(bookmark) {
+                logDebug("Resetting to bookmark " + bookmark);
+                var bookmarkedPair = bookmarkOffsets.get(bookmark);
+                if(bookmarkedPair) {
+                    var pairs = textTermElem.querySelectorAll(".textterm-pair");
+                    var bookmarkIdx = -1;
+                    for (var i = 0; i < pairs.length; i++) {
+                        if(pairs[i] === bookmarkedPair) {
+                            bookmarkIdx = i;
+                            break;
+                        }
+                    }
+                    if(bookmarkIdx >= 0) {
+                        var newParentElem = createNewTextTermPair("", null, false);
+                        for (var i = bookmarkIdx; i < pairs.length; i++) {
+                            textTermElem.removeChild(pairs[i]);
+                        }
+                        textTermElem.appendChild(newParentElem);
+                    }
+                }
             };
 
             self.execute = postInitData;

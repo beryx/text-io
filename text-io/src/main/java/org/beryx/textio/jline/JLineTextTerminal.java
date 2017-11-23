@@ -281,11 +281,13 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     }
 
     @Override
-    public void resetLine() {
+    public boolean resetLine() {
         try {
             reader.resetPromptLine("", "", 0);
+            return true;
         } catch (IOException e) {
             logger.error("resetLine error.", e);
+            return false;
         }
     }
 

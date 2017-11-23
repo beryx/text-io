@@ -91,10 +91,33 @@ public interface TextTerminal<T extends TextTerminal<T>> {
 
     /**
      * Clears the current line of text.
-     * Since not all terminals support this feature, the default implementation just calls {@link #println()}.
+     * Since not all terminals support this feature, the default implementation just calls {@link #println()} and returns false.
+     * @return true, if the terminal supports this feature and the current line has been successfully cleared.
      */
-    default void resetLine() {
+    default boolean resetLine() {
         println();
+        return false;
+    }
+
+    /**
+     * Sets a bookmark with the given name at the current position.
+     * The bookmark name can be subsequently used in a call to {@link #resetToBookmark(String)} in order to clear the text after this bookmark.
+     * If a bookmark with this name already exists, it will be overwritten.
+     * Since not all terminals support this feature, the default implementation does nothing and returns false.
+     * @return true, if the terminal supports bookmarking and the bookmark has been successfully set.
+     */
+    default boolean setBookmark(String bookmark) {
+        return false;
+    }
+
+    /**
+     * Clears the text after the given bookmark.
+     * The bookmark name can be subsequently used in a call to {@link #resetToBookmark(String)} in order to clear the text after this bookmark.
+     * Since not all terminals support this feature, the default implementation does nothing and returns false.
+     * @return true, if the terminal supports bookmarking, the given bookmark exists and the text after it has been successfully cleared.
+     */
+    default boolean resetToBookmark(String bookmark) {
+        return false;
     }
 
     /**

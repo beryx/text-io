@@ -20,15 +20,20 @@
 <script src="textterm/textterm.js"></script>
 <script>
     var textTerm = createTextTerm(document.getElementById("textterm"));
+    textTerm.setLogLevelTrace();
     textTerm.onDispose = function(resultData) {
+        console.log("Calling onDispose in web-demo...");
         var message = "You can now close this window.";
         if(resultData) {
             message = resultData + " " + message;
         }
         document.getElementById("app-done").textContent = message;
+        textTerm.terminate();
     }
     textTerm.onAbort = function() {
+        console.log("Calling onAbort in web-demo...");
         document.getElementById("app-done").textContent = "Program aborted by the user. You can now close this window.";
+        textTerm.terminate();
     }
     textTerm.settings.paneBackgroundColor = "#000022";
     textTerm.execute("Thanks for using the WebTextTerminal!\n");
