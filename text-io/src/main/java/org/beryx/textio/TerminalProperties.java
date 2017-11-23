@@ -388,4 +388,17 @@ public class TerminalProperties<T extends TextTerminal<T>> {
         put(PROP_PANE_BGCOLOR, toHex(bgcolor));
     }
 
+    /** Convenience method that associates the specified {@code width} with the key {@value PropertiesConstants#PROP_PANE_WIDTH} */
+    public void setPaneWidth(int width) {
+        put(PROP_PANE_WIDTH, width);
+    }
+    /** Convenience method that associates the specified {@code height} with the key {@value PropertiesConstants#PROP_PANE_HEIGHT} */
+    public void setPaneHeight(int height) {
+        put(PROP_PANE_HEIGHT, height);
+    }
+    /** Convenience method that associates the specified {@code width} and {@code height} with the keys {@value PropertiesConstants#PROP_PANE_WIDTH} and {@value PropertiesConstants#PROP_PANE_HEIGHT}*/
+    public void setPaneDimension(int width, int height) {
+        put(PROP_PANE_WIDTH, width);
+        put(PROP_PANE_HEIGHT, height);
+    }
 }

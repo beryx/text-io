@@ -41,6 +41,8 @@ public class PropertiesConstants {
     public static final String PROP_PANE_BGCOLOR = "pane.bgcolor";
     public static final String PROP_PANE_STYLE_CLASS = "pane.style.class";
 
+    public static final String PROP_PANE_WIDTH = "pane.width";
+    public static final String PROP_PANE_HEIGHT = "pane.height";
     public static final String PROP_PANE_TITLE = "pane.title";
     public static final String PROP_PANE_ICON_URL = "pane.icon.url";
     public static final String PROP_PANE_ICON_FILE = "pane.icon.file";

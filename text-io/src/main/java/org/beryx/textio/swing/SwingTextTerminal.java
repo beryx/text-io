@@ -56,6 +56,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
 
     private final JFrame frame;
     private final JTextPane textPane;
+    private final JScrollPane scrollPane;
 
     private String unmaskedInput = "";
     private int startReadLen;
@@ -175,6 +176,8 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
 
         props.addStringListener(PROP_USER_INTERRUPT_KEY, null, (term, newVal) -> setUserInterruptKey(newVal));
 
+        props.addStringListener(PROP_PANE_WIDTH, null, (term, newVal) -> updateScrollPaneSize(true));
+        props.addStringListener(PROP_PANE_HEIGHT, null, (term, newVal) -> updateScrollPaneSize(true));
         props.addStringListener(PROP_PANE_BGCOLOR, null, (term, newVal) -> setPaneBackgroundColor(newVal));
         props.addStringListener(PROP_PANE_TITLE, null, (term, newVal) -> setPaneTitle(newVal));
         props.addStringListener(PROP_PANE_ICON_URL, null, (term, newVal) -> setPaneIconUrl(newVal));
@@ -212,11 +215,11 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         document = textPane.getStyledDocument();
         ((AbstractDocument) document).setDocumentFilter(new TerminalDocumentFilter());
 
-        JScrollPane scroll = new JScrollPane (textPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scroll.setPreferredSize(new Dimension(640, 480));
-        scroll.setMinimumSize(new Dimension(40, 40));
+        scrollPane = new JScrollPane (textPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        updateScrollPaneSize(false);
+        scrollPane.setMinimumSize(new Dimension(40, 40));
 
-        frame.add(scroll);
+        frame.add(scrollPane);
 
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         WindowListener exitListener = new WindowAdapter() {
@@ -229,7 +232,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         };
         frame.addWindowListener(exitListener);
 
-        frame.add(scroll);
+        frame.add(scrollPane);
         frame.pack();
     }
 
@@ -239,6 +242,10 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
 
     public JTextPane getTextPane() {
         return textPane;
+    }
+
+    public JScrollPane getScrollPane() {
+        return scrollPane;
     }
 
     @Override
@@ -484,6 +491,13 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         }
     }
 
+    protected void updateScrollPaneSize(boolean pack) {
+        TerminalProperties<SwingTextTerminal> props = getProperties();
+        int w = props.getInt(PROP_PANE_WIDTH, 640);
+        int h = props.getInt(PROP_PANE_HEIGHT, 480);
+        scrollPane.setPreferredSize(new Dimension(w, h));
+        if(pack) frame.pack();
+    }
 
     public static Optional<Color> getColor(String colorName) {
         try {

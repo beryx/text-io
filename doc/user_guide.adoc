@@ -205,11 +205,15 @@ Default value: `false`.
 |input.underline | &#x2713; | &#x2713; | &#x2713; | `true`, if the input text should be underlined. +
 Default value: `false`.
 |pane.bgcolor | - | &#x2713; | &#x2713; | The background color of the terminal pane.
+|pane.height| - | &#x2713; | - | The height of the terminal pane. +
+Default value: `480`.
 |pane.icon.file | - | &#x2713; | - | The path to the file containing the icon to be used in the title bar of the terminal pane.
 |pane.icon.resource | - | &#x2713; | - | The name of the resource containing the icon to be used in the title bar of the terminal pane.
 |pane.icon.url | - | &#x2713; | - | The URL of the icon to be used in the title bar of the terminal pane.
 |pane.style.class | - | - | &#x2713; | The CSS style class of the terminal pane.
 |pane.title | - | &#x2713; | - | The text to appear in the title bar of the terminal pane.
+|pane.width | - | &#x2713; | - | The width of the terminal pane. +
+Default value: `640`.
 |prompt.bgcolor | &#x2713; | &#x2713; | &#x2713; | The background color of the prompt text.
 |prompt.bold | &#x2713; | &#x2713; | &#x2713; | `true`, if the prompt text should be bold. +
 Default value: `false`.
