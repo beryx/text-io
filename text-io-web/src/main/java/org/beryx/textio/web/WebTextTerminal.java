@@ -46,6 +46,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
 
     public static final long DEFAULT_TIMEOUT_NOT_EMPTY = 5000L;
     public static final long DEFAULT_TIMEOUT_HAS_ACTION = 250L;
+    public static final long DEFAULT_TIMEOUT_DATA_CLEARED = 1000L;
 
     private final TextTerminalData data = new TextTerminalData();
     private final Lock dataLock = new ReentrantLock();
@@ -63,6 +64,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
 
     private long timeoutNotEmpty = DEFAULT_TIMEOUT_NOT_EMPTY;
     private long timeoutHasAction = DEFAULT_TIMEOUT_HAS_ACTION;
+    private long timeoutDataCleared = DEFAULT_TIMEOUT_DATA_CLEARED;
 
     private int userInterruptKeyCode = 'Q';
     private boolean userInterruptKeyCtrl = true;
@@ -173,7 +175,10 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
         try {
             try {
                 if(data.hasAction()) {
-                    dataCleared.await();
+                    boolean ok = dataCleared.await(timeoutDataCleared, TimeUnit.MILLISECONDS);
+                    if(!ok) {
+                        logger.warn("dataCleared timeout.");
+                    }
                 }
             } finally {
                 dataLock.unlock();
