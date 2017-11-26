@@ -292,6 +292,12 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     }
 
     @Override
+    public boolean moveToLineStart() {
+        rawPrint("\r");
+        return true;
+    }
+
+    @Override
     public boolean registerUserInterruptHandler(Consumer<JLineTextTerminal> handler, boolean abortRead) {
         this.userInterruptHandler = (handler != null) ? handler : DEFAULT_USER_INTERRUPT_HANDLER;
         this.abortRead = abortRead;

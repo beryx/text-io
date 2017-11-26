@@ -90,6 +90,8 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     private final StyleData inputStyleData = new StyleData();
     private int styleCount = 0;
 
+    private boolean moveToLineStartRequired = false;
+
     private static class StyleData {
         Color color;
         Color bgColor;
@@ -279,32 +281,72 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     }
 
     @Override
-    public void rawPrint(String message) {
-        rawPrint(message, promptStyleData);
-    }
-
-    private void rawPrint(String message, StyleData styleData) {
-        display();
-        synchronized (editLock) {
-            String styleName = getStyle(styleData);
-            try {
-                document.insertString(document.getLength(), message, document.getStyle(styleName));
-            } catch (BadLocationException e) {
-                logger.error("Cannot insert string", e);
-            }
-            textPane.setCaretPosition(document.getLength());
-        }
-    }
-
-    @Override
     public void println() {
         rawPrint("\n");
         startLineOffset = document.getLength();
     }
 
     @Override
+    public void rawPrint(String message) {
+        display();
+        synchronized (editLock) {
+            int overwriteOffset = moveToLineStartRequired ? startLineOffset : -1;
+            moveToLineStartRequired = false;
+            plainOverwriteCurrentLine(message, promptStyleData, overwriteOffset);
+        }
+    }
+
+    private void rawPrint(String message, StyleData styleData) {
+        display();
+        synchronized (editLock) {
+            plainOverwriteCurrentLine(message, styleData, -1);
+        }
+    }
+
+    private boolean plainOverwriteCurrentLine(String message, StyleData styleData, int overwriteOffset) {
+        boolean resultRemove = plainRemoveFromOffset(overwriteOffset);
+        boolean resultInsert = plainInsertMessage(message, styleData);
+        textPane.setCaretPosition(document.getLength());
+        return resultRemove && resultInsert;
+    }
+
+    private boolean plainRemoveFromOffset(int offset) {
+        int len = (offset < 0) ? offset : (document.getLength() - offset);
+        if(len > 0) {
+            int oldStartReadLen = startReadLen;
+            if(startReadLen > offset) {
+                startReadLen = offset;
+            }
+            try {
+                document.remove(offset, len);
+            } catch (BadLocationException e) {
+                logger.error("Cannot remove from offset " + offset, e);
+                startReadLen = oldStartReadLen;
+                return false;
+            }
+        }
+        return true;
+    }
+    private boolean plainInsertMessage(String message, StyleData styleData) {
+        String styleName = getStyle(styleData);
+        try {
+            document.insertString(document.getLength(), message, document.getStyle(styleName));
+        } catch (BadLocationException e) {
+            logger.error("Cannot insert string", e);
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public boolean resetLine() {
         return resetToOffset(startLineOffset);
+    }
+
+    @Override
+    public boolean moveToLineStart() {
+        moveToLineStartRequired = true;
+        return true;
     }
 
     @Override

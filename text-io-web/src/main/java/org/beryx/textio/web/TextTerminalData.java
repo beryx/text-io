@@ -24,13 +24,13 @@ import java.util.stream.Collectors;
 /**
  * The data sent by the server to a polling web component.
  * Includes:<ul>
- *     <li>an action to be executed by the web component (NONE, FLUSH, READ, READ_MASKED, DISPOSE or ABORT).</li>
+ *     <li>an action to be executed by the web component (NONE, VIRTUAL, FLUSH, READ, READ_MASKED, DISPOSE or ABORT).</li>
  *     <li>a boolean value indicating whether the terminal should reset its settings before performing the specified action.</li>
  *     <li>a list of {@link MessageGroup}s, each one consisting of a list of settings (represented as {@link KeyValue}s) and a list of prompt messages.</li>
  * </ul>
  */
 public class TextTerminalData {
-    public enum Action {NONE, FLUSH, READ, READ_MASKED, DISPOSE, ABORT}
+    public enum Action {NONE, VIRTUAL, FLUSH, READ, READ_MASKED, DISPOSE, ABORT}
 
     /** A key-value pair */
     public static class KeyValue {
@@ -72,6 +72,7 @@ public class TextTerminalData {
     private String actionData = null;
     private boolean resetRequired = true;
     private boolean lineResetRequired = false;
+    private boolean moveToLineStartRequired = false;
     private String bookmark = null;
     private String resetToBookmark = null;
 
@@ -88,6 +89,7 @@ public class TextTerminalData {
         data.actionData = actionData;
         data.resetRequired = resetRequired;
         data.lineResetRequired = lineResetRequired;
+        data.moveToLineStartRequired = moveToLineStartRequired;
         data.bookmark = bookmark;
         data.resetToBookmark = resetToBookmark;
         return data;
@@ -177,6 +179,14 @@ public class TextTerminalData {
         this.lineResetRequired = lineResetRequired;
     }
 
+    public boolean isMoveToLineStartRequired() {
+        return moveToLineStartRequired;
+    }
+
+    public void setMoveToLineStartRequired(boolean moveToLineStartRequired) {
+        this.moveToLineStartRequired = moveToLineStartRequired;
+    }
+
     public String getBookmark() {
         return bookmark;
     }
@@ -206,6 +216,7 @@ public class TextTerminalData {
         actionData = null;
         resetRequired = false;
         lineResetRequired = false;
+        moveToLineStartRequired = false;
         bookmark = null;
         resetToBookmark = null;
     }
@@ -214,6 +225,7 @@ public class TextTerminalData {
     public String toString() {
         return "resetRequired: " + resetRequired +
                 ", lineResetRequired: " + lineResetRequired +
+                ", moveToLineStartRequired: " + moveToLineStartRequired +
                 ", bookmark: " + bookmark +
                 ", resetToBookmark: " + resetToBookmark +
                 ", action: " + action +

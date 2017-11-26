@@ -51,6 +51,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
     private final Lock dataLock = new ReentrantLock();
     private final Condition dataNotEmpty = dataLock.newCondition();
     private final Condition dataHasAction = dataLock.newCondition();
+    private final Condition dataCleared = dataLock.newCondition();
 
     private String input;
     private boolean userInterruptedInput;
@@ -136,20 +137,50 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
 
     @Override
     public boolean resetLine() {
+        setAction(VIRTUAL);
+        waitForDataCleared();
         data.setLineResetRequired(true);
+        setAction(VIRTUAL);
+        return true;
+    }
+
+    @Override
+    public boolean moveToLineStart() {
+        setAction(VIRTUAL);
+        waitForDataCleared();
+        data.setMoveToLineStartRequired(true);
         return true;
     }
 
     @Override
     public boolean setBookmark(String bookmark) {
+        setAction(VIRTUAL);
+        waitForDataCleared();
         data.setBookmark(bookmark);
         return true;
     }
 
     @Override
     public boolean resetToBookmark(String bookmark) {
+        setAction(VIRTUAL);
+        waitForDataCleared();
         data.setResetToBookmark(bookmark);
         return true;
+    }
+
+    private void waitForDataCleared() {
+        dataLock.lock();
+        try {
+            try {
+                if(data.hasAction()) {
+                    dataCleared.await();
+                }
+            } finally {
+                dataLock.unlock();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     public void setOnDispose(Runnable onDispose) {
@@ -266,6 +297,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
             }
             TextTerminalData result = data.getCopy();
             data.clear();
+            dataCleared.signalAll();
             logger.debug("returning terminalData: {}", result);
             return result;
         } finally {

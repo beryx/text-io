@@ -65,6 +65,8 @@
         var textTermElem;
         var inputElem;
         var promptElem;
+        var currentLinePromptElem;
+        var nextTextTermPairIsCurrentLine = true;
 
         var action;
 
@@ -167,9 +169,11 @@
         };
 
 
-        var displayMessageGroups = function(messageGroups, specialPromptStyleClass) {
+        var displayMessageGroups = function(messageGroups, specialPromptStyleClass, moveToLineStartRequired) {
             var groupCount = messageGroups.length;
             logTrace("groupCount: " + groupCount);
+            var firstMessage = true;
+            var hasBr = false;
             for(var k = 0; k < groupCount; k++) {
                 var settingsCount = applySettings(messageGroups[k].settings);
                 var msgCount = messageGroups[k].messages.length;
@@ -177,17 +181,30 @@
                 if (msgCount > 0) {
                     var newPrompt = "";
                     for (var i = 0; i < msgCount; i++) {
-                        newPrompt += messageGroups[k].messages[i];
+                        var msg = messageGroups[k].messages[i];
+                        newPrompt += msg;
+                        if(msg.endsWith("<br>") || msg.endsWith("<br/>")) {
+                            hasBr = true;
+                        }
                     }
-                    if(specialPromptStyleClass || settingsCount > 0) {
+                    if(firstMessage && moveToLineStartRequired) {
+                        configurePromptElem(specialPromptStyleClass);
+                        var pElem = currentLinePromptElem ? currentLinePromptElem : promptElem;
+                        pElem.innerHTML = "";
+                        pElem.textContent = "";
+                    } else if(specialPromptStyleClass || settingsCount > 0) {
                         createNewTextTermPair("", specialPromptStyleClass, true);
                     }
                     promptElem.innerHTML += newPrompt;
                     textTermElem.scrollTop = textTermElem.scrollHeight;
                     inputElem.focus();
+                    firstMessage = false;
                 }
             }
-            if(specialPromptStyleClass) {
+            if(hasBr) {
+                nextTextTermPairIsCurrentLine = true;
+            }
+            if(hasBr || specialPromptStyleClass) {
                 createNewTextTermPair("", null, true);
                 inputElem.focus();
             }
@@ -227,15 +244,15 @@
                         self.resetTextTerm();
                     }
                     if (data.lineResetRequired) {
-                        self.lineReset();
-                    }
-                    if (data.bookmark) {
-                        self.setBookmark(data.bookmark);
+                        self.resetLine();
                     }
                     if (data.resetToBookmark) {
                         self.resetToBookmark(data.resetToBookmark);
                     }
-                    displayMessageGroups(data.messageGroups, null);
+                    if (data.bookmark) {
+                        self.setBookmark(data.bookmark);
+                    }
+                    displayMessageGroups(data.messageGroups, null, data.moveToLineStartRequired);
                     logTrace("data.action: " + data.action);
                     if (data.action != 'NONE') {
                         action = data.action;
@@ -247,7 +264,6 @@
                     var textSecurity = (action == 'READ_MASKED') ? "disc" : "none";
                     inputElem.style["-webkit-text-security"] = textSecurity;
                     inputElem.style["text-security"] = textSecurity;
-
                     if (action == 'DISPOSE') {
                         inputElem.setAttribute("contenteditable", false);
                         self.onDispose(data.actionData);
@@ -298,7 +314,9 @@
                 logInfo("User interrupt!");
                 xhr.setRequestHeader("textio-user-interrupt", "true");
             } else {
-                createNewTextTermPair("<br/>", null, true);
+                createNewTextTermPair("<br>", null, true);
+                nextTextTermPairIsCurrentLine = true;
+                createNewTextTermPair("", null, true);
             }
             inputElem.focus();
             xhr.send(text);
@@ -316,15 +334,7 @@
             return color;
         };
 
-        var createNewTextTermPair = function(initialInnerHTML, specialPromptStyleClass, appendToTextTermElem) {
-            var newParentElem = inputElem.parentNode.cloneNode(true);
-            if(inputElem.textContent) {
-                inputElem.setAttribute("contenteditable", false);
-            } else {
-                inputElem.parentNode.removeChild(inputElem);
-            }
-
-            inputElem = newParentElem.querySelector(".textterm-input");
+        var configureInputElem = function() {
             inputElem.style.color = getColor(self.settings.inputColor);
             inputElem.style.backgroundColor = getColor(self.settings.inputBackgroundColor);
             inputElem.style.fontWeight = (self.settings.inputBold) ? 'bold' : null;
@@ -334,9 +344,9 @@
             if(self.settings.inputStyleClass) {
                 inputElem.classList.add(self.settings.inputStyleClass);
             }
-            inputElem.textContent = "";
+        };
 
-            promptElem = newParentElem.querySelector(".textterm-prompt");
+        var configurePromptElem = function(specialPromptStyleClass) {
             promptElem.className = "textterm-prompt";
             if(specialPromptStyleClass) {
                 promptElem.style = null;
@@ -352,6 +362,22 @@
                     promptElem.classList.add(self.settings.promptStyleClass);
                 }
             }
+        };
+
+        var createNewTextTermPair = function(initialInnerHTML, specialPromptStyleClass, appendToTextTermElem) {
+            var newParentElem = inputElem.parentNode.cloneNode(true);
+            if(inputElem.textContent) {
+                inputElem.setAttribute("contenteditable", false);
+            } else {
+                inputElem.parentNode.removeChild(inputElem);
+            }
+
+            inputElem = newParentElem.querySelector(".textterm-input");
+            configureInputElem();
+            inputElem.textContent = "";
+
+            promptElem = newParentElem.querySelector(".textterm-prompt");
+            configurePromptElem(specialPromptStyleClass);
             promptElem.textContent = "";
             if(initialInnerHTML) {
                 promptElem.innerHTML = initialInnerHTML;
@@ -365,6 +391,10 @@
             }
             if(appendToTextTermElem) {
                 textTermElem.appendChild(newParentElem);
+            }
+            if(nextTextTermPairIsCurrentLine) {
+                nextTextTermPairIsCurrentLine = false;
+                currentLinePromptElem = promptElem;
             }
             return newParentElem;
         };
@@ -469,14 +499,14 @@
             self.onSessionExpired = function() {
                 logInfo("onSessionExpired() called.");
                 self.resetTextTerm();
-                self.displayError("<h2>Session expired.</h2><br/>Press enter to restart.");
+                self.displayError("<h2>Session expired.</h2><br>Press enter to restart.");
                 self.specialKeyPressHandler = waitForEnterToRestart;
             };
 
             self.onServerError = function() {
                 logError("onServerError() called.");
                 self.resetTextTerm();
-                self.displayError("<h2>Server error.</h2><br/>Press enter to restart.");
+                self.displayError("<h2>Server error.</h2><br>Press enter to restart.");
                 self.specialKeyPressHandler = waitForEnterToRestart;
             };
 
@@ -496,10 +526,13 @@
                 inputElem.setAttribute("contenteditable", true);
             };
 
-            self.lineReset = function() {
+            self.resetLine = function() {
                 logDebug("Resetting line.");
-                promptElem.textContent = "";
+                var pElem = currentLinePromptElem ? currentLinePromptElem : promptElem;
+                pElem.textContent = "";
+                pElem.innerHTML = "";
                 inputElem.textContent = "";
+                inputElem.innerHTML = "";
             };
 
             self.setBookmark = function(bookmark) {
@@ -523,11 +556,20 @@
                         }
                     }
                     if(bookmarkIdx >= 0) {
+                        var deletedBookmarks = [];
                         var newParentElem = createNewTextTermPair("", null, false);
                         for (var i = bookmarkIdx; i < pairs.length; i++) {
                             textTermElem.removeChild(pairs[i]);
+                            bookmarkOffsets.forEach(function (value, key, map) {
+                                if(value === pairs[i]) {
+                                    deletedBookmarks.push(key);
+                                }
+                            });
                         }
                         textTermElem.appendChild(newParentElem);
+                        deletedBookmarks.forEach(function(item, index, array) {
+                            bookmarkOffsets.set(item, newParentElem);
+                        });
                     }
                 }
             };

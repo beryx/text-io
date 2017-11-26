@@ -7,12 +7,19 @@
     overflow:       auto;
     margin:         40px;
     padding:        20px;
-    word-wrap: break-word;
+    word-wrap:      break-word;
 }
 
 .textterm-normal-prompt {
     color:          lightgreen;
     font-weight:    normal;
+}
+
+.textterm-white-space-pre {
+    white-space: pre;
+}
+.textterm-white-space-normal {
+    white-space: normal;
 }
 
 .textterm-error-prompt {
