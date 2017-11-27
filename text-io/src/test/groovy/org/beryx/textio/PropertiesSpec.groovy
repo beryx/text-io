@@ -32,9 +32,6 @@ class PropertiesSpec extends Specification {
 
         @Override
         void println() {}
-
-        @Override
-        boolean registerUserInterruptHandler(Consumer<TermA> handler, boolean abortRead) { false }
     }
 
     static class TermB extends TermA {

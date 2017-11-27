@@ -15,10 +15,7 @@
  */
 package org.beryx.textio.web;
 
-import org.beryx.textio.AbstractTextTerminal;
-import org.beryx.textio.PropertiesPrefixes;
-import org.beryx.textio.TerminalProperties;
-import org.beryx.textio.TextTerminal;
+import org.beryx.textio.*;
 import org.beryx.textio.web.TextTerminalData.KeyValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +74,10 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
 
     public void setTimeoutHasAction(long timeoutHasAction) {
         this.timeoutHasAction = timeoutHasAction;
+    }
+
+    public void setTimeoutDataCleared(long timeoutDataCleared) {
+        this.timeoutDataCleared = timeoutDataCleared;
     }
 
     private Consumer<WebTextTerminal> userInterruptHandler = textTerm -> {
@@ -342,47 +343,12 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
         postUserInput(partialInput, true);
     }
 
-
-    private static class KeyCombination {
-        final int code;
-        final boolean ctrl;
-        final boolean shift;
-        final boolean alt;
-
-        KeyCombination(int code, boolean ctrl, boolean shift, boolean alt) {
-            this.code = code;
-            this.ctrl = ctrl;
-            this.shift = shift;
-            this.alt = alt;
-        }
-    }
-
-    private KeyCombination getKeyCombination(String keyStroke) {
-        if(keyStroke == null) return null;
-        String[] parts = keyStroke.trim().split("\\s+");
-        if(parts.length < 2) return null;
-        String charPart = parts[parts.length - 1];
-        if(charPart.length() != 1) return null;
-        char code = Character.toUpperCase(charPart.charAt(0));
-        if(code < 'A' || code > 'Z')return null;
-        List<String> modifiers = Arrays.asList("ctrl", "shift", "alt");
-        int[] modCount = new int[3];
-        for(int i=0; i < parts.length - 1; i++) {
-            String part = parts[i].trim().toLowerCase();
-            int idx = modifiers.indexOf(part);
-            if(idx < 0) return null;
-            if(modCount[idx] > 0) return null;
-            modCount[idx]++;
-        }
-        return new KeyCombination(code, (modCount[0] > 0), (modCount[1] > 0), (modCount[2] > 0));
-    }
-
     public void setUserInterruptKey(String keyStroke) {
-        KeyCombination kc = getKeyCombination(keyStroke);
+        KeyCombination kc = KeyCombination.of(keyStroke);
         if(kc == null) {
             logger.warn("Invalid keyStroke: {}", keyStroke);
         } else {
-            setUserInterruptKey(kc.code, kc.ctrl, kc.shift, kc.alt);
+            setUserInterruptKey(kc.getCharOrCode(), kc.isCtrlDown(), kc.isShiftDown(), kc.isAltDown());
         }
     }
 

@@ -48,12 +48,4 @@ public class SystemTextTerminal extends AbstractTextTerminal<SystemTextTerminal>
         out.println();
         out.flush();
     }
-
-    /**
-     * @return always false, because SystemTextTerminal cannot register a user interrupt handler
-     */
-    @Override
-    public boolean registerUserInterruptHandler(Consumer<SystemTextTerminal> handler, boolean abortRead) {
-        return false;
-    }
 }

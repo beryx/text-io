@@ -59,9 +59,4 @@ public class ConsoleTextTerminal extends AbstractTextTerminal<ConsoleTextTermina
         console.printf("\n");
         console.flush();
     }
-
-    @Override
-    public boolean registerUserInterruptHandler(Consumer<ConsoleTextTerminal> handler, boolean abortRead) {
-        return false;
-    }
 }

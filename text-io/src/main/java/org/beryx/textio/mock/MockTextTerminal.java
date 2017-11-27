@@ -84,9 +84,4 @@ public class MockTextTerminal extends AbstractTextTerminal<MockTextTerminal> {
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.joining("\n"));
     }
-
-    @Override
-    public boolean registerUserInterruptHandler(Consumer<MockTextTerminal> handler, boolean abortRead) {
-        return false;
-    }
 }

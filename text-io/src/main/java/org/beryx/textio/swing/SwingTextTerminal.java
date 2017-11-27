@@ -157,7 +157,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
                         else throw new BadLocationException(e.toString(), offset);
                     }
                     if(pos >= 0) {
-                        input = unmaskedInput;
+                            input = unmaskedInput;
                         editLock.notifyAll();
                     }
                 }

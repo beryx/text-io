@@ -53,12 +53,26 @@ public interface TextTerminal<T extends TextTerminal<T>> {
      * Registers a handler that will be called in response to a user interrupt.
      * The event that triggers a user interrupt is usually Ctrl+C, but in general it is terminal specific.
      * For example, a Swing based terminal may send a user interrupt when the X close button of its window is hit.
-     * If a terminal is not able to register user interrupt handlers, it should return false.
+     * Since not all terminals support this feature, the default implementation just returns false.
      * @param handler the action to be performed in response to a user interrupt.
      * @param abortRead true, if the current read operation should be aborted on user interrupt.
-     * @return true, if the handler has been registered; false, otherwise.
+     * @return true, if the terminal supports this feature and the handler has been registered; false, otherwise.
      */
-    boolean registerUserInterruptHandler(Consumer<T> handler, boolean abortRead);
+    default boolean registerUserInterruptHandler(Consumer<T> handler, boolean abortRead) {
+        return false;
+    }
+
+    /**
+     * Associates a key combination to a handler.
+     * Since not all terminals support this feature, the default implementation just returns false.
+     * @param keyStroke the key combination associated with the handler.
+     *                  It should have the same format as the argument of {@link javax.swing.KeyStroke#getKeyStroke(String)}.
+     * @param handler the action to be performed when the {@code keyStroke} is detected during a read operation.
+     * @return true, if the terminal supports this feature and the handler has been associated with the given key combination; false, otherwise.
+     */
+    default boolean bindHandler(String keyStroke, Consumer<T> handler) {
+        return false;
+    }
 
     /**
      * This method is typically called after the terminal has been created.

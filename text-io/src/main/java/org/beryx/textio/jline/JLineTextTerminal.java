@@ -18,13 +18,12 @@ package org.beryx.textio.jline;
 import javafx.scene.paint.Color;
 import jline.console.ConsoleReader;
 import jline.console.UserInterruptException;
-import org.beryx.textio.AbstractTextTerminal;
-import org.beryx.textio.PropertiesPrefixes;
-import org.beryx.textio.TerminalProperties;
-import org.beryx.textio.TextTerminal;
+import org.beryx.textio.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -311,6 +310,29 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
         return true;
     }
 
+    private static class UserHandler implements ActionListener {
+        private final JLineTextTerminal textTerminal;
+        private final Consumer<JLineTextTerminal> handler;
+
+        private UserHandler(JLineTextTerminal textTerminal, Consumer<JLineTextTerminal> handler) {
+            this.textTerminal = textTerminal;
+            this.handler = handler;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            handler.accept(textTerminal);
+        }
+    }
+
+    @Override
+    public boolean bindHandler(String keyStroke, Consumer<JLineTextTerminal> handler) {
+        String keySeq = getKeySequence(keyStroke);
+        if(keySeq == null) return false;
+        reader.getKeys().bind(keySeq, new UserHandler(this, handler));
+        return true;
+    }
+
     public ConsoleReader getReader() {
         return reader;
     }
@@ -366,5 +388,23 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
         } catch (Exception e) {
             logger.warn("Invalid value for ansiColorMode: {}", mode);
         }
+    }
+
+    public static String getKeySequence(String keyStroke) {
+        KeyCombination kc = KeyCombination.of(keyStroke);
+        if(kc == null) return null;
+        if(kc.isTyped()) return String.valueOf(kc.getChar());
+        int code = kc.getCode();
+        if(code < 'A' || code > 'Z') return null;
+        if(kc.isCtrlDown()) {
+            if(kc.isAltDown()) return null;
+            return String.valueOf((char)(code + 1 -'A'));
+        } else if(kc.isAltDown()) {
+            if(!kc.isShiftDown()) {
+                code += 32;
+            }
+            return String.format("%c%c", (char)27, (char)code);
+        }
+        return null;
     }
 }
