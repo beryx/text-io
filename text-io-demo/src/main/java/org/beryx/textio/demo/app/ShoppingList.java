@@ -74,9 +74,8 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
         boolean hasHandlers = registeredReboot || registeredAutoValue || registeredHelp || registeredAbort;
         if(!hasHandlers) {
             terminal.println("No handlers can been registered.");
-            textIO.newStringInputReader().withMinLength(0).read("\nPress enter to terminate...");
         } else {
-            terminal.println("-------------------------------------------------------------------------------");
+            terminal.println("--------------------------------------------------------------------------------");
             if(registeredReboot) {
                 terminal.println("Press " + keyStrokeReboot + " to print a 'reboot' message");
             }
@@ -89,8 +88,8 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
             if(registeredAbort) {
                 terminal.println("Press " + keyStrokeAbort + " to abort the program");
             }
-            terminal.println("You can use these key combination at any moment during your data entry session.");
-            terminal.println("-------------------------------------------------------------------------------");
+            terminal.println("You can use these key combinations at any moment during your data entry session.");
+            terminal.println("--------------------------------------------------------------------------------");
 
             List<String> products = new ArrayList<>();
             while(true) {
@@ -107,6 +106,7 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
             }
         }
 
+        textIO.newStringInputReader().withMinLength(0).read("\nPress enter to terminate...");
         textIO.dispose();
     }
 

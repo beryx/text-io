@@ -15,10 +15,7 @@
  */
 package org.beryx.textio.swing;
 
-import org.beryx.textio.AbstractTextTerminal;
-import org.beryx.textio.PropertiesPrefixes;
-import org.beryx.textio.TerminalProperties;
-import org.beryx.textio.TextTerminal;
+import org.beryx.textio.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,8 +36,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.beryx.textio.PropertiesConstants.*;
+import static org.beryx.textio.ReadInterruptionStrategy.Action.*;
 
 /**
  * A {@link TextTerminal} implemented using a {@link JTextPane} inside a {@link JFrame}.
@@ -61,6 +60,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     private final JScrollPane scrollPane;
 
     private String unmaskedInput = "";
+    private String savedUnmaskedInput = "";
     private int startReadLen;
     private int startLineOffset;
     private int overwriteOffset = -1;
@@ -73,6 +73,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     private volatile String input;
 
     private Consumer<SwingTextTerminal> userInterruptHandler = textTerm -> System.exit(-1);
+    private Function<SwingTextTerminal, ReadHandlerData> activatedHandler;
 
     private final Action userInterruptAction = new AbstractAction() {
         private static final long serialVersionUID = 1L;
@@ -157,7 +158,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
                         else throw new BadLocationException(e.toString(), offset);
                     }
                     if(pos >= 0) {
-                            input = unmaskedInput;
+                        input = unmaskedInput;
                         editLock.notifyAll();
                     }
                 }
@@ -260,12 +261,38 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         try {
             synchronized (editLock) {
                 startReadLen = document.getLength();
-                unmaskedInput = "";
+                unmaskedInput = savedUnmaskedInput;
+                savedUnmaskedInput = "";
+                if(!unmaskedInput.isEmpty()) {
+                    plainOverwriteCurrentLine(unmaskedInput, inputStyleData);
+                }
                 input = null;
                 inputMasking = masking;
                 readMode = true;
                 while(input == null) {
                     editLock.wait();
+                    if(activatedHandler != null) {
+                        String currentUnmaskedInput = unmaskedInput;
+                        unmaskedInput = "";
+                        readMode = false;
+                        Function<SwingTextTerminal, ReadHandlerData> handler = activatedHandler;
+                        activatedHandler = null;
+                        ReadHandlerData data = handler.apply(this);
+                        readMode = true;
+                        unmaskedInput = currentUnmaskedInput;
+                        if(data.getAction() != CONTINUE) {
+                            if(data.getAction() == RESTART) {
+                                readMode = false;
+                                savedUnmaskedInput = currentUnmaskedInput;
+                            }
+                            Function<String, String> valueProvider = data.getReturnValueProvider();
+                            String retVal = (valueProvider == null) ? null : valueProvider.apply(unmaskedInput);
+                            ReadInterruptionData readInterruptionData = new ReadInterruptionData(data.getAction())
+                                    .withRedrawRequired(data.isRedrawRequired())
+                                    .withReturnValue(retVal);
+                            throw new ReadInterruptionException(readInterruptionData);
+                        }
+                    }
                 }
                 return input;
             }
@@ -276,7 +303,9 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
                 inputMasking = false;
                 readMode = false;
             }
-            rawPrint("\n", inputStyleData);
+            if(savedUnmaskedInput.isEmpty()) {
+                rawPrint("\n", inputStyleData);
+            }
         }
     }
 
@@ -463,6 +492,40 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         setUserInterruptKey(KeyStroke.getKeyStroke(keyStroke));
     }
 
+
+    private static class HandlerAction extends AbstractAction {
+        private static final long serialVersionUID = 1L;
+
+        private final SwingTextTerminal textTerminal;
+        private final Function<SwingTextTerminal, ReadHandlerData> handler;
+
+        private HandlerAction(SwingTextTerminal textTerminal, Function<SwingTextTerminal, ReadHandlerData> handler) {
+            this.textTerminal = textTerminal;
+            this.handler = handler;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            synchronized (textTerminal.editLock) {
+                textTerminal.activatedHandler = handler;
+                textTerminal.editLock.notifyAll();
+            }
+        }
+    };
+
+
+    @Override
+    public boolean bindHandler(String keyStroke, Function<SwingTextTerminal, ReadHandlerData> handler) {
+        KeyStroke ks = KeyStroke.getKeyStroke(keyStroke);
+        if(ks == null) {
+            logger.warn("Invalid keyStroke: " + keyStroke);
+            return false;
+        }
+        String actionKey = "SwingTextTerminal.handler." + System.identityHashCode(handler);
+        textPane.getInputMap().put(ks, actionKey);
+        textPane.getActionMap().put(actionKey, new HandlerAction(this, handler));
+        return true;
+    }
 
     public String getStyle(StyleData styleData) {
         Style defaultStyle = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
