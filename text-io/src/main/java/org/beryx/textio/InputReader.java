@@ -17,10 +17,12 @@ package org.beryx.textio;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.beryx.textio.TerminalProperties.ExtendedChangeListener;
 
 /**
  * A reader for values of type T.
@@ -129,6 +131,8 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
 
     /** The function used to check whether two values are equal. Default: {@link Objects#equals(Object, Object)} */
     protected BiFunction<T, T, Boolean> equalsFunc = Objects::equals;
+
+    protected Consumer<TerminalProperties<?>> propertiesConfigurator = null;
 
     private boolean valueListMode = false;
 
@@ -253,6 +257,11 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return (B)this;
     }
 
+    public B withPropertiesConfigurator(Consumer<TerminalProperties<?>> propertiesConfigurator) {
+        this.propertiesConfigurator = propertiesConfigurator;
+        return (B)this;
+    }
+
     /**
      * @return true, if currently reading a list of values via {@link #readList(List)}
      */
@@ -331,17 +340,18 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     public T read(List<String> prompt) {
         valueListMode = false;
         checkConfiguration();
-        TextTerminal<?> textTerminal = textTerminalSupplier.get();
-        while(true) {
-            printPrompt(prompt, textTerminal);
-            String sVal = textTerminal.read(inputMasking);
-            if(sVal != null && inputTrimming) sVal = sVal.trim();
-            if(sVal == null || sVal.isEmpty()) {
-                if(defaultValue != null) return defaultValue;
+        return executeWithTerminal(textTerminal -> {
+            while(true) {
+                printPrompt(prompt, textTerminal);
+                String sVal = textTerminal.read(inputMasking);
+                if(sVal != null && inputTrimming) sVal = sVal.trim();
+                if(sVal == null || sVal.isEmpty()) {
+                    if(defaultValue != null) return defaultValue;
+                }
+                T value = getValueFromStringOrIndex(sVal, textTerminal);
+                if (value != null) return value;
             }
-            T value = getValueFromStringOrIndex(sVal, textTerminal);
-            if (value != null) return value;
-        }
+        });
     }
 
     public List<T> readList(String... prompt) {
@@ -351,35 +361,55 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     public List<T> readList(List<String> prompt) {
         valueListMode = true;
         checkConfiguration();
+        return executeWithTerminal(textTerminal -> {
+            mainLoop:
+            while(true) {
+                printPrompt(prompt, textTerminal);
+                String sInput = textTerminal.read(inputMasking);
+                String[] sValues = (sInput == null) ? new String[0] : sInput.split(",");
+                if(inputTrimming) {
+                    for(int i=0; i<sValues.length; i++) sValues[i] = sValues[i].trim();
+                }
+                if(sValues.length == 1 && sValues[0].isEmpty()) sValues = new String[0];
+                if(sValues.length == 0 && defaultValue != null) return Collections.singletonList(defaultValue);
+                List<T> values = new ArrayList<T>();
+                for(String sVal : sValues) {
+                    T value = getValueFromStringOrIndex(sVal, textTerminal);
+                    if(value == null) continue mainLoop;
+                    values.add(value);
+                }
+                List<String> allErrors = new ArrayList<>();
+                for(ValueChecker<List<T>> checker : valueListCheckers) {
+                    List<String> errors = checker.getErrorMessages(values, itemName);
+                    if(errors != null) allErrors.addAll(errors);
+                }
+                if(!allErrors.isEmpty()) {
+                    allErrors.add(0, getDefaultErrorMessage(null));
+                    textTerminal.println(allErrors);
+                    textTerminal.println();
+                    continue;
+                }
+                return values;
+            }
+        });
+    }
+
+    protected <V> V executeWithTerminal(Function<TextTerminal<?>, V> action) {
         TextTerminal<?> textTerminal = textTerminalSupplier.get();
-        mainLoop:
-        while(true) {
-            printPrompt(prompt, textTerminal);
-            String sInput = textTerminal.read(inputMasking);
-            String[] sValues = (sInput == null) ? new String[0] : sInput.split(",");
-            if(inputTrimming) {
-                for(int i=0; i<sValues.length; i++) sValues[i] = sValues[i].trim();
+        LinkedList<String[]> toRestore = new LinkedList<>();
+        ExtendedChangeListener listener = (term, key, oldVal, newVal) -> toRestore.add(new String[] {key, oldVal});
+        TerminalProperties<?> props = textTerminal.getProperties();
+        if(propertiesConfigurator != null) {
+            props.addListener(listener);
+            propertiesConfigurator.accept(props);
+        }
+        try {
+            return action.apply(textTerminal);
+        } finally {
+            if(propertiesConfigurator != null) {
+                props.removeListener(listener);
+                toRestore.forEach(pair -> props.put(pair[0], pair[1]));
             }
-            if(sValues.length == 1 && sValues[0].isEmpty()) sValues = new String[0];
-            if(sValues.length == 0 && defaultValue != null) return Collections.singletonList(defaultValue);
-            List<T> values = new ArrayList<T>();
-            for(String sVal : sValues) {
-                T value = getValueFromStringOrIndex(sVal, textTerminal);
-                if(value == null) continue mainLoop;
-                values.add(value);
-            }
-            List<String> allErrors = new ArrayList<>();
-            for(ValueChecker<List<T>> checker : valueListCheckers) {
-                List<String> errors = checker.getErrorMessages(values, itemName);
-                if(errors != null) allErrors.addAll(errors);
-            }
-            if(!allErrors.isEmpty()) {
-                allErrors.add(0, getDefaultErrorMessage(null));
-                textTerminal.println(allErrors);
-                textTerminal.println();
-                continue;
-            }
-            return values;
         }
     }
 

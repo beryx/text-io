@@ -79,7 +79,9 @@ public class Weather implements BiConsumer<TextIO, RunnerData> {
             terminal.getProperties().put(PropertiesConstants.PROP_PROMPT_STYLE_CLASS, "textterm-white-space-normal");
             terminal.println();terminal.println();terminal.println();
 
-            if(!textIO.newBooleanInputReader().withDefaultValue(true).read("Run again?")) break;
+            if(!textIO.newBooleanInputReader()
+                    .withPropertiesConfigurator(props -> props.setPromptColor("cyan"))
+                    .withDefaultValue(true).read("Run again?")) break;
             terminal.resetToBookmark("MAIN");
         }
 

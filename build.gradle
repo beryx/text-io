@@ -264,7 +264,7 @@ gitPublish {
 
 project('text-io') {
     dependencies {
-      compile 'jline:jline:2.14.3'
+      compile 'jline:jline:2.14.5'
     }
 }
 

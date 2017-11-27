@@ -251,6 +251,16 @@ public class TerminalProperties<T extends TextTerminal<T>> {
     }
 
     /**
+     * Removes the listener passed as argument.
+     * @param listener the listener to be added.
+     * @return true, if the listener has been found and removed.
+     */
+    public boolean removeListener(ExtendedChangeListener<T> listener) {
+        return listeners.remove(listener);
+    }
+
+
+    /**
      * Convenience method that adds a listener for the String property with the specified key.
      * @param key the key of the property for which the listener is added.
      * @param defaultValue the value to be used if the new value is null.
