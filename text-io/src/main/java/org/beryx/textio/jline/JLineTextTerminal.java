@@ -81,6 +81,8 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     private StyleData inputStyleData = new StyleData();
     private StyleData promptStyleData = new StyleData();
 
+    private boolean moveToLineStartRequired = false;
+
     private static class StyleData {
         String ansiColor = "";
         String ansiBackgroundColor = "";
@@ -247,7 +249,12 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
 
     @Override
     public void rawPrint(String message) {
-        printAnsi(getAnsiPrefix(promptStyleData) + message + ANSI_RESET);
+        String msgPrefix = "";
+        if(moveToLineStartRequired) {
+            moveToLineStartRequired = false;
+            msgPrefix = "\r";
+        }
+        printAnsi(getAnsiPrefix(promptStyleData) + msgPrefix + message + ANSI_RESET);
     }
 
     public void printAnsi(String message) {
@@ -293,7 +300,7 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
 
     @Override
     public boolean moveToLineStart() {
-        rawPrint("\r");
+        moveToLineStartRequired = true;
         return true;
     }
 

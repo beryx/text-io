@@ -63,6 +63,8 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     private String unmaskedInput = "";
     private int startReadLen;
     private int startLineOffset;
+    private int overwriteOffset = -1;
+
     private final Map<String, Integer> bookmarkOffsets = new HashMap<>();
 
     private final Object editLock = new Object();
@@ -89,8 +91,6 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     private final StyleData promptStyleData = new StyleData();
     private final StyleData inputStyleData = new StyleData();
     private int styleCount = 0;
-
-    private boolean moveToLineStartRequired = false;
 
     private static class StyleData {
         Color color;
@@ -282,6 +282,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
 
     @Override
     public void println() {
+        overwriteOffset = -1;
         rawPrint("\n");
         startLineOffset = document.getLength();
     }
@@ -290,28 +291,60 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     public void rawPrint(String message) {
         display();
         synchronized (editLock) {
-            int overwriteOffset = moveToLineStartRequired ? startLineOffset : -1;
-            moveToLineStartRequired = false;
-            plainOverwriteCurrentLine(message, promptStyleData, overwriteOffset);
+            plainOverwriteCurrentLine(message, promptStyleData);
         }
     }
 
     private void rawPrint(String message, StyleData styleData) {
         display();
         synchronized (editLock) {
-            plainOverwriteCurrentLine(message, styleData, -1);
+            overwriteOffset = -1;
+            plainOverwriteCurrentLine(message, styleData);
         }
     }
 
-    private boolean plainOverwriteCurrentLine(String message, StyleData styleData, int overwriteOffset) {
-        boolean resultRemove = plainRemoveFromOffset(overwriteOffset);
-        boolean resultInsert = plainInsertMessage(message, styleData);
+    private boolean plainOverwriteCurrentLine(String message, StyleData styleData) {
+        boolean result;
+        if(document instanceof AbstractDocument) {
+            result = plainReplaceText(message, styleData);
+        } else {
+            boolean resultRemove = plainRemoveFromOffset(overwriteOffset, message.length());
+            if(overwriteOffset >= document.getLength()) {
+                overwriteOffset = -1;
+            }
+            boolean resultInsert = plainInsertMessage(message, styleData);
+            result = resultRemove && resultInsert;
+        }
         textPane.setCaretPosition(document.getLength());
-        return resultRemove && resultInsert;
+        return result;
     }
 
-    private boolean plainRemoveFromOffset(int offset) {
-        int len = (offset < 0) ? offset : (document.getLength() - offset);
+    private boolean plainReplaceText(String message, StyleData styleData) {
+        if(overwriteOffset >= document.getLength()) {
+            overwriteOffset = -1;
+        }
+        if(overwriteOffset < 0) return plainInsertMessage(message, styleData);
+        String styleName = getStyle(styleData);
+        int oldStartReadLen = startReadLen;
+        if(startReadLen > overwriteOffset) {
+            startReadLen = overwriteOffset;
+        }
+        boolean result = true;
+        try {
+            int len = Math.min(document.getLength() - overwriteOffset, message.length());
+            ((AbstractDocument) document).replace(overwriteOffset, len, message, document.getStyle(styleName));
+            overwriteOffset += message.length();
+        } catch (BadLocationException e) {
+            logger.error("Cannot replace text", e);
+            startReadLen = oldStartReadLen;
+            result = false;
+        }
+        return result;
+    }
+
+    private boolean plainRemoveFromOffset(int offset, int maxLen) {
+        int len = (offset < 0) ? -1 : (document.getLength() - offset);
+        if(len > maxLen) len = maxLen;
         if(len > 0) {
             int oldStartReadLen = startReadLen;
             if(startReadLen > offset) {
@@ -330,7 +363,14 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     private boolean plainInsertMessage(String message, StyleData styleData) {
         String styleName = getStyle(styleData);
         try {
-            document.insertString(document.getLength(), message, document.getStyle(styleName));
+            if(overwriteOffset >= document.getLength()) {
+                overwriteOffset = -1;
+            }
+            int insertOffset = (overwriteOffset < 0) ? document.getLength() : overwriteOffset;
+            document.insertString(insertOffset, message, document.getStyle(styleName));
+            if(overwriteOffset >= 0) {
+                overwriteOffset += message.length();
+            }
         } catch (BadLocationException e) {
             logger.error("Cannot insert string", e);
             return false;
@@ -345,7 +385,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
 
     @Override
     public boolean moveToLineStart() {
-        moveToLineStartRequired = true;
+        overwriteOffset = startLineOffset;
         return true;
     }
 
