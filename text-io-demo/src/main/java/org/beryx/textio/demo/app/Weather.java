@@ -125,6 +125,6 @@ public class Weather implements BiConsumer<TextIO, RunnerData> {
     @Override
     public String toString() {
         return getClass().getSimpleName() + ": displaying weather data.\n" +
-                "(Illustrates features introduced in Text-IO 3: line reset, bookmarking etc.)";
+                "(Illustrates line resetting, moving to line start, bookmarking and resetting to a bookmark.)";
     }
 }

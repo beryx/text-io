@@ -330,12 +330,15 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            CursorBuffer buf = textTerminal.reader.getCursorBuffer();
+            String partialInput = buf.buffer.toString();
+            buf.clear();
+
             ReadHandlerData handlerData = handler.apply(textTerminal);
             ReadInterruptionStrategy.Action action = handlerData.getAction();
-            if(action != CONTINUE) {
-                CursorBuffer buf = textTerminal.reader.getCursorBuffer();
-                String partialInput = buf.buffer.toString();
-                buf.clear();
+            if(action == CONTINUE) {
+                buf.write(partialInput);
+            } else {
                 if(action == RESTART) {
                     textTerminal.initialReadBuffer = partialInput;
                 }

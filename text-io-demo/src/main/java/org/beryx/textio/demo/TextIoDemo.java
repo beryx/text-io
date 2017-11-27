@@ -17,10 +17,7 @@ package org.beryx.textio.demo;
 
 import org.beryx.textio.*;
 import org.beryx.textio.console.ConsoleTextTerminalProvider;
-import org.beryx.textio.demo.app.Cuboid;
-import org.beryx.textio.demo.app.ECommerce;
-import org.beryx.textio.demo.app.UserDataCollector;
-import org.beryx.textio.demo.app.Weather;
+import org.beryx.textio.demo.app.*;
 import org.beryx.textio.jline.JLineTextTerminalProvider;
 import org.beryx.textio.swing.SwingTextTerminalProvider;
 import org.beryx.textio.system.SystemTextTerminal;
@@ -110,8 +107,13 @@ public class TextIoDemo {
     }
 
     private static BiConsumer<TextIO, RunnerData> chooseApp(TextIO textIO) {
-        List<BiConsumer<TextIO, RunnerData>> apps = Arrays.asList(new UserDataCollector(), new ECommerce(), new Cuboid(), new Weather());
-
+        List<BiConsumer<TextIO, RunnerData>> apps = Arrays.asList(
+                new UserDataCollector(),
+                new ECommerce(),
+                new Cuboid(),
+                new Weather(),
+                new ShoppingList()
+        );
         BiConsumer<TextIO, RunnerData> app = textIO.<BiConsumer<TextIO, RunnerData>>newGenericInputReader(null)
             .withNumberedPossibleValues(apps)
             .read("Choose the application to be run");
