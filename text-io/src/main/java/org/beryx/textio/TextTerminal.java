@@ -70,7 +70,7 @@ public interface TextTerminal<T extends TextTerminal<T>> {
      * @param handler the action to be performed when the {@code keyStroke} is detected during a read operation.
      * @return true, if the terminal supports this feature and the handler has been associated with the given key combination; false, otherwise.
      */
-    default boolean bindHandler(String keyStroke, Consumer<T> handler) {
+    default boolean bindHandler(String keyStroke, Function<T, ReadHandlerData> handler) {
         return false;
     }
 

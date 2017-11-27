@@ -23,6 +23,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.beryx.textio.TerminalProperties.ExtendedChangeListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A reader for values of type T.
@@ -31,6 +33,8 @@ import org.beryx.textio.TerminalProperties.ExtendedChangeListener;
  * @param <B> the type of this InputReader
  */
 public abstract class InputReader<T, B extends InputReader<T, B>> {
+    private static final Logger logger =  LoggerFactory.getLogger(InputReader.class);
+
     /** Functional interface for providing error messages */
     @FunctionalInterface
     public interface ErrorMessagesProvider {
@@ -342,8 +346,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         checkConfiguration();
         return executeWithTerminal(textTerminal -> {
             while(true) {
-                printPrompt(prompt, textTerminal);
-                String sVal = textTerminal.read(inputMasking);
+                String sVal = readWithPrompt(textTerminal, prompt);
                 if(sVal != null && inputTrimming) sVal = sVal.trim();
                 if(sVal == null || sVal.isEmpty()) {
                     if(defaultValue != null) return defaultValue;
@@ -364,8 +367,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return executeWithTerminal(textTerminal -> {
             mainLoop:
             while(true) {
-                printPrompt(prompt, textTerminal);
-                String sInput = textTerminal.read(inputMasking);
+                String sInput = readWithPrompt(textTerminal, prompt);
                 String[] sValues = (sInput == null) ? new String[0] : sInput.split(",");
                 if(inputTrimming) {
                     for(int i=0; i<sValues.length; i++) sValues[i] = sValues[i].trim();
@@ -392,6 +394,30 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
                 return values;
             }
         });
+    }
+
+    protected String readWithPrompt(TextTerminal<?> textTerminal, List<String> prompt) {
+        printPrompt(prompt, textTerminal);
+        while(true) {
+            String sInput = null;
+            try {
+                sInput = textTerminal.read(inputMasking);
+            } catch (ReadInterruptionException e) {
+                ReadInterruptionData data = e.getReadInterruptionData();
+                switch (data.getAction()) {
+                    case CONTINUE: logger.error("ReadInterruptionException with action CONTINUE."); // no break here: handle it as RESTART
+                    case RESTART:
+                        if(data.isRedrawRequired()) {
+                            textTerminal.println();
+                            printPrompt(prompt, textTerminal);
+                        }
+                        continue;
+                    case RETURN: return data.getReturnValue();
+                    case ABORT: throw new ReadAbortedException("Read aborted");
+                }
+            }
+            return sInput;
+        }
     }
 
     protected <V> V executeWithTerminal(Function<TextTerminal<?>, V> action) {

@@ -17,6 +17,7 @@ package org.beryx.textio.jline;
 
 import javafx.scene.paint.Color;
 import jline.console.ConsoleReader;
+import jline.console.CursorBuffer;
 import jline.console.UserInterruptException;
 import org.beryx.textio.*;
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.beryx.textio.PropertiesConstants.*;
+import static org.beryx.textio.ReadInterruptionStrategy.Action.*;
 
 /**
  * A JLine-based {@link TextTerminal}.
@@ -81,6 +83,7 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     private StyleData promptStyleData = new StyleData();
 
     private boolean moveToLineStartRequired = false;
+    private String initialReadBuffer;
 
     private static class StyleData {
         String ansiColor = "";
@@ -231,14 +234,20 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
             Character mask = masking ? '*' : null;
             while(true) {
                 try {
-                    return prefix + reader.readLine(mask);
+                    String buffer = initialReadBuffer;
+                    initialReadBuffer = null;
+                    return prefix + reader.readLine(null, mask, buffer);
                 } catch(UserInterruptException e) {
                     userInterruptHandler.accept(this);
                     prefix = prefix + e.getPartialLine();
                     if(abortRead) return prefix;
+                } catch (ReadInterruptionException e) {
+                    throw e;
                 } catch (IOException e) {
                     logger.error("read error.", e);
                     return "";
+                } catch (Exception e) {
+                    logger.error("read error.", e);
                 }
             }
         } finally {
@@ -312,21 +321,36 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
 
     private static class UserHandler implements ActionListener {
         private final JLineTextTerminal textTerminal;
-        private final Consumer<JLineTextTerminal> handler;
+        private final Function<JLineTextTerminal, ReadHandlerData> handler;
 
-        private UserHandler(JLineTextTerminal textTerminal, Consumer<JLineTextTerminal> handler) {
+        private UserHandler(JLineTextTerminal textTerminal, Function<JLineTextTerminal, ReadHandlerData> handler) {
             this.textTerminal = textTerminal;
             this.handler = handler;
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            handler.accept(textTerminal);
+            ReadHandlerData handlerData = handler.apply(textTerminal);
+            ReadInterruptionStrategy.Action action = handlerData.getAction();
+            if(action != CONTINUE) {
+                CursorBuffer buf = textTerminal.reader.getCursorBuffer();
+                String partialInput = buf.buffer.toString();
+                buf.clear();
+                if(action == RESTART) {
+                    textTerminal.initialReadBuffer = partialInput;
+                }
+                Function<String, String> valueProvider = handlerData.getReturnValueProvider();
+                String retVal = (valueProvider == null) ? null : valueProvider.apply(partialInput);
+                ReadInterruptionData interruptData = new ReadInterruptionData(action)
+                        .withReturnValue(retVal)
+                        .withRedrawRequired(handlerData.isRedrawRequired());
+                throw new ReadInterruptionException(interruptData);
+            }
         }
     }
 
     @Override
-    public boolean bindHandler(String keyStroke, Consumer<JLineTextTerminal> handler) {
+    public boolean bindHandler(String keyStroke, Function<JLineTextTerminal, ReadHandlerData> handler) {
         String keySeq = getKeySequence(keyStroke);
         if(keySeq == null) return false;
         reader.getKeys().bind(keySeq, new UserHandler(this, handler));
