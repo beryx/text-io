@@ -16,7 +16,19 @@
 package org.beryx.textio;
 
 public class ReadAbortedException extends RuntimeException {
-    public ReadAbortedException(String message) {
-        super(message);
+    private final String payload;
+    private final String partialInput;
+
+    public ReadAbortedException(String payload, String partialInput) {
+        this.payload = payload;
+        this.partialInput = partialInput;
+    }
+
+    public String getPayload() {
+        return payload;
+    }
+
+    public String getPartialInput() {
+        return partialInput;
     }
 }

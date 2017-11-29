@@ -100,9 +100,10 @@ public class RatpackDataServer extends AbstractDataServer<Context> {
                 logger.trace("Received POST");
                 Request request = ctx.getRequest();
                 boolean userInterrupt = Boolean.parseBoolean(request.getHeaders().get("textio-user-interrupt"));
+                String handlerId = request.getHeaders().get("textio-handler-id");
                 request.getBody().then(req -> {
                     String text = req.getText(StandardCharsets.UTF_8);
-                    sendResponseData(ctx, handlePostInput(ctx, text, userInterrupt));
+                    sendResponseData(ctx, handlePostInput(ctx, text, userInterrupt, handlerId));
                 });
             });
 

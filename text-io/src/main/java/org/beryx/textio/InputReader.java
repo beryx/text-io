@@ -404,16 +404,19 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
                 sInput = textTerminal.read(inputMasking);
             } catch (ReadInterruptionException e) {
                 ReadInterruptionData data = e.getReadInterruptionData();
+                logger.debug("ReadInterruptionException with data: " + data);
                 switch (data.getAction()) {
                     case CONTINUE: logger.error("ReadInterruptionException with action CONTINUE."); // no break here: handle it as RESTART
                     case RESTART:
                         if(data.isRedrawRequired()) {
+                            logger.trace("Re-printing prompt before read restart");
                             textTerminal.println();
                             printPrompt(prompt, textTerminal);
+                            logger.trace("Prompt re-printed.");
                         }
                         continue;
                     case RETURN: return data.getReturnValue();
-                    case ABORT: throw new ReadAbortedException("Read aborted");
+                    case ABORT: throw new ReadAbortedException(data.getPayload(), e.getPartialInput());
                 }
             }
             return sInput;

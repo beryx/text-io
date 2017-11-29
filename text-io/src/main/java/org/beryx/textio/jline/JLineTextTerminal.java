@@ -342,12 +342,8 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
                 if(action == RESTART) {
                     textTerminal.initialReadBuffer = partialInput;
                 }
-                Function<String, String> valueProvider = handlerData.getReturnValueProvider();
-                String retVal = (valueProvider == null) ? null : valueProvider.apply(partialInput);
-                ReadInterruptionData interruptData = new ReadInterruptionData(action)
-                        .withReturnValue(retVal)
-                        .withRedrawRequired(handlerData.isRedrawRequired());
-                throw new ReadInterruptionException(interruptData);
+                ReadInterruptionData interruptData = ReadInterruptionData.from(handlerData, partialInput);
+                throw new ReadInterruptionException(interruptData, partialInput);
             }
         }
     }

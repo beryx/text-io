@@ -285,12 +285,8 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
                                 readMode = false;
                                 savedUnmaskedInput = currentUnmaskedInput;
                             }
-                            Function<String, String> valueProvider = data.getReturnValueProvider();
-                            String retVal = (valueProvider == null) ? null : valueProvider.apply(unmaskedInput);
-                            ReadInterruptionData readInterruptionData = new ReadInterruptionData(data.getAction())
-                                    .withRedrawRequired(data.isRedrawRequired())
-                                    .withReturnValue(retVal);
-                            throw new ReadInterruptionException(readInterruptionData);
+                            ReadInterruptionData readInterruptionData = ReadInterruptionData.from(data, unmaskedInput);
+                            throw new ReadInterruptionException(readInterruptionData, unmaskedInput);
                         }
                     }
                 }
@@ -521,7 +517,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
             logger.warn("Invalid keyStroke: " + keyStroke);
             return false;
         }
-        String actionKey = "SwingTextTerminal.handler." + System.identityHashCode(handler);
+        String actionKey = "SwingTextTerminal.handler." + keyStroke.replaceAll("\\s", "-");
         textPane.getInputMap().put(ks, actionKey);
         textPane.getActionMap().put(actionKey, new HandlerAction(this, handler));
         return true;

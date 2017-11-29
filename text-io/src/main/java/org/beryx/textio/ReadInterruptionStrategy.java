@@ -20,6 +20,7 @@ public class ReadInterruptionStrategy<T extends ReadInterruptionStrategy<T>> {
 
     private final Action action;
     private boolean redrawRequired;
+    private String payload;
 
     public ReadInterruptionStrategy(Action action) {
         this.action = action;
@@ -38,8 +39,19 @@ public class ReadInterruptionStrategy<T extends ReadInterruptionStrategy<T>> {
         return redrawRequired;
     }
 
+    public T withPayload(String payload) {
+        this.payload = payload;
+        return (T)this;
+    }
+
+    public String getPayload() {
+        return payload;
+
+    }
     @Override
     public String toString() {
-        return "action: " + action + ", redrawRequired: " + redrawRequired;
+        return "action: " + action
+                + ", redrawRequired: " + redrawRequired
+                + ", payload: " + payload;
     }
 }

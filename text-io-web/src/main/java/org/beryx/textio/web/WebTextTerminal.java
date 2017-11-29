@@ -15,22 +15,27 @@
  */
 package org.beryx.textio.web;
 
+import org.apache.commons.lang3.StringUtils;
 import org.beryx.textio.*;
 import org.beryx.textio.web.TextTerminalData.KeyValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.beryx.textio.PropertiesConstants.*;
 import static org.beryx.textio.web.TextTerminalData.Action.*;
+import static org.beryx.textio.web.TextTerminalData.Action.ABORT;
 
 /**
  * A {@link TextTerminal} that allows accessing the application via a browser.
@@ -53,6 +58,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
 
     private String input;
     private boolean userInterruptedInput;
+    private String handlerIdInput;
     private final Lock inputLock = new ReentrantLock();
     private final Condition inputAvailable = inputLock.newCondition();
 
@@ -67,6 +73,8 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
     private boolean userInterruptKeyCtrl = true;
     private boolean userInterruptKeyShift = false;
     private boolean userInterruptKeyAlt = false;
+
+    private final Map<String, Function<WebTextTerminal, ReadHandlerData>> registeredHandlers = new HashMap<>();
 
     public void setTimeoutNotEmpty(long timeoutNotEmpty) {
         this.timeoutNotEmpty = timeoutNotEmpty;
@@ -208,13 +216,50 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
                 try {
                     logger.trace("read(): waiting for input...");
                     inputAvailable.await();
+                    String result = input;
                     if(input != null) {
                         if(userInterruptedInput && (userInterruptHandler != null)) {
                             logger.debug("Calling userInterruptHandler");
                              userInterruptHandler.accept(this);
                              if(!abortRead) continue;
+                        } else if(StringUtils.isNotEmpty(handlerIdInput)) {
+                            logger.debug("Calling handler: {}", handlerIdInput);
+                            String hInput = handlerIdInput;
+                            handlerIdInput = null;
+                            Function<WebTextTerminal, ReadHandlerData> handler = registeredHandlers.get(hInput);
+                            if(handler == null) {
+                                logger.error("Unknown handler: {}", hInput);
+                                continue;
+                            }
+                            ReadHandlerData handlerData = handler.apply(this);
+                            logger.debug("handlerData: {}", handlerData);
+                            ReadInterruptionStrategy.Action action = handlerData.getAction();
+                            switch (action) {
+                                case CONTINUE:
+                                    logger.debug("Setting action: CONTINUE_READ");
+                                    setAction(CONTINUE_READ);
+                                    continue;
+                                case RESTART:
+                                    ReadInterruptionData readInterruptionData = ReadInterruptionData.from(handlerData, input);
+                                    throw new ReadInterruptionException(readInterruptionData, input);
+                                case RETURN:
+                                    setAction(FLUSH);
+                                    waitForDataCleared();
+                                    println();
+                                    waitForDataCleared();
+                                    Function<String, String> valueProvider = handlerData.getReturnValueProvider();
+                                    result = (valueProvider == null) ? null : valueProvider.apply(input);
+                                    setAction(CLEAR_OLD_INPUT);
+                                    waitForDataCleared();
+                                    break;
+                                case ABORT:
+                                    println();
+                                    waitForDataCleared();
+                                    setAction(CLEAR_OLD_INPUT);
+                                    waitForDataCleared();
+                                    throw new ReadAbortedException(handlerData.getPayload(), input);
+                            }
                         }
-                        String result = input;
                         input = null;
                         userInterruptedInput = false;
                         if(logger.isTraceEnabled()) {
@@ -246,7 +291,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
         try {
             TextTerminalData.Action currAction = data.getAction();
             if(currAction != NONE && currAction != FLUSH) {
-                logger.warn("data.getAction() is " + currAction + " in setAction(" + action + ")");
+                logger.warn("data.getAction() is {} in setAction({})", currAction, action);
             }
             data.setAction(action);
             data.setActionData(actionData);
@@ -288,6 +333,27 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
     }
 
     @Override
+    public boolean bindHandler(String keyStroke, Function<WebTextTerminal, ReadHandlerData> handler) {
+        KeyCombination kc = KeyCombination.of(keyStroke);
+        if(kc == null) return false;
+
+        dataLock.lock();
+        try {
+            String key = data.addKey(keyStroke);
+            if(key != null) {
+                registeredHandlers.put(key, handler);
+                dataNotEmpty.signalAll();
+                if(data.hasAction()) {
+                    dataHasAction.signalAll();
+                }
+            }
+        } finally {
+            dataLock.unlock();
+        }
+        return true;
+    }
+
+    @Override
     public TextTerminalData getTextTerminalData() {
         dataLock.lock();
         try {
@@ -311,14 +377,15 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
         }
     }
 
-    public void postUserInput(String newInput, boolean userInterrupt) {
+    public void postUserInput(String newInput, boolean userInterrupt, String handlerId) {
         inputLock.lock();
         try {
             this.userInterruptedInput = userInterrupt;
+            this.handlerIdInput = handlerId;
             if(newInput == null) {
                 if(userInterrupt) {
                     newInput = "";
-                } else {
+                } else if(StringUtils.isEmpty(handlerId)){
                     logger.error("newInput is null");
                     return;
                 }
@@ -335,12 +402,17 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
 
     @Override
     public void postUserInput(String newInput) {
-        postUserInput(newInput, false);
+        postUserInput(newInput, false, null);
     }
 
     @Override
     public void postUserInterrupt(String partialInput) {
-        postUserInput(partialInput, true);
+        postUserInput(partialInput, true, null);
+    }
+
+    @Override
+    public void postHandlerCall(String handlerId, String partialInput) {
+        postUserInput(partialInput, false, handlerId);
     }
 
     public void setUserInterruptKey(String keyStroke) {

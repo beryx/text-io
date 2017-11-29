@@ -30,4 +30,11 @@ public interface DataApi {
      * @param partialInput the partially entered input when the user interrupt occurred.
      */
     void postUserInterrupt(String partialInput);
+
+    /**
+     * This method is called by the web component in response to a handler call (triggered by typing its associated key combination).
+     * @param handlerId the id of the handler to be called.
+     * @param partialInput the partially entered input when the hander call occurred.
+     */
+    void postHandlerCall(String handlerId, String partialInput);
 }

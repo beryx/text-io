@@ -15,6 +15,8 @@
  */
 package org.beryx.textio;
 
+import java.util.function.Function;
+
 public class ReadInterruptionData extends ReadInterruptionStrategy<ReadInterruptionData> {
     private String returnValue;
 
@@ -23,6 +25,15 @@ public class ReadInterruptionData extends ReadInterruptionStrategy<ReadInterrupt
         if(action == Action.CONTINUE) {
             throw new IllegalArgumentException("Action CONTINUE not allowed for ReadInterruptionData.");
         }
+    }
+
+    public static ReadInterruptionData from(ReadHandlerData handlerData, String partialInput) {
+        Function<String, String> valueProvider = handlerData.getReturnValueProvider();
+        String retVal = (valueProvider == null) ? null : valueProvider.apply(partialInput);
+        return new ReadInterruptionData(handlerData.getAction())
+                .withRedrawRequired(handlerData.isRedrawRequired())
+                .withPayload(handlerData.getPayload())
+                .withReturnValue(retVal);
     }
 
     public ReadInterruptionData withReturnValue(String returnValue) {

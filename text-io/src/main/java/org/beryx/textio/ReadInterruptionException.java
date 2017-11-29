@@ -17,12 +17,18 @@ package org.beryx.textio;
 
 public class ReadInterruptionException extends RuntimeException {
     private final ReadInterruptionData readInterruptionData;
+    private final String partialInput;
 
-    public ReadInterruptionException(ReadInterruptionData readInterruptionData) {
+    public ReadInterruptionException(ReadInterruptionData readInterruptionData, String partialInput) {
         this.readInterruptionData = readInterruptionData;
+        this.partialInput = partialInput;
     }
 
     public ReadInterruptionData getReadInterruptionData() {
         return readInterruptionData;
+    }
+
+    public String getPartialInput() {
+        return partialInput;
     }
 }

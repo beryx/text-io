@@ -42,7 +42,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-(function (root, factory) {
+ (function (root, factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -56,6 +56,26 @@
     }
 }(this, function () {
     var createTextTerm = function TextTerm(ttElem) {
+        // polyfill from: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/endsWith
+        if (!String.prototype.endsWith)
+            String.prototype.endsWith = function(searchStr, Position) {
+                // This works much better than >= because
+                // it compensates for NaN:
+                if (!(Position < this.length))
+                    Position = this.length;
+                else
+                    Position |= 0; // round position
+                return this.substr(Position - searchStr.length,
+                    searchStr.length) === searchStr;
+            };
+
+        // polyfill from: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
+        if (!String.prototype.startsWith) {
+            String.prototype.startsWith = function(searchString, position){
+                return this.substr(position || 0, searchString.length) === searchString;
+            };
+        }
+
         var self = {};
         self.terminated = false;
         self.textTerminalInitPath = "/textTerminalInit";
@@ -69,8 +89,12 @@
         var nextTextTermPairIsCurrentLine = true;
 
         var action;
+        var oldAction = 'NONE';
+
+        var oldInputInnerHtml = '';
 
         var bookmarkOffsets = new Map();
+        var registeredHandlerKeys = new Map();
 
         var LEVEL = {
             OFF: 0,
@@ -100,7 +124,7 @@
             var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = (d + Math.random()*16)%16 | 0;
                 d = Math.floor(d/16);
-                return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+                return (c==='x' ? r : (r&0x3|0x8)).toString(16);
             });
             return uuid;
         };
@@ -136,13 +160,13 @@
 
         var browseHistory = function(target, direction) {
             var changedInput = false;
-            if(direction == KEY_UP && historyIndex > 0) {
-                if(action == 'READ') {
+            if(direction === KEY_UP && historyIndex > 0) {
+                if(action === 'READ') {
                     inputElem.textContent = history[--historyIndex];
                 }
                 changedInput = true;
-            } else if(direction == KEY_DOWN) {
-                if(action == 'READ') {
+            } else if(direction === KEY_DOWN) {
+                if(action === 'READ') {
                     if(historyIndex < history.length) ++historyIndex;
                     if(historyIndex < history.length) inputElem.textContent = history[historyIndex];
                     else inputElem.textContent = "";
@@ -168,6 +192,15 @@
             sel.addRange(range);
         };
 
+        var registerHandlerKeys = function(handlerKeys) {
+            logTrace("Registering " + handlerKeys.length + " handlers");
+            var handlerCount = handlerKeys.length;
+            for(var k = 0; k < handlerCount; k++) {
+                var key = handlerKeys[k];
+                logTrace("Registering handler " + key.id);
+                registeredHandlerKeys.set(key.id, key);
+            }
+        };
 
         var displayMessageGroups = function(messageGroups, specialPromptStyleClass, moveToLineStartRequired) {
             var groupCount = messageGroups.length;
@@ -192,7 +225,7 @@
                         var pElem = currentLinePromptElem ? currentLinePromptElem : promptElem;
                         pElem.innerHTML = "";
                         pElem.textContent = "";
-                    } else if(specialPromptStyleClass || settingsCount > 0) {
+                    } else if(specialPromptStyleClass || settingsCount > 0 || (firstMessage && oldInputInnerHtml)) {
                         createNewTextTermPair("", specialPromptStyleClass, true);
                     }
                     promptElem.innerHTML += newPrompt;
@@ -237,7 +270,7 @@
 
         var handleXhrStateChange = function(xhr) {
             return (function() {
-                if((xhr.readyState == XMLHttpRequest.DONE) && (xhr.status == 200)) {
+                if((xhr.readyState === XMLHttpRequest.DONE) && (xhr.status === 200)) {
                     var data = JSON.parse(xhr.responseText);
                     self.onDataReceived(data);
                     if (data.resetRequired) {
@@ -252,22 +285,48 @@
                     if (data.bookmark) {
                         self.setBookmark(data.bookmark);
                     }
+                    registerHandlerKeys(data.handlerKeys);
                     displayMessageGroups(data.messageGroups, null, data.moveToLineStartRequired);
                     logTrace("data.action: " + data.action);
-                    if (data.action != 'NONE') {
+                    if (data.action !== 'NONE') {
                         action = data.action;
                     }
-                    if(action == 'FLUSH') {
+                    if(action === 'FLUSH') {
                         createNewTextTermPair("", null, true);
                         inputElem.focus();
                     }
-                    var textSecurity = (action == 'READ_MASKED') ? "disc" : "none";
+                    if(action === 'CLEAR_OLD_INPUT') {
+                        oldInputInnerHtml = '';
+                    }
+                    if(action === 'CONTINUE_READ') {
+                        action = oldAction.startsWith('READ') ? oldAction : 'READ';
+                        logDebug('CONTINUE_READ received. Switching to: ' + action);
+                        oldInputInnerHtml = '';
+                        inputElem.setAttribute("contenteditable", true);
+                        inputElem.focus();
+                    }
+                    if(action.startsWith('READ')) {
+                        if(oldInputInnerHtml) {
+                            nextTextTermPairIsCurrentLine = true;
+                            createNewTextTermPair("", null, true);
+                            inputElem.innerHTML = oldInputInnerHtml;
+
+                            inputElem.setAttribute("contenteditable", true);
+                            inputElem.focus();
+                            moveCaretToEnd();
+                        }
+                    }
+                    if(action.indexOf('READ') !== -1) {
+                        logTrace('oldInputInnerHtml cleared');
+                        oldInputInnerHtml = '';
+                    }
+                    var textSecurity = (action === 'READ_MASKED') ? "disc" : "none";
                     inputElem.style["-webkit-text-security"] = textSecurity;
                     inputElem.style["text-security"] = textSecurity;
-                    if (action == 'DISPOSE') {
+                    if (action === 'DISPOSE') {
                         inputElem.setAttribute("contenteditable", false);
                         self.onDispose(data.actionData);
-                    } else if (action == 'ABORT') {
+                    } else if (action === 'ABORT') {
                         inputElem.setAttribute("contenteditable", false);
                         logTrace("Calling onAbort()...");
                         self.onAbort();
@@ -303,7 +362,7 @@
             xhr.send(JSON.stringify(initData));
         };
 
-        var postAsInput = function(text, userInterrupt) {
+        var postAsInput = function(text, userInterrupt, handlerId) {
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = handleXhrError(xhr);
             xhr.open("POST", self.textTerminalInputPath, true);
@@ -313,6 +372,14 @@
             if(userInterrupt) {
                 logInfo("User interrupt!");
                 xhr.setRequestHeader("textio-user-interrupt", "true");
+            } else if(handlerId) {
+                logInfo("handlerId: " + handlerId);
+                oldInputInnerHtml = inputElem.innerHTML;
+                logTrace("oldInputInnerHtml: " + oldInputInnerHtml);
+                oldAction = action;
+                action = 'VIRTUAL';
+                inputElem.setAttribute("contenteditable", false);
+                xhr.setRequestHeader("textio-handler-id", handlerId);
             } else {
                 createNewTextTermPair("<br>", null, true);
                 nextTextTermPairIsCurrentLine = true;
@@ -322,13 +389,13 @@
             xhr.send(text);
         };
 
-        var postInput = function(userInterrupt) {
-            postAsInput(inputElem.textContent, userInterrupt);
+        var postInput = function(userInterrupt, handlerId) {
+            postAsInput(inputElem.textContent, userInterrupt, handlerId);
         };
 
         var getColor = function(colorName) {
             var color = colorName || null;
-            if(color == 'default' || color == 'null' || color == 'none') {
+            if(color === 'default' || color === 'null' || color === 'none') {
                 color = null;
             }
             return color;
@@ -369,12 +436,14 @@
             if(inputElem.textContent) {
                 inputElem.setAttribute("contenteditable", false);
             } else {
+                logTrace("Removing empty inputElem");
                 inputElem.parentNode.removeChild(inputElem);
             }
 
             inputElem = newParentElem.querySelector(".textterm-input");
             configureInputElem();
             inputElem.textContent = "";
+            inputElem.setAttribute("contenteditable", true);
 
             promptElem = newParentElem.querySelector(".textterm-prompt");
             configurePromptElem(specialPromptStyleClass);
@@ -401,10 +470,10 @@
 
         var isUserInterruptKey = function(event) {
             var key = event.which || event.keyCode || 0;
-            if(key != self.settings.userInterruptKeyCode) return false;
-            if(event.ctrlKey != self.settings.userInterruptKeyCtrl) return false;
-            if(event.shiftKey != self.settings.userInterruptKeyShift) return false;
-            if(event.altKey != self.settings.userInterruptKeyAlt) return false;
+            if(key !== self.settings.userInterruptKeyCode) return false;
+            if(event.ctrlKey !== self.settings.userInterruptKeyCtrl) return false;
+            if(event.shiftKey !== self.settings.userInterruptKeyShift) return false;
+            if(event.altKey !== self.settings.userInterruptKeyAlt) return false;
 
             return true;
         };
@@ -480,21 +549,21 @@
 
             self.onDispose = function(resultData) {
                 logDebug("onDispose: resultData = " + resultData);
-                textTerm.terminate();
+                self.terminate();
             };
 
             self.onAbort = function() {
                 logDebug("onAbort: default implementation");
-                textTerm.terminate();
+                self.terminate();
             };
 
             var waitForEnterToRestart = function(event) {
                 var key = event.which || event.keyCode || 0;
                 event.preventDefault();
-                if(key != 13) return;
+                if(key !== 13) return;
                 self.specialKeyPressHandler = null;
                 self.restart();
-            }
+            };
 
             self.onSessionExpired = function() {
                 logInfo("onSessionExpired() called.");
@@ -512,7 +581,7 @@
 
 
             self.sendUserInterrupt = function() {
-                postAsInput("", true);
+                postAsInput("", true, null);
             };
 
             self.resetTextTerm = function() {
@@ -549,9 +618,9 @@
                 if(bookmarkedPair) {
                     var pairs = textTermElem.querySelectorAll(".textterm-pair");
                     var bookmarkIdx = -1;
-                    for (var i = 0; i < pairs.length; i++) {
-                        if(pairs[i] === bookmarkedPair) {
-                            bookmarkIdx = i;
+                    for (var k = 0; k < pairs.length; k++) {
+                        if(pairs[k] === bookmarkedPair) {
+                            bookmarkIdx = k;
                             break;
                         }
                     }
@@ -580,6 +649,20 @@
                 postInitData(currentInitData);
             };
 
+            var eventMatchesHandlerKey = function(event, handlerKey) {
+                var matchesKey = event.key && (event.key.length === 1) && (event.key.toLowerCase() === handlerKey.key);
+                if(!matchesKey) {
+                    var keyCode = event.which || event.keyCode || 0;
+                    matchesKey = (keyCode === handlerKey.keyCode);
+                }
+                if(!matchesKey) return false;
+                if(event.ctrlKey !== handlerKey.ctrlKey) return false;
+                if(event.shiftKey !== handlerKey.shiftKey) return false;
+                if(event.altKey !== handlerKey.altKey) return false;
+                logDebug("Detected call to handler " + handlerKey.id);
+                return true;
+            };
+
             ttElem.onkeyup = function(event) {
                 if(historyIndex < 0) return;
                 browseHistory(event.target, event.keyCode);
@@ -587,8 +670,19 @@
 
             ttElem.onkeydown = function(event) {
                 if(isUserInterruptKey(event)) {
-                    postInput(true);
+                    postInput(true, null);
                     event.preventDefault();
+                } else {
+                    var matchingKey = null;
+                    registeredHandlerKeys.forEach(function (key, handlerId, map) {
+                        if(!matchingKey && eventMatchesHandlerKey(event, key)) {
+                            matchingKey = key;
+                        }
+                    });
+                    if(matchingKey) {
+                        postInput(false, matchingKey.id);
+                        event.preventDefault();
+                    }
                 }
             };
 
@@ -608,11 +702,11 @@
                     self.specialKeyPressHandler(event);
                 } else {
                     var key = event.which || event.keyCode || 0;
-                    if(key != 13) return;
-                    if(action != "READ_MASKED") {
+                    if(key !== 13) return;
+                    if(action !== 'READ_MASKED') {
                         updateHistory(inputElem.textContent);
                     }
-                    postInput(false);
+                    postInput(false, null);
                     event.preventDefault();
                 }
             };

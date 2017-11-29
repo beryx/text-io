@@ -16,6 +16,7 @@
 package org.beryx.textio.web;
 
 import com.google.gson.Gson;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,12 +112,15 @@ public abstract class AbstractDataServer<CTX> implements DataServer {
         });
     }
 
-    protected ResponseData handlePostInput(CTX ctx, String input, boolean userInterrupt) {
+    protected ResponseData handlePostInput(CTX ctx, String input, boolean userInterrupt, String handlerId) {
         return handle(() -> {
             DataApi dataApi = getDataApiProvider().get(ctx);
             if(userInterrupt) {
                 logger.trace("Posting user interrupted input...");
                 dataApi.postUserInterrupt(input);
+            } else if(StringUtils.isNotEmpty(handlerId)) {
+                logger.trace("Posting handler call(" + handlerId + ")");
+                dataApi.postHandlerCall(handlerId, input);
             } else {
                 logger.trace("Posting input...");
                 dataApi.postUserInput(input);

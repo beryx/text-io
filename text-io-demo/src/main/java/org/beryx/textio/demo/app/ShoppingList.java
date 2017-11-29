@@ -21,6 +21,8 @@ import org.beryx.textio.web.RunnerData;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -45,7 +47,7 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
 
         String keyStrokeReboot = "ctrl R";
         String keyStrokeAutoValue = "ctrl S";
-        String keyStrokeHelp = "ctrl T";
+        String keyStrokeHelp = "ctrl U";
         String keyStrokeAbort = "alt Z";
 
         boolean registeredReboot = terminal.bindHandler(keyStrokeReboot, t -> {
@@ -63,13 +65,19 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
         });
 
         boolean registeredHelp = terminal.bindHandler(keyStrokeHelp, t -> {
-            JOptionPane.showMessageDialog(null,
-                    "Type the name of a product to be included in your shopping list",
-                    "Help", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane optionPane = new JOptionPane("Type the name of a product to be included in your shopping list",
+                    JOptionPane.INFORMATION_MESSAGE);
+            JDialog dialog = optionPane.createDialog("Help");
+            dialog.setModal(true);
+            dialog.setAlwaysOnTop(true);
+            dialog.setVisible(true);
+            dialog.dispose();
             return new ReadHandlerData(ReadInterruptionStrategy.Action.CONTINUE);
         });
 
-        boolean registeredAbort = terminal.bindHandler(keyStrokeAbort, t -> new ReadHandlerData(ReadInterruptionStrategy.Action.ABORT));
+        boolean registeredAbort = terminal.bindHandler(keyStrokeAbort,
+                t -> new ReadHandlerData(ReadInterruptionStrategy.Action.ABORT)
+                        .withPayload(System.getProperty("user.name", "nobody")));
 
         boolean hasHandlers = registeredReboot || registeredAutoValue || registeredHelp || registeredAbort;
         if(!hasHandlers) {
@@ -97,7 +105,7 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
                 try {
                     product = textIO.newStringInputReader().read("product");
                 } catch (ReadAbortedException e) {
-                    terminal.println("\nRead aborted by the user");
+                    terminal.println("\nRead aborted by user " + e.getPayload());
                     break;
                 }
                 products.add(product);

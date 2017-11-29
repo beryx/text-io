@@ -120,8 +120,9 @@ public class SparkDataServer extends AbstractDataServer<Request> {
         post("/" + getPathForPostInput(), (request, response) -> {
             logger.trace("Received POST");
             boolean userInterrupt = Boolean.parseBoolean(request.headers("textio-user-interrupt"));
+            String handlerId = request.headers("textio-handler-id");
             String input = new String(request.body().getBytes(), StandardCharsets.UTF_8);
-            return configureResponseData(response, handlePostInput(request, input, userInterrupt));
+            return configureResponseData(response, handlePostInput(request, input, userInterrupt, handlerId));
         });
     }
 }

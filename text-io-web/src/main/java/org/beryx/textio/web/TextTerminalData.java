@@ -16,6 +16,8 @@
 package org.beryx.textio.web;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.beryx.textio.KeyCombination;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,13 +26,13 @@ import java.util.stream.Collectors;
 /**
  * The data sent by the server to a polling web component.
  * Includes:<ul>
- *     <li>an action to be executed by the web component (NONE, VIRTUAL, FLUSH, READ, READ_MASKED, DISPOSE or ABORT).</li>
+ *     <li>an action to be executed by the web component (NONE, VIRTUAL, FLUSH, READ, READ_MASKED, CONTINUE_READ, CLEAR_OLD_INPUT, DISPOSE or ABORT).</li>
  *     <li>a boolean value indicating whether the terminal should reset its settings before performing the specified action.</li>
  *     <li>a list of {@link MessageGroup}s, each one consisting of a list of settings (represented as {@link KeyValue}s) and a list of prompt messages.</li>
  * </ul>
  */
 public class TextTerminalData {
-    public enum Action {NONE, VIRTUAL, FLUSH, READ, READ_MASKED, DISPOSE, ABORT}
+    public enum Action {NONE, VIRTUAL, FLUSH, READ, READ_MASKED, CONTINUE_READ, CLEAR_OLD_INPUT, DISPOSE, ABORT}
 
     /** A key-value pair */
     public static class KeyValue {
@@ -67,6 +69,32 @@ public class TextTerminalData {
         }
     }
 
+    public static class Key {
+        public final String id;
+        public final String key;
+        public final int keyCode;
+        public final boolean ctrlKey;
+        public final boolean shiftKey;
+        public final boolean altKey;
+
+        public Key(String id, String key, int keyCode, boolean ctrlKey, boolean shiftKey, boolean altKey) {
+            this.id = id;
+            this.key = key;
+            this.keyCode = keyCode;
+            this.ctrlKey = ctrlKey;
+            this.shiftKey = shiftKey;
+            this.altKey = altKey;
+        }
+
+        public static Key of(String s) {
+            KeyCombination kc = KeyCombination.of(s);
+            if(kc == null) return null;
+            String id = s.replaceAll("\\s", "-");
+            String key = String.valueOf((char)kc.getCharOrCode()).toLowerCase();
+            return new Key(id, key, kc.getCode(), kc.isCtrlDown(), kc.isShiftDown(), kc.isAltDown());
+        }
+    }
+
     private final List<MessageGroup> messageGroups = new ArrayList<>();
     private Action action = Action.NONE;
     private String actionData = null;
@@ -75,6 +103,7 @@ public class TextTerminalData {
     private boolean moveToLineStartRequired = false;
     private String bookmark = null;
     private String resetToBookmark = null;
+    private final List<Key> handlerKeys = new ArrayList<>();
 
     public TextTerminalData getCopy() {
         TextTerminalData data = new TextTerminalData();
@@ -92,6 +121,7 @@ public class TextTerminalData {
         data.moveToLineStartRequired = moveToLineStartRequired;
         data.bookmark = bookmark;
         data.resetToBookmark = resetToBookmark;
+        data.handlerKeys.addAll(handlerKeys);
         return data;
     }
 
@@ -210,6 +240,28 @@ public class TextTerminalData {
         return (action != Action.NONE);
     }
 
+    public List<Key> getHandlerKeys() {
+        return handlerKeys;
+    }
+
+    public void addKey(Key key) {
+        for(int i=0; i<handlerKeys.size(); i++) {
+            Key k = handlerKeys.get(i);
+            if(k.id.equals(key.id)) {
+                handlerKeys.set(i, key);
+                return;
+            }
+        }
+        handlerKeys.add(key);
+    }
+
+    public String addKey(String keyStroke) {
+        Key key = Key.of(keyStroke);
+        if(key == null) return null;
+        addKey(key);
+        return key.id;
+    }
+
     public void clear() {
         messageGroups.clear();
         action = Action.NONE;
@@ -219,6 +271,7 @@ public class TextTerminalData {
         moveToLineStartRequired = false;
         bookmark = null;
         resetToBookmark = null;
+        handlerKeys.clear();
     }
 
     @Override
@@ -228,6 +281,7 @@ public class TextTerminalData {
                 ", moveToLineStartRequired: " + moveToLineStartRequired +
                 ", bookmark: " + bookmark +
                 ", resetToBookmark: " + resetToBookmark +
+                ", handlerKeys: " + handlerKeys +
                 ", action: " + action +
                 ", actionData: " + actionData +
                 ", messageGroups: " + messageGroups;

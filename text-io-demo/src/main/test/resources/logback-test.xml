@@ -13,10 +13,12 @@
     <logger name="org.beryx.textio" level="trace" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
+<!--
     <logger name="ratpack" level="trace" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
-    <logger name="org.beryx.textio.web.WebTextTerminal" level="info" additivity="false">
+-->
+    <logger name="org.beryx.textio.web.RatpackDataServer" level="info" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 </configuration>
