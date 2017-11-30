@@ -21,18 +21,13 @@ import org.beryx.textio.web.RunnerData;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 /**
- * Illustrates some features introduced in version 3 of Text-IO: line reset, bookmarking etc.
+ * Illustrates how to use read handlers.
  */
 public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
-    private boolean useCelsius;
-    private boolean useKmh;
-    private boolean useMbar;
 
     public static void main(String[] args) {
         TextIO textIO = TextIoFactory.getTextIO();
@@ -61,7 +56,7 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
         boolean registeredAutoValue = terminal.bindHandler(keyStrokeAutoValue, t -> {
             terminal.println();
             return new ReadHandlerData(ReadInterruptionStrategy.Action.RETURN)
-                    .withReturnValueProvider(partialInput -> partialInput.isEmpty() ? "nothing" : "big " + partialInput);
+                    .withReturnValueProvider(partialInput -> partialInput.isEmpty() ? "nothing" : "high-quality-" + partialInput);
         });
 
         boolean registeredHelp = terminal.bindHandler(keyStrokeHelp, t -> {

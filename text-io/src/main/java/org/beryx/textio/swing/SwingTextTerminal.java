@@ -69,6 +69,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
 
     private final Object editLock = new Object();
     private volatile boolean readMode = false;
+    private volatile boolean fakeReadMode = false;
     private volatile boolean inputMasking = false;
     private volatile String input;
 
@@ -140,13 +141,13 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
                     try {
                         textChanger.changeText(text);
                         int newUnmaskedInputLen = doc.getLength() - startReadLen;
-                        if(readMode && inputMasking) {
+                        if((readMode || fakeReadMode) && inputMasking) {
                             int caretPosition = textPane.getCaretPosition();
                             fb.replace(startReadLen, newUnmaskedInputLen, unmaskedInput, attrs);
-
-                            textChanger.changeText(text);
+                            if(!fakeReadMode) {
+                                textChanger.changeText(text);
+                            }
                             unmaskedInput = doc.getText(startReadLen, newUnmaskedInputLen);
-
                             maskContent(fb, attrs);
                             textPane.setCaretPosition(caretPosition);
                         } else {
@@ -166,10 +167,8 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         }
 
         private void maskContent(FilterBypass fb, AttributeSet attrs) throws BadLocationException {
-            StringBuilder maskedSb = new StringBuilder();
-            int maskedLen = unmaskedInput.length();
-            for(int i=0; i<maskedLen; i++) maskedSb.append('*');
-            fb.replace(startReadLen, maskedLen, maskedSb.toString(), attrs);
+            String maskedInput = getMaskedInput();
+            fb.replace(startReadLen, maskedInput.length(), maskedInput, attrs);
         }
 
         private boolean isEditAllowedAt(int offset) {
@@ -264,11 +263,14 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
                 unmaskedInput = savedUnmaskedInput;
                 savedUnmaskedInput = "";
                 if(!unmaskedInput.isEmpty()) {
+                    inputMasking = masking;
+                    fakeReadMode = true;
                     plainOverwriteCurrentLine(unmaskedInput, inputStyleData);
+                    fakeReadMode = false;
                 }
-                input = null;
                 inputMasking = masking;
                 readMode = true;
+                input = null;
                 while(input == null) {
                     editLock.wait();
                     if(activatedHandler != null) {
@@ -298,6 +300,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
             synchronized (editLock) {
                 inputMasking = false;
                 readMode = false;
+                fakeReadMode = false;
             }
             if(savedUnmaskedInput.isEmpty()) {
                 rawPrint("\n", inputStyleData);
@@ -326,6 +329,13 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
             overwriteOffset = -1;
             plainOverwriteCurrentLine(message, styleData);
         }
+    }
+
+    private String getMaskedInput() {
+        StringBuilder maskedSb = new StringBuilder();
+        int maskedLen = unmaskedInput.length();
+        for(int i=0; i<maskedLen; i++) maskedSb.append('*');
+        return maskedSb.toString();
     }
 
     private boolean plainOverwriteCurrentLine(String message, StyleData styleData) {
