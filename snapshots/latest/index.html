@@ -413,7 +413,7 @@ your application via a browser. See <a href="#web_text_term">Using the WebTextTe
 <p>The <a href="javadoc/org/beryx/textio/TextTerminal.html">TextTerminal</a> interface
 provides a number of optional methods, which are supported only by some terminals.
 Calling one of these methods on a terminal that does not support the corresponding feature
-will have no effect and will usually return a value of <em>false</em>.</p>
+returns a value of <em>false</em> and has usually no effect.</p>
 </div>
 <div class="sect4">
 <h5 id="line_handling">Line handling</h5>
@@ -441,7 +441,8 @@ for usage details.
 </table>
 </div>
 <div class="paragraph">
-<p>Currently, only JLineTextTerminal, SwingTextTerminal and WebTextTerminal support these methods.</p>
+<p>Currently, only JLineTextTerminal, SwingTextTerminal and WebTextTerminal support these methods.
+The default implementation for the other terminals performs a <em>println()</em>.</p>
 </div>
 </div>
 <div class="sect4">
@@ -471,14 +472,15 @@ for usage details.
 </table>
 </div>
 <div class="paragraph">
-<p>Currently, only JLineTextTerminal, SwingTextTerminal and WebTextTerminal support these methods.</p>
+<p>Currently, only SwingTextTerminal and WebTextTerminal support these methods.
+The default implementation of <em>resetToBookmark</em> for the other terminals performs a println().</p>
 </div>
 </div>
 <div class="sect4">
 <h5 id="read_handlers">Read handlers</h5>
 <div class="paragraph">
 <p>You can allow users to perform additional actions during a read operation, by registering handlers to given key combinations via
-<a href="javadoc/org/beryx/textio/TextTerminal.html#bindHandler-java.lang.String-java.util.function.Function-">registerHandler()</a>.</p>
+<a href="javadoc/org/beryx/textio/TextTerminal.html#registerHandler-java.lang.String-java.util.function.Function-">registerHandler()</a>.</p>
 </div>
 <div class="paragraph">
 <p>Examples of actions you may want to associate with specific key combinations include:
