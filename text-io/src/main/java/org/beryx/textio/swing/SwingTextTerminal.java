@@ -521,7 +521,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
 
 
     @Override
-    public boolean bindHandler(String keyStroke, Function<SwingTextTerminal, ReadHandlerData> handler) {
+    public boolean registerHandler(String keyStroke, Function<SwingTextTerminal, ReadHandlerData> handler) {
         KeyStroke ks = KeyStroke.getKeyStroke(keyStroke);
         if(ks == null) {
             logger.warn("Invalid keyStroke: " + keyStroke);

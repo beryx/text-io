@@ -333,7 +333,7 @@ public class WebTextTerminal extends AbstractTextTerminal<WebTextTerminal> imple
     }
 
     @Override
-    public boolean bindHandler(String keyStroke, Function<WebTextTerminal, ReadHandlerData> handler) {
+    public boolean registerHandler(String keyStroke, Function<WebTextTerminal, ReadHandlerData> handler) {
         KeyCombination kc = KeyCombination.of(keyStroke);
         if(kc == null) return false;
 

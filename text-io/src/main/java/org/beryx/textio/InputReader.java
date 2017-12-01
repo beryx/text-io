@@ -261,6 +261,11 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return (B)this;
     }
 
+    /** Sets a configurator for InputReader-specific properties.
+     * The configurator will be applied to the terminal properties at the start of a read operation and
+     * the properties will be reverted to their previous values at the end of the read operation.
+     **/
+    @SuppressWarnings("unchecked")
     public B withPropertiesConfigurator(Consumer<TerminalProperties<?>> propertiesConfigurator) {
         this.propertiesConfigurator = propertiesConfigurator;
         return (B)this;

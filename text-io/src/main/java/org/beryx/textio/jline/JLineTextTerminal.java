@@ -349,7 +349,7 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     }
 
     @Override
-    public boolean bindHandler(String keyStroke, Function<JLineTextTerminal, ReadHandlerData> handler) {
+    public boolean registerHandler(String keyStroke, Function<JLineTextTerminal, ReadHandlerData> handler) {
         String keySeq = getKeySequence(keyStroke);
         if(keySeq == null) return false;
         reader.getKeys().bind(keySeq, new UserHandler(this, handler));

@@ -45,7 +45,7 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
         String keyStrokeHelp = "ctrl U";
         String keyStrokeAbort = "alt Z";
 
-        boolean registeredReboot = terminal.bindHandler(keyStrokeReboot, t -> {
+        boolean registeredReboot = terminal.registerHandler(keyStrokeReboot, t -> {
             String color = terminal.getProperties().getString(PropertiesConstants.PROP_PROMPT_COLOR);
             terminal.getProperties().setPromptColor("red");
             terminal.println("\nSystem reboot in 5 minutes!");
@@ -53,13 +53,13 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
             return new ReadHandlerData(ReadInterruptionStrategy.Action.RESTART).withRedrawRequired(true);
         });
 
-        boolean registeredAutoValue = terminal.bindHandler(keyStrokeAutoValue, t -> {
+        boolean registeredAutoValue = terminal.registerHandler(keyStrokeAutoValue, t -> {
             terminal.println();
             return new ReadHandlerData(ReadInterruptionStrategy.Action.RETURN)
                     .withReturnValueProvider(partialInput -> partialInput.isEmpty() ? "nothing" : "high-quality-" + partialInput);
         });
 
-        boolean registeredHelp = terminal.bindHandler(keyStrokeHelp, t -> {
+        boolean registeredHelp = terminal.registerHandler(keyStrokeHelp, t -> {
             JOptionPane optionPane = new JOptionPane("Type the name of a product to be included in your shopping list",
                     JOptionPane.INFORMATION_MESSAGE);
             JDialog dialog = optionPane.createDialog("Help");
@@ -70,7 +70,7 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
             return new ReadHandlerData(ReadInterruptionStrategy.Action.CONTINUE);
         });
 
-        boolean registeredAbort = terminal.bindHandler(keyStrokeAbort,
+        boolean registeredAbort = terminal.registerHandler(keyStrokeAbort,
                 t -> new ReadHandlerData(ReadInterruptionStrategy.Action.ABORT)
                         .withPayload(System.getProperty("user.name", "nobody")));
 
