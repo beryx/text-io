@@ -57,19 +57,19 @@ a| [subs="attributes",options="nowrap"]
 &lt;dependency&gt;
     &lt;groupId&gt;io.ratpack&lt;/groupId&gt;
     &lt;artifactId&gt;ratpack-core&lt;/artifactId&gt;
-    &lt;version&gt;1.4.6&lt;/version&gt;
+    &lt;version&gt;1.5.1&lt;/version&gt;
 &lt;/dependency&gt;
 &lt;dependency&gt;
     &lt;groupId&gt;io.ratpack&lt;/groupId&gt;
     &lt;artifactId&gt;ratpack-session&lt;/artifactId&gt;
-    &lt;version&gt;1.4.6&lt;/version&gt;
+    &lt;version&gt;1.5.1&lt;/version&gt;
 &lt;/dependency&gt;
 ----
 
 a| [subs="attributes",options="nowrap"]
 ----
-compile 'io.ratpack:ratpack-core:1.4.6'
-compile 'io.ratpack:ratpack-session:1.4.6'
+compile 'io.ratpack:ratpack-core:1.5.1'
+compile 'io.ratpack:ratpack-session:1.5.1'
 ----
 |===
 
@@ -82,12 +82,12 @@ a| [subs="attributes",options="nowrap"]
 &lt;dependency&gt;
     &lt;groupId&gt;com.sparkjava&lt;/groupId&gt;
     &lt;artifactId&gt;spark-core&lt;/artifactId&gt;
-    &lt;version&gt;2.6.0&lt;/version&gt;
+    &lt;version&gt;2.7.1&lt;/version&gt;
 &lt;/dependency&gt;
 ----
 
 a| [subs="attributes",options="nowrap"]
 ----
-compile 'com.sparkjava:spark-core:2.6.0'
+compile 'com.sparkjava:spark-core:2.7.1'
 ----
 |===

@@ -34,6 +34,76 @@ It is not capable to mask input strings, therefore not recommended when reading 
 - link:javadoc/org/beryx/textio/web/WebTextTerminal.html[WebTextTerminal], which allows accessing
 your application via a browser. See <<web_text_term>> for more details.
 
+[[advanced_features]]
+=== Advanced features
+The link:javadoc/org/beryx/textio/TextTerminal.html[TextTerminal] interface
+provides a number of optional methods, which are supported only by some terminals.
+Calling one of these methods on a terminal that does not support the corresponding feature
+will have no effect and will usually return a value of _false_.
+
+[[line_handling]]
+==== Line handling
+You can use
+link:javadoc/org/beryx/textio/TextTerminal.html#moveToLineStart--[moveToLineStart()]
+to place the cursor at the beginning of the current line and
+link:javadoc/org/beryx/textio/TextTerminal.html#resetLine--[resetLine()]
+to clear the current line.
+
+TIP: Look at the
+link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/app/Weather.java[Weather]
+example in the
+https://github.com/beryx/text-io/releases/download/v{project-version}/textio-demo-{project-version}.zip[demo application]
+for usage details.
+
+Currently, only JLineTextTerminal, SwingTextTerminal and WebTextTerminal support these methods.
+
+
+[[bookmarking]]
+==== Bookmarking
+
+With
+link:javadoc/org/beryx/textio/TextTerminal.html#setBookmark-java.lang.String-[setBookmark(String bookmark)]
+you can attach a bookmark to the current line of text.
+By calling
+link:javadoc/org/beryx/textio/TextTerminal.html#resetToBookmark-java.lang.String-[resetToBookmark(String bookmark)],
+you can clear all the text after the given bookmark.
+
+TIP: Look at the
+link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/app/Weather.java[Weather]
+example in the
+https://github.com/beryx/text-io/releases/download/v{project-version}/textio-demo-{project-version}.zip[demo application]
+for usage details.
+
+Currently, only JLineTextTerminal, SwingTextTerminal and WebTextTerminal support these methods.
+
+[[read_handlers]]
+==== Read handlers
+
+You can allow users to perform additional actions during a read operation, by registering handlers to given key combinations via
+link:javadoc/org/beryx/textio/TextTerminal.html#bindHandler-java.lang.String-java.util.function.Function-[registerHandler()].
+
+Examples of actions you may want to associate with specific key combinations include:
+displaying a help text, saving the data collected so far, aborting the current read operation.
+
+TIP: Look at the
+link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/app/ShoppingList.java[ShoppingList]
+example in the
+https://github.com/beryx/text-io/releases/download/v{project-version}/textio-demo-{project-version}.zip[demo application]
+for usage details.
+
+Some terminals may generate a user-interrupt when a specific key combination (such as _Ctrl+C_) is pressed.
+This usually terminates the current program.
+The method
+link:javadoc/org/beryx/textio/TextTerminal.html#registerUserInterruptHandler-java.util.function.Consumer-boolean-[registerUserInterruptHandler()]
+lets you configure the action to be taken when the user-interrupt key combination is pressed.
+
+Currently, only JLineTextTerminal, SwingTextTerminal and WebTextTerminal support registering handlers.
+
+The key combination for user-interrupt handlers can be changed for SwingTextTerminal and WebTextTerminal
+through the property _user.interrupt.key_.
+See <<supported_properties>> for more details.
+
+
 == Input Readers
 
 Input readers are able to read values of a specific type.
@@ -181,6 +251,7 @@ It is therefore safe to configure the value of a certain property for all termin
 Currently, only the JLineTextTerminal, SwingTextTerminal and WebTextTerminal types have a non-empty set of supported properties,
 which are shown in the table below:
 
+[[supported_properties]]
 .Supported properties
 [cols="3,1,1,1,8"]
 |===
@@ -256,6 +327,25 @@ TIP: You can learn how to configure and use terminal properties by looking at th
 link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo[source code]
 and the link:{blob-root}/dist/xbin[configuration files]
 of the https://github.com/beryx/text-io/releases/download/v{project-version}/textio-demo-{project-version}.zip[demo application].
+
+[[input_reader_props]]
+=== InputReader-specific properties
+
+Sometimes you want to change some TextTerminal properties for the next read operation, but want to revert to the previous property values at the end of this read operation.
+You can achieve this by configuring InputReader-specific properties via the
+link:javadoc/org/beryx/textio/InputReader.html#withPropertiesConfigurator-java.util.function.Consumer-withPropertiesConfigurator[withPropertiesConfigurator()]
+method, as shown in the example below.
+[source,java]
+----
+textIO.getTextTerminal().getProperties().setPromptColor("cyan");
+String user = textIO.newStringInputReader().read("User name");
+boolean eraseAll = textIO.newBooleanInputReader()
+        .withPropertiesConfigurator(props -> props.setPromptColor("red"))
+        .read("Erase all data?");
+String directory = textIO.newStringInputReader().read("Home directory");
+----
+The question _"Erase all data?"_ will appear in red, while _"User name"_ and _"Home directory"_ will be printed in cyan.
+
 
 [[web_text_term]]
 == Using the WebTextTerminal
