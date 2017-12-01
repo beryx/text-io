@@ -112,7 +112,8 @@ public class TextIoDemo {
                 new ECommerce(),
                 new Cuboid(),
                 new Weather(),
-                new ShoppingList()
+                new ShoppingList(),
+                new ContactInfo()
         );
         BiConsumer<TextIO, RunnerData> app = textIO.<BiConsumer<TextIO, RunnerData>>newGenericInputReader(null)
             .withNumberedPossibleValues(apps)
