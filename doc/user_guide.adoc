@@ -39,7 +39,7 @@ your application via a browser. See <<web_text_term>> for more details.
 The link:javadoc/org/beryx/textio/TextTerminal.html[TextTerminal] interface
 provides a number of optional methods, which are supported only by some terminals.
 Calling one of these methods on a terminal that does not support the corresponding feature
-will have no effect and will usually return a value of _false_.
+returns a value of _false_ and has usually no effect.
 
 [[line_handling]]
 ==== Line handling
@@ -56,7 +56,7 @@ https://github.com/beryx/text-io/releases/download/v{project-version}/textio-dem
 for usage details.
 
 Currently, only JLineTextTerminal, SwingTextTerminal and WebTextTerminal support these methods.
-
+The default implementation for the other terminals performs a _println()_.
 
 [[bookmarking]]
 ==== Bookmarking
@@ -74,13 +74,14 @@ example in the
 https://github.com/beryx/text-io/releases/download/v{project-version}/textio-demo-{project-version}.zip[demo application]
 for usage details.
 
-Currently, only JLineTextTerminal, SwingTextTerminal and WebTextTerminal support these methods.
+Currently, only SwingTextTerminal and WebTextTerminal support these methods.
+The default implementation of _resetToBookmark_ for the other terminals performs a println().
 
 [[read_handlers]]
 ==== Read handlers
 
 You can allow users to perform additional actions during a read operation, by registering handlers to given key combinations via
-link:javadoc/org/beryx/textio/TextTerminal.html#bindHandler-java.lang.String-java.util.function.Function-[registerHandler()].
+link:javadoc/org/beryx/textio/TextTerminal.html#registerHandler-java.lang.String-java.util.function.Function-[registerHandler()].
 
 Examples of actions you may want to associate with specific key combinations include:
 displaying a help text, saving the data collected so far, aborting the current read operation.

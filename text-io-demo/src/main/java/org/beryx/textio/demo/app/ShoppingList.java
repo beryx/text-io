@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,11 +46,13 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
         String keyStrokeAbort = "alt Z";
 
         boolean registeredReboot = terminal.registerHandler(keyStrokeReboot, t -> {
-            String color = terminal.getProperties().getString(PropertiesConstants.PROP_PROMPT_COLOR);
-            terminal.getProperties().setPromptColor("red");
-            terminal.println("\nSystem reboot in 5 minutes!");
-            terminal.getProperties().setPromptColor(color);
-            return new ReadHandlerData(ReadInterruptionStrategy.Action.RESTART).withRedrawRequired(true);
+            JOptionPane optionPane = new JOptionPane("System reboot in 5 minutes!", JOptionPane.WARNING_MESSAGE);
+            JDialog dialog = optionPane.createDialog("REBOOT");
+            dialog.setModal(true);
+            dialog.setAlwaysOnTop(true);
+            dialog.setVisible(true);
+            dialog.dispose();
+            return new ReadHandlerData(ReadInterruptionStrategy.Action.CONTINUE);
         });
 
         boolean registeredAutoValue = terminal.registerHandler(keyStrokeAutoValue, t -> {
@@ -60,14 +62,11 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
         });
 
         boolean registeredHelp = terminal.registerHandler(keyStrokeHelp, t -> {
-            JOptionPane optionPane = new JOptionPane("Type the name of a product to be included in your shopping list",
-                    JOptionPane.INFORMATION_MESSAGE);
-            JDialog dialog = optionPane.createDialog("Help");
-            dialog.setModal(true);
-            dialog.setAlwaysOnTop(true);
-            dialog.setVisible(true);
-            dialog.dispose();
-            return new ReadHandlerData(ReadInterruptionStrategy.Action.CONTINUE);
+            String color = terminal.getProperties().getString(PropertiesConstants.PROP_PROMPT_COLOR);
+            terminal.getProperties().setPromptColor("cyan");
+            terminal.print("\n\nType the name of a product to be included in your shopping list.");
+            terminal.getProperties().setPromptColor(color);
+            return new ReadHandlerData(ReadInterruptionStrategy.Action.RESTART).withRedrawRequired(true);
         });
 
         boolean registeredAbort = terminal.registerHandler(keyStrokeAbort,
@@ -76,17 +75,17 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
 
         boolean hasHandlers = registeredReboot || registeredAutoValue || registeredHelp || registeredAbort;
         if(!hasHandlers) {
-            terminal.println("No handlers can been registered.");
+            terminal.println("No handlers can be registered.");
         } else {
             terminal.println("--------------------------------------------------------------------------------");
             if(registeredReboot) {
-                terminal.println("Press " + keyStrokeReboot + " to print a 'reboot' message");
+                terminal.println("Press " + keyStrokeReboot + " to display a 'reboot' message box");
             }
             if(registeredAutoValue) {
                 terminal.println("Press " + keyStrokeAutoValue + " to provide a product name based on the current input text");
             }
             if(registeredHelp) {
-                terminal.println("Press " + keyStrokeHelp + " to display a help message box");
+                terminal.println("Press " + keyStrokeHelp + " to print a help message");
             }
             if(registeredAbort) {
                 terminal.println("Press " + keyStrokeAbort + " to abort the program");
