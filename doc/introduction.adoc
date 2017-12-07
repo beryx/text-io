@@ -64,3 +64,6 @@ Make sure your JAVA_HOME environment variable correctly points to a JDK 8u40 or 
 Start the demo by executing 'textio-demo' or 'textio-demo.bat' in the bin directory.
 
 Change the configuration by editing the properties files and see how your changes affect the behavior and the visual appearance of the application.
+
+TIP: Have a look at the list of
+https://github.com/beryx/text-io/wiki/Demos,-Examples-and-Projects-using-Text-IO[demos, examples and projects] that use Text-IO.
