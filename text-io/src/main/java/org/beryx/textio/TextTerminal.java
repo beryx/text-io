@@ -16,10 +16,13 @@
 package org.beryx.textio;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.*;
 import java.util.stream.Collectors;
+
+import static org.beryx.textio.TerminalProperties.ExtendedChangeListener;
 
 /**
  * Interface for text-based terminals capable of reading (optionally masking the input) and writing text.
@@ -214,5 +217,44 @@ public interface TextTerminal<T extends TextTerminal<T>> {
      */
     default void printf(Locale l, String format, Object... args) {
         print(String.format(l, format, args));
+    }
+
+    /**
+     * Executes an action while temporarily modifying the terminal properties.
+     * @param propertiesConfigurator the task that is in charge of modifying the TerminalProperties.
+     * The configurator will be applied to the terminal properties before starting the action and
+     * the properties will be reverted to their previous values at the end of the action.
+     * @param action the action to be executed, usually consisting of a series of TextTerminal-related operations.
+     */
+    default void executeWithPropertiesConfigurator(Consumer<TerminalProperties<?>> propertiesConfigurator,
+                                                    Consumer<TextTerminal<T>> action) {
+        applyWithPropertiesConfigurator(propertiesConfigurator, t -> {action.accept(t); return null;});
+    }
+
+    /**
+     * Executes an action that returns a result, while temporarily modifying the terminal properties.
+     * @param propertiesConfigurator the task that is in charge of modifying the TerminalProperties.
+     * The configurator will be applied to the terminal properties before starting the action and
+     * the properties will be reverted to their previous values at the end of the action.
+     * @param action the action to be performed on the TextTerminal in order to obtain a result.
+     *               Usually, the result is the return value of a {@link #read(boolean)} operation.
+     */
+    default <R> R applyWithPropertiesConfigurator(Consumer<TerminalProperties<?>> propertiesConfigurator,
+                                                  Function<TextTerminal<T>, R> action) {
+        LinkedList<String[]> toRestore = new LinkedList<>();
+        ExtendedChangeListener listener = (term, key, oldVal, newVal) -> toRestore.add(new String[] {key, oldVal});
+        TerminalProperties<?> props = getProperties();
+        if(propertiesConfigurator != null) {
+            props.addListener(listener);
+            propertiesConfigurator.accept(props);
+        }
+        try {
+            return action.apply(this);
+        } finally {
+            if(propertiesConfigurator != null) {
+                props.removeListener(listener);
+                toRestore.forEach(pair -> props.put(pair[0], pair[1]));
+            }
+        }
     }
 }

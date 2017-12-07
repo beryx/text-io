@@ -62,10 +62,8 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
         });
 
         boolean registeredHelp = terminal.registerHandler(keyStrokeHelp, t -> {
-            String color = terminal.getProperties().getString(PropertiesConstants.PROP_PROMPT_COLOR);
-            terminal.getProperties().setPromptColor("cyan");
-            terminal.print("\n\nType the name of a product to be included in your shopping list.");
-            terminal.getProperties().setPromptColor(color);
+            terminal.executeWithPropertiesConfigurator(props -> props.setPromptColor("cyan"),
+                    tt -> tt.print("\n\nType the name of a product to be included in your shopping list."));
             return new ReadHandlerData(ReadInterruptionStrategy.Action.RESTART).withRedrawRequired(true);
         });
 
@@ -95,7 +93,7 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
 
             List<String> products = new ArrayList<>();
             while(true) {
-                String product = null;
+                String product;
                 try {
                     product = textIO.newStringInputReader().read("product");
                 } catch (ReadAbortedException e) {

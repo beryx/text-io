@@ -22,7 +22,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import org.beryx.textio.TerminalProperties.ExtendedChangeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -161,10 +160,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     public B withPossibleValues(T... possibleValues) {
         this.possibleValues = null;
         if(possibleValues.length > 0) {
-            this.possibleValues = new ArrayList<>();
-            for(T val : possibleValues) {
-                this.possibleValues.add(val);
-            }
+            this.possibleValues = Arrays.asList(possibleValues);
         }
         return (B)this;
     }
@@ -283,10 +279,10 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         StringBuilder errBuilder = new StringBuilder("Invalid value");
         if(valueListMode) {
             errBuilder.append(" in the comma-separated list");
-            if(itemName != null) errBuilder.append(" of '" + itemName + "'");
-            if(sVal != null && !sVal.isEmpty()) errBuilder.append(": " + sVal);
+            if(itemName != null) errBuilder.append(" of '").append(itemName).append("'");
+            if(sVal != null && !sVal.isEmpty()) errBuilder.append(": ").append(sVal);
         } else {
-            if(itemName != null) errBuilder.append(" for '" + itemName + "'");
+            if(itemName != null) errBuilder.append(" for '").append(itemName).append("'");
         }
         errBuilder.append('.');
         return errBuilder.toString();
@@ -324,7 +320,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
             }
             if(!allErrors.isEmpty()) {
                 allErrors.add(0, getDefaultErrorMessage(s));
-                res = new ParseResult<T>(res.value, allErrors);
+                res = new ParseResult<>(res.value, allErrors);
             }
         }
         return res;
@@ -379,7 +375,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
                 }
                 if(sValues.length == 1 && sValues[0].isEmpty()) sValues = new String[0];
                 if(sValues.length == 0 && defaultValue != null) return Collections.singletonList(defaultValue);
-                List<T> values = new ArrayList<T>();
+                List<T> values = new ArrayList<>();
                 for(String sVal : sValues) {
                     T value = getValueFromStringOrIndex(sVal, textTerminal);
                     if(value == null) continue mainLoop;
@@ -429,22 +425,8 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     }
 
     protected <V> V executeWithTerminal(Function<TextTerminal<?>, V> action) {
-        TextTerminal<?> textTerminal = textTerminalSupplier.get();
-        LinkedList<String[]> toRestore = new LinkedList<>();
-        ExtendedChangeListener listener = (term, key, oldVal, newVal) -> toRestore.add(new String[] {key, oldVal});
-        TerminalProperties<?> props = textTerminal.getProperties();
-        if(propertiesConfigurator != null) {
-            props.addListener(listener);
-            propertiesConfigurator.accept(props);
-        }
-        try {
-            return action.apply(textTerminal);
-        } finally {
-            if(propertiesConfigurator != null) {
-                props.removeListener(listener);
-                toRestore.forEach(pair -> props.put(pair[0], pair[1]));
-            }
-        }
+        TextTerminal textTerminal = textTerminalSupplier.get();
+        return (V)textTerminal.applyWithPropertiesConfigurator(propertiesConfigurator, action);
     }
 
     private T getValueFromStringOrIndex(String sVal, TextTerminal<?> textTerminal) {
@@ -516,7 +498,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
             throw new IllegalArgumentException("Invalid default value: " + valueFormatter.apply(defaultValue) + ". Allowed values: " + possibleValues);
         }
         for(ValueChecker<T> checker : valueCheckers) {
-            List<String> errors = null;
+            List<String> errors;
             if(defaultValue != null) {
                 errors = checker.getErrorMessages(defaultValue, itemName);
                 if(errors != null) throw new IllegalArgumentException("Invalid default value: " + valueFormatter.apply(defaultValue) + ".\n" + errors);
@@ -595,7 +577,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     public static <T> ValueChecker<List<T>> noDuplicatesChecker() {
         return (list, propName) -> {
             if(list == null || list.size() < 2) return null;
-            Set<T> valueSet = new HashSet<T>(list);
+            Set<T> valueSet = new HashSet<>(list);
             if(valueSet.size() < list.size()) return Collections.singletonList("Duplicate values are not allowed.");
             return null;
         };
