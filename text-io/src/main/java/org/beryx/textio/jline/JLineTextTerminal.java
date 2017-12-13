@@ -356,6 +356,12 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
         return true;
     }
 
+    @Override
+    public void dispose(String resultData) {
+        printAnsi(ANSI_RESET);
+        reader.close();
+    }
+
     public ConsoleReader getReader() {
         return reader;
     }
