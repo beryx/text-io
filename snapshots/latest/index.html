@@ -52,6 +52,7 @@ hs.src = ('//s10.histats.com/js15_as.js');
 <li><a href="#_textiofactory">TextIoFactory</a></li>
 <li><a href="#_terminal_properties">Terminal properties</a>
 <ul class="sectlevel3">
+<li><a href="#terminal_temporary_props">TextTerminal temporary properties</a></li>
 <li><a href="#input_reader_props">InputReader-specific properties</a></li>
 </ul>
 </li>
@@ -1099,12 +1100,77 @@ of the <a href="https://github.com/beryx/text-io/releases/download/v3.1.0-SNAPSH
 </table>
 </div>
 <div class="sect3">
+<h4 id="terminal_temporary_props">TextTerminal temporary properties</h4>
+<div class="paragraph">
+<p>Sometimes you want to temporarily change some TextTerminal properties and revert them to their previous values after a couple of operations.
+You can achieve this by passing the sequence of operations to be executed with modified properties as argument to the
+<a href="javadoc/org/beryx/textio/TextTerminal.html#executeWithPropertiesConfigurator-java.util.function.Consumer-java.util.function.Consumer-">executeWithPropertiesConfigurator()</a>
+method, as shown in the example below.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">textTerminal.getProperties().setPromptColor(<span class="string"><span class="delimiter">&quot;</span><span class="content">cyan</span><span class="delimiter">&quot;</span></span>);
+textTerminal.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">1. Choose the desired hard drive.</span><span class="delimiter">&quot;</span></span>);
+textTerminal.executeWithPropertiesConfigurator(
+        props -&gt; props.setPromptColor(<span class="string"><span class="delimiter">&quot;</span><span class="content">red</span><span class="delimiter">&quot;</span></span>),
+        t -&gt; t.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">2. Backup all your data.</span><span class="delimiter">&quot;</span></span>));
+textTerminal.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">3. Start the formatting process.</span><span class="delimiter">&quot;</span></span>);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The second message will appear in red, while the other two will be printed in cyan.</p>
+</div>
+<div class="paragraph">
+<p>The code above uses hard-coded property values.
+A more elegant solution is to specify these values in the <code>textio.properties</code> file.
+TextTerminal offers the
+<a href="javadoc/org/beryx/textio/TextTerminal.html#executeWithPropertiesPrefix-java.util.function.Consumer-java.util.function.Consumer-">executeWithPropertiesConfigurator()</a>
+convenience method to help you accomplish this task.</p>
+</div>
+<div class="paragraph">
+<p>Consider the code below:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">textTerminal.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">1. Choose the desired hard drive.</span><span class="delimiter">&quot;</span></span>);
+textTerminal.executeWithPropertiesPrefix(<span class="string"><span class="delimiter">&quot;</span><span class="content">warn</span><span class="delimiter">&quot;</span></span>,
+        t -&gt; t.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">2. Backup all your data.</span><span class="delimiter">&quot;</span></span>));
+textTerminal.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">3. Start the formatting process.</span><span class="delimiter">&quot;</span></span>);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and let&#8217;s assume that your <code>textio.properties</code> contains:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>textio.prompt.color = cyan
+textio.warn.prompt.color = red</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then, the second message will appear in red, while the other two will be printed in cyan.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Look at the source code of
+<a href="https://github.com/beryx/text-io/blob/master/text-io-demo/src/main/java/org/beryx/textio/demo/app/Cuboid.java">Cuboid.java</a>
+for an example of using temporary TextTerminal properties.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
 <h4 id="input_reader_props">InputReader-specific properties</h4>
 <div class="paragraph">
-<p>Sometimes you want to change some TextTerminal properties for the next read operation, but want to revert to the previous property values at the end of this read operation.
-You can achieve this by configuring InputReader-specific properties via the
-<a href="javadoc/org/beryx/textio/InputReader.html#withPropertiesConfigurator-java.util.function.Consumer-withPropertiesConfigurator">withPropertiesConfigurator()</a>
-method, as shown in the example below.</p>
+<p>If you want to apply some temporary TextTerminal properties only during the next read operation, you can call the
+<a href="javadoc/org/beryx/textio/InputReader.html#withPropertiesConfigurator-java.util.function.Consumer-">withPropertiesConfigurator()</a>
+method of your InputReader, as shown in the example below.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1118,6 +1184,54 @@ method, as shown in the example below.</p>
 </div>
 <div class="paragraph">
 <p>The question <em>"Erase all data?"</em> will appear in red, while <em>"User name"</em> and <em>"Home directory"</em> will be printed in cyan.</p>
+</div>
+<div class="paragraph">
+<p>The code above uses hard-coded property values.
+A more elegant solution is to specify these values in the <code>textio.properties</code> file.
+InputReader offers the
+<a href="javadoc/org/beryx/textio/InputReader.html#withPropertiesPrefix-java.lang.String-">withPropertiesPrefix()</a>
+convenience method to help you accomplish this task.</p>
+</div>
+<div class="paragraph">
+<p>Consider the code below:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="predefined-type">String</span> user = textIO.newStringInputReader().read(<span class="string"><span class="delimiter">&quot;</span><span class="content">User name</span><span class="delimiter">&quot;</span></span>);
+textIO.newBooleanInputReader()
+   .withPropertiesPrefix(<span class="string"><span class="delimiter">&quot;</span><span class="content">warn</span><span class="delimiter">&quot;</span></span>)
+   .read(<span class="string"><span class="delimiter">&quot;</span><span class="content">Erase all data?</span><span class="delimiter">&quot;</span></span>);
+<span class="predefined-type">String</span> directory = textIO.newStringInputReader().read(<span class="string"><span class="delimiter">&quot;</span><span class="content">Home directory</span><span class="delimiter">&quot;</span></span>);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and let&#8217;s assume that your <code>textio.properties</code> contains:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>textio.prompt.color = green
+textio.input.color = yellow
+textio.warn.prompt.color = red
+textio.warn.input.color = orange</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then, the question <em>"Erase all data?"</em> will appear in red and its corresponding user input in orange.
+For the other two read operations the questions will be displayed in green and the user input in yellow.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Look at the source code of
+<a href="https://github.com/beryx/text-io/blob/master/text-io-demo/src/main/java/org/beryx/textio/demo/app/Cuboid.java">Cuboid.java</a>
+for an example of using InputReader-specific properties.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
