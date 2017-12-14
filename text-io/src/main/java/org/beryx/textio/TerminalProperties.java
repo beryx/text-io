@@ -19,11 +19,10 @@ import javafx.scene.paint.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static org.beryx.textio.PropertiesConstants.*;
 
@@ -159,6 +158,18 @@ public class TerminalProperties<T extends TextTerminal<T>> {
     public void putAll(Map<String, ? extends Object> map) {
         if(map == null) return;
         map.entrySet().forEach(entry -> put(entry.getKey(), entry.getValue()));
+    }
+
+    public Set<String> getAllKeys() {
+        return props.keySet();
+    }
+
+    public Set<String> getMatchingKeys(String regex) {
+        return getMatchingKeys(key -> key.matches(regex));
+    }
+
+    public Set<String> getMatchingKeys(Predicate<String> keyFilter) {
+        return props.keySet().stream().filter(keyFilter).collect(Collectors.toSet());
     }
 
     /**

@@ -15,10 +15,7 @@
  */
 package org.beryx.textio;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collectors;
 
@@ -220,18 +217,6 @@ public interface TextTerminal<T extends TextTerminal<T>> {
     }
 
     /**
-     * Executes an action while temporarily modifying the terminal properties.
-     * @param propertiesConfigurator the task that is in charge of modifying the TerminalProperties.
-     * The configurator will be applied to the terminal properties before starting the action and
-     * the properties will be reverted to their previous values at the end of the action.
-     * @param action the action to be executed, usually consisting of a series of TextTerminal-related operations.
-     */
-    default void executeWithPropertiesConfigurator(Consumer<TerminalProperties<?>> propertiesConfigurator,
-                                                    Consumer<TextTerminal<T>> action) {
-        applyWithPropertiesConfigurator(propertiesConfigurator, t -> {action.accept(t); return null;});
-    }
-
-    /**
      * Executes an action that returns a result, while temporarily modifying the terminal properties.
      * @param propertiesConfigurator the task that is in charge of modifying the TerminalProperties.
      * The configurator will be applied to the terminal properties before starting the action and
@@ -257,4 +242,45 @@ public interface TextTerminal<T extends TextTerminal<T>> {
             }
         }
     }
+
+    /**
+     * Executes an action while temporarily modifying the terminal properties.
+     * @param propertiesConfigurator the task that is in charge of modifying the TerminalProperties.
+     * The configurator will be applied to the terminal properties before starting the action and
+     * the properties will be reverted to their previous values at the end of the action.
+     * @param action the action to be executed, usually consisting of a series of TextTerminal-related operations.
+     */
+    default void executeWithPropertiesConfigurator(Consumer<TerminalProperties<?>> propertiesConfigurator,
+                                                    Consumer<TextTerminal<T>> action) {
+        applyWithPropertiesConfigurator(propertiesConfigurator, t -> {action.accept(t); return null;});
+    }
+
+    /**
+     * A convenience method that calls {@link #executeWithPropertiesConfigurator(Consumer, Consumer)}
+     * with a configurator that takes all terminal properties with the given prefix
+     * and applies them after stripping the prefix from their keys.
+     * <br>For example, if {@code textio.properties contains}:
+     * <pre>
+     *   textio.prompt.color = green
+     *   textio.error.prompt.color = red
+     * </pre>
+     * then the following statement:
+     * <pre>
+     *   textTerminal.executeWithPropertiesPrefix("error", t -> t.println("Connection failed."));
+     * </pre>
+     * will display the message in red.
+     * @param prefix the prefix of the terminal properties whose values will be temporarily used.
+     * @param action the action to be performed on the TextTerminal.
+     */
+    default void executeWithPropertiesPrefix(String prefix, Consumer<TextTerminal<T>> action) {
+        executeWithPropertiesConfigurator(t -> {
+            Set<String> keys = t.getMatchingKeys(key -> key.startsWith(prefix + "."));
+            int len = prefix.length() + 1;
+            keys.forEach(key -> {
+                String baseKey = key.substring(len);
+                t.put(baseKey, t.getString(key));
+            });
+        }, action);
+    }
+
 }

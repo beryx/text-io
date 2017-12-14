@@ -1,4 +1,6 @@
 .fancy-border {
     border-style: dashed;
     border-color: orange;
+    line-height: 2.0;
+    font-size: 18px;
 }

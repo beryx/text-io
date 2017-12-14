@@ -329,13 +329,56 @@ link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo[source code]
 and the link:{blob-root}/dist/xbin[configuration files]
 of the https://github.com/beryx/text-io/releases/download/v{project-version}/textio-demo-{project-version}.zip[demo application].
 
+[[terminal_temporary_props]]
+=== TextTerminal temporary properties
+
+Sometimes you want to temporarily change some TextTerminal properties and revert them to their previous values after a couple of operations.
+You can achieve this by passing the sequence of operations to be executed with modified properties as argument to the
+link:javadoc/org/beryx/textio/TextTerminal.html#executeWithPropertiesConfigurator-java.util.function.Consumer-java.util.function.Consumer-[executeWithPropertiesConfigurator()]
+method, as shown in the example below.
+[source,java]
+----
+textTerminal.getProperties().setPromptColor("cyan");
+textTerminal.println("1. Choose the desired hard drive.");
+textTerminal.executeWithPropertiesConfigurator(
+        props -> props.setPromptColor("red"),
+        t -> t.println("2. Backup all your data."));
+textTerminal.println("3. Start the formatting process.");
+----
+The second message will appear in red, while the other two will be printed in cyan.
+
+The code above uses hard-coded property values.
+A more elegant solution is to specify these values in the `textio.properties` file.
+TextTerminal offers the
+link:javadoc/org/beryx/textio/TextTerminal.html#executeWithPropertiesPrefix-java.util.function.Consumer-java.util.function.Consumer-[executeWithPropertiesConfigurator()]
+convenience method to help you accomplish this task.
+
+Consider the code below:
+[source,java]
+----
+textTerminal.println("1. Choose the desired hard drive.");
+textTerminal.executeWithPropertiesPrefix("warn",
+        t -> t.println("2. Backup all your data."));
+textTerminal.println("3. Start the formatting process.");
+----
+and let's assume that your `textio.properties` contains:
+[source]
+----
+textio.prompt.color = cyan
+textio.warn.prompt.color = red
+----
+Then, the second message will appear in red, while the other two will be printed in cyan.
+
+TIP: Look at the source code of
+link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/app/Cuboid.java[Cuboid.java]
+for an example of using temporary TextTerminal properties.
+
 [[input_reader_props]]
 === InputReader-specific properties
 
-Sometimes you want to change some TextTerminal properties for the next read operation, but want to revert to the previous property values at the end of this read operation.
-You can achieve this by configuring InputReader-specific properties via the
-link:javadoc/org/beryx/textio/InputReader.html#withPropertiesConfigurator-java.util.function.Consumer-withPropertiesConfigurator[withPropertiesConfigurator()]
-method, as shown in the example below.
+If you want to apply some temporary TextTerminal properties only during the next read operation, you can call the
+link:javadoc/org/beryx/textio/InputReader.html#withPropertiesConfigurator-java.util.function.Consumer-[withPropertiesConfigurator()]
+method of your InputReader, as shown in the example below.
 [source,java]
 ----
 textIO.getTextTerminal().getProperties().setPromptColor("cyan");
@@ -346,6 +389,36 @@ boolean eraseAll = textIO.newBooleanInputReader()
 String directory = textIO.newStringInputReader().read("Home directory");
 ----
 The question _"Erase all data?"_ will appear in red, while _"User name"_ and _"Home directory"_ will be printed in cyan.
+
+The code above uses hard-coded property values.
+A more elegant solution is to specify these values in the `textio.properties` file.
+InputReader offers the
+link:javadoc/org/beryx/textio/InputReader.html#withPropertiesPrefix-java.lang.String-[withPropertiesPrefix()]
+convenience method to help you accomplish this task.
+
+Consider the code below:
+[source,java]
+----
+String user = textIO.newStringInputReader().read("User name");
+textIO.newBooleanInputReader()
+   .withPropertiesPrefix("warn")
+   .read("Erase all data?");
+String directory = textIO.newStringInputReader().read("Home directory");
+----
+and let's assume that your `textio.properties` contains:
+[source]
+----
+textio.prompt.color = green
+textio.input.color = yellow
+textio.warn.prompt.color = red
+textio.warn.input.color = orange
+----
+Then, the question _"Erase all data?"_ will appear in red and its corresponding user input in orange.
+For the other two read operations the questions will be displayed in green and the user input in yellow.
+
+TIP: Look at the source code of
+link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/app/Cuboid.java[Cuboid.java]
+for an example of using InputReader-specific properties.
 
 
 [[web_text_term]]

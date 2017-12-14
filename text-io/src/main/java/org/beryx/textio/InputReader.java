@@ -267,6 +267,36 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return (B)this;
     }
 
+    /** Convenience method that calls {@link #withPropertiesConfigurator(Consumer)}
+     * with a configurator that takes all terminal properties with the given prefix
+     * and applies them after stripping the prefix from their keys.
+     * <br>For example, if {@code textio.properties} contains:
+     * <pre>
+     *   textio.prompt.color = green
+     *   textio.input.color = yellow
+     *   textio.warn.prompt.color = red
+     *   textio.warn.input.color = orange
+     * </pre>
+     * then the following statement:
+     * <pre>
+     *   textIO.newBooleanInputReader()
+     *      .withPropertiesPrefix("warn")
+     *      .read("Erase all data?");
+     * </pre>
+     * will display the question in red and the user input in orange.
+     **/
+    @SuppressWarnings("unchecked")
+    public B withPropertiesPrefix(String prefix) {
+        return withPropertiesConfigurator(t -> {
+            Set<String> keys = t.getMatchingKeys(key -> key.startsWith(prefix + "."));
+            int len = prefix.length() + 1;
+            keys.forEach(key -> {
+                String baseKey = key.substring(len);
+                t.put(baseKey, t.getString(key));
+            });
+        });
+    }
+
     /**
      * @return true, if currently reading a list of values via {@link #readList(List)}
      */
