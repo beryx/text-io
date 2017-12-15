@@ -509,7 +509,9 @@ displaying a help text, saving the data collected so far, aborting the current r
 <td class="content">
 Look at the
 <a href="https://github.com/beryx/text-io/blob/master/text-io-demo/src/main/java/org/beryx/textio/demo/app/ShoppingList.java">ShoppingList</a>
-example in the
+and
+<a href="https://github.com/beryx/text-io/blob/master/text-io-demo/src/main/java/org/beryx/textio/demo/app/ContactInfo.java">ContactInfo</a>
+examples in the
 <a href="https://github.com/beryx/text-io/releases/download/v3.1.0-SNAPSHOT/textio-demo-3.1.0-SNAPSHOT.zip">demo application</a>
 for usage details.
 </td>
@@ -1124,7 +1126,7 @@ textTerminal.println(<span class="string"><span class="delimiter">&quot;</span><
 <p>The code above uses hard-coded property values.
 A more elegant solution is to specify these values in the <code>textio.properties</code> file.
 TextTerminal offers the
-<a href="javadoc/org/beryx/textio/TextTerminal.html#executeWithPropertiesPrefix-java.util.function.Consumer-java.util.function.Consumer-">executeWithPropertiesConfigurator()</a>
+<a href="javadoc/org/beryx/textio/TextTerminal.html#executeWithPropertiesPrefix-java.lang.String-java.util.function.Consumer-">executeWithPropertiesPrefix()</a>
 convenience method to help you accomplish this task.</p>
 </div>
 <div class="paragraph">
@@ -1163,6 +1165,18 @@ for an example of using temporary TextTerminal properties.
 </td>
 </tr>
 </table>
+</div>
+<div class="sect4">
+<h5 id="error_message_props">Error message prefix</h5>
+<div class="paragraph">
+<p>When printing error messages, an InputReader temporarily changes the TextTerminal properties using the prefix <code>error</code>.
+For example, in order to have error messages displayed in red, you can insert the following line into <code>textio.properties</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>textio.error.prompt.color = red</code></pre>
+</div>
+</div>
 </div>
 </div>
 <div class="sect3">
