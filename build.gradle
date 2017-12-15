@@ -1,6 +1,19 @@
-
+import groovy.text.SimpleTemplateEngine
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.gradle.plugins.signing.Sign
+import org.kohsuke.github.*
+
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath 'org.kohsuke:github-api:1.90'
+    }
+}
 
 plugins {
     id 'java'
@@ -235,6 +248,8 @@ gitPublish {
         def pgType = project.hasProperty('ghPageType') ? ghPageType : 'latest'
         if(pgType == 'init') {
             from file("ghpages")
+        } else if(pgType == 'list') {
+            from file("build/release-list")
         } else {
             from file("${asciidoctor.outputDir.path}/html5")
             from file("build/docs")
@@ -242,6 +257,12 @@ gitPublish {
         def docDir = Boolean.valueOf(textIoReleaseBuild) ? 'releases' : 'snapshots'
         if(pgType == 'init') {
             into "."
+        } else if(pgType == 'list') {
+            into "."
+            preserve {
+                include '**'
+                exclude "releases.md"
+            }
         } else if(pgType == 'version') {
             gitPublishPush.enabled = (docDir != 'snapshots')
             into "$docDir/$textIoVersion"
@@ -337,6 +358,57 @@ def configureJavadoc(task) {
       }
   }
 }
+
+task "update-release-list" {
+    doLast {
+        def docBaseUrl = 'https://beryx.github.io/text-io'
+        updateReleaseList(docBaseUrl)
+    }
+}
+
+def updateReleaseList(String docBaseUrl) {
+    List<String> releases = getReleases()
+    def markdown = getReleasesMarkdown(releases, docBaseUrl)
+    def releaseListDir = new File('build/release-list')
+    releaseListDir.mkdirs()
+    new File(releaseListDir, 'releases.md').write(markdown)
+}
+
+def getReleases() {
+    GitHub gitHubApi = GitHub.connectUsingPassword(System.getenv('GH_PAGES_ACCESS_TOKEN') ?: '', '')
+    def releases = gitHubApi.getOrganization("beryx")
+            .getRepository("text-io")
+            .getDirectoryContent("releases", "gh-pages")*.name
+    releases.removeAll { !it || it == 'latest' }
+    releases.reverse()
+}
+
+def getReleasesMarkdown(List<String> releases, String docBaseUrl) {
+    def releasesTemplate = '''
+            ## List of all releases ##
+            
+            **Latest snapshot**
+            - [documentation]($docBaseUrl/snapshots/latest)
+            - [javadoc]($docBaseUrl/snapshots/latest/javadoc)
+            
+            <% releases.each { %>**Release $it**
+              - [documentation]($docBaseUrl/releases/$it)
+              - [javadoc]($docBaseUrl/releases/$it/javadoc)
+              
+            <% } %>
+        '''.stripIndent()
+
+    def engine = new SimpleTemplateEngine()
+    def template = engine.createTemplate(releasesTemplate)
+    def binding = [
+            docBaseUrl: docBaseUrl,
+            releases  : releases
+    ]
+
+    template.make(binding).toString()
+}
+
+
 
 def readFromConsole(prompt) {
     readFromConsole('', prompt)

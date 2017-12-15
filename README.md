@@ -53,7 +53,10 @@ You can also use a web-based terminal, which allows you to access your applicati
 
 <a href="https://github.com/beryx/text-io/raw/master/doc/img/web-terminal-animated.gif"><img src="https://github.com/beryx/text-io/raw/master/doc/img/web-terminal-thumb.gif"></a>
 
-Before starting to use the library read the **[documentation](http://text-io.beryx.org)** and the **[javadoc](http://text-io.beryx.org/releases/latest/javadoc)**.
-Also, take a look at the list of **[demos, examples and projects](https://github.com/beryx/text-io/wiki/Demos,-Examples-and-Projects-using-Text-IO)** using Text-IO.
+**Useful links**
+ - [Documentation](http://text-io.beryx.org)
+ - [javadoc](http://text-io.beryx.org/releases/latest/javadoc)
+ - [Demos, examples and projects using Text-IO](https://github.com/beryx/text-io/wiki/Demos,-Examples-and-Projects-using-Text-IO)
+ - [List of all releases](https://github.com/beryx/text-io/blob/gh-pages/releases.md)
 
 Text-IO is available in [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.beryx%22%20AND%20a%3A%22text-io%22) and [JCenter](https://bintray.com/beryx/maven/text-io).
