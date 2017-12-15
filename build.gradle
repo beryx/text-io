@@ -361,7 +361,7 @@ def configureJavadoc(task) {
 
 task "update-release-list" {
     doLast {
-        def docBaseUrl = 'https://beryx.github.io/text-io'
+        def docBaseUrl = 'http://text-io.beryx.org'
         updateReleaseList(docBaseUrl)
     }
 }
