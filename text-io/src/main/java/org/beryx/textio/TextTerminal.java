@@ -16,7 +16,8 @@
 package org.beryx.textio;
 
 import java.util.*;
-import java.util.function.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.beryx.textio.TerminalProperties.ExtendedChangeListener;
@@ -227,7 +228,12 @@ public interface TextTerminal<T extends TextTerminal<T>> {
     default <R> R applyWithPropertiesConfigurator(Consumer<TerminalProperties<?>> propertiesConfigurator,
                                                   Function<TextTerminal<T>, R> action) {
         LinkedList<String[]> toRestore = new LinkedList<>();
-        ExtendedChangeListener listener = (term, key, oldVal, newVal) -> toRestore.add(new String[] {key, oldVal});
+        ExtendedChangeListener listener = (term, key, oldVal, newVal) -> {
+            boolean exists = toRestore.stream().filter(e -> e[0].equals(key)).findAny().isPresent();
+            if (!exists) {
+                toRestore.add(new String[]{key, oldVal});
+            }
+        };
         TerminalProperties<?> props = getProperties();
         if(propertiesConfigurator != null) {
             props.addListener(listener);
@@ -282,5 +288,4 @@ public interface TextTerminal<T extends TextTerminal<T>> {
             });
         }, action);
     }
-
 }

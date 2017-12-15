@@ -34,6 +34,8 @@ import org.slf4j.LoggerFactory;
 public abstract class InputReader<T, B extends InputReader<T, B>> {
     private static final Logger logger =  LoggerFactory.getLogger(InputReader.class);
 
+    public static final String PROPS_PREFIX_ERROR_MESSAGE = "error";
+
     /** Functional interface for providing error messages */
     @FunctionalInterface
     public interface ErrorMessagesProvider {
@@ -418,7 +420,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
                 }
                 if(!allErrors.isEmpty()) {
                     allErrors.add(0, getDefaultErrorMessage(null));
-                    textTerminal.println(allErrors);
+                    textTerminal.executeWithPropertiesPrefix(PROPS_PREFIX_ERROR_MESSAGE, t ->t.println(allErrors));
                     textTerminal.println();
                     continue;
                 }
@@ -470,18 +472,20 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         if(errMessages == null) {
             Optional<T> value = getPossibleValue(result.getValue());
             if(value.isPresent()) return value.get();
-            textTerminal.print(getDefaultErrorMessage(sVal));
-            if(inlinePossibleValues) {
-                String options = possibleValues.stream()
-                        .map(val -> "'" + valueFormatter.apply(val) + "'")
-                        .collect(Collectors.joining(", "));
-                textTerminal.println(" Please enter one of: " + options + ".");
-            } else {
-                textTerminal.println(" Please enter one of the displayed values.");
-            }
-            textTerminal.println( );
+            textTerminal.executeWithPropertiesPrefix(PROPS_PREFIX_ERROR_MESSAGE, t -> {
+                t.print(getDefaultErrorMessage(sVal));
+                if(inlinePossibleValues) {
+                    String options = possibleValues.stream()
+                            .map(val -> "'" + valueFormatter.apply(val) + "'")
+                            .collect(Collectors.joining(", "));
+                    t.println(" Please enter one of: " + options + ".");
+                } else {
+                    t.println(" Please enter one of the displayed values.");
+                }
+            });
+            textTerminal.println();
         } else {
-            textTerminal.println(errMessages);
+            textTerminal.executeWithPropertiesPrefix(PROPS_PREFIX_ERROR_MESSAGE, t -> t.println(errMessages));
             textTerminal.println();
         }
         return null;
@@ -496,8 +500,10 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         } catch (NumberFormatException e) {
             // Continue the execution. The next statement will print the error message.
         }
-        textTerminal.print(getDefaultErrorMessage(sVal));
-        textTerminal.println(" Enter a value between 1 and " + possibleValues.size() + ".");
+        textTerminal.executeWithPropertiesPrefix(PROPS_PREFIX_ERROR_MESSAGE, t -> {
+            textTerminal.print(getDefaultErrorMessage(sVal));
+            textTerminal.println(" Enter a value between 1 and " + possibleValues.size() + ".");
+        });
         textTerminal.println();
         return null;
     }

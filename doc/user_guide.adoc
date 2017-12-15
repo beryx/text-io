@@ -88,7 +88,9 @@ displaying a help text, saving the data collected so far, aborting the current r
 
 TIP: Look at the
 link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/app/ShoppingList.java[ShoppingList]
-example in the
+and
+link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/app/ContactInfo.java[ContactInfo]
+examples in the
 https://github.com/beryx/text-io/releases/download/v{project-version}/textio-demo-{project-version}.zip[demo application]
 for usage details.
 
@@ -350,7 +352,7 @@ The second message will appear in red, while the other two will be printed in cy
 The code above uses hard-coded property values.
 A more elegant solution is to specify these values in the `textio.properties` file.
 TextTerminal offers the
-link:javadoc/org/beryx/textio/TextTerminal.html#executeWithPropertiesPrefix-java.util.function.Consumer-java.util.function.Consumer-[executeWithPropertiesConfigurator()]
+link:javadoc/org/beryx/textio/TextTerminal.html#executeWithPropertiesPrefix-java.lang.String-java.util.function.Consumer-[executeWithPropertiesPrefix()]
 convenience method to help you accomplish this task.
 
 Consider the code below:
@@ -372,6 +374,16 @@ Then, the second message will appear in red, while the other two will be printed
 TIP: Look at the source code of
 link:{blob-root}/text-io-demo/src/main/java/org/beryx/textio/demo/app/Cuboid.java[Cuboid.java]
 for an example of using temporary TextTerminal properties.
+
+[[error_message_props]]
+==== Error message prefix
+When printing error messages, an InputReader temporarily changes the TextTerminal properties using the prefix `error`.
+For example, in order to have error messages displayed in red, you can insert the following line into `textio.properties`:
+[source]
+----
+textio.error.prompt.color = red
+----
+
 
 [[input_reader_props]]
 === InputReader-specific properties

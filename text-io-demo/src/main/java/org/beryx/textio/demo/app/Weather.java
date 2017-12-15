@@ -67,20 +67,21 @@ public class Weather implements BiConsumer<TextIO, RunnerData> {
             terminal.resetToBookmark("MAIN");
 
             terminal.getProperties().put(PropertiesConstants.PROP_PROMPT_STYLE_CLASS, "textterm-white-space-pre");
-            terminal.println("-------------------------------------------------------");
-            terminal.println("  Temperature      Wind speed      Atmospheric pressure");
-            terminal.println("-------------------------------------------------------");
-            for(int i=0; i<20; i++) {
-                terminal.moveToLineStart();
-                delay(80);
-                terminal.print(getData());
-                delay(400);
-            }
-            terminal.getProperties().put(PropertiesConstants.PROP_PROMPT_STYLE_CLASS, "textterm-white-space-normal");
+            terminal.executeWithPropertiesPrefix("pre", t -> {
+                t.println("-------------------------------------------------------");
+                t.println("  Temperature      Wind speed      Atmospheric pressure");
+                t.println("-------------------------------------------------------");
+                for(int i=0; i<20; i++) {
+                    t.moveToLineStart();
+                    delay(80);
+                    t.print(getData());
+                    delay(400);
+                }
+            });
             terminal.println();terminal.println();terminal.println();
 
             if(!textIO.newBooleanInputReader()
-                    .withPropertiesConfigurator(props -> props.setPromptColor("cyan"))
+                    .withPropertiesPrefix("exit")
                     .withDefaultValue(true).read("Run again?")) break;
             terminal.resetToBookmark("MAIN");
         }

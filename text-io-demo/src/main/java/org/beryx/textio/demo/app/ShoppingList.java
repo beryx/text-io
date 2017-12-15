@@ -62,7 +62,7 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
         });
 
         boolean registeredHelp = terminal.registerHandler(keyStrokeHelp, t -> {
-            terminal.executeWithPropertiesConfigurator(props -> props.setPromptColor("cyan"),
+            terminal.executeWithPropertiesPrefix("help",
                     tt -> tt.print("\n\nType the name of a product to be included in your shopping list."));
             return new ReadHandlerData(ReadInterruptionStrategy.Action.RESTART).withRedrawRequired(true);
         });
@@ -95,13 +95,15 @@ public class ShoppingList implements BiConsumer<TextIO, RunnerData> {
             while(true) {
                 String product;
                 try {
-                    product = textIO.newStringInputReader().read("product");
+                    product = textIO.newStringInputReader().withPropertiesPrefix("product").read("product");
                 } catch (ReadAbortedException e) {
-                    terminal.println("\nRead aborted by user " + e.getPayload());
+                    terminal.executeWithPropertiesPrefix("abort",
+                            t -> t.println("\nRead aborted by user " + e.getPayload()));
                     break;
                 }
                 products.add(product);
-                terminal.println("Your shopping list contains: " + products.stream().collect(Collectors.joining(", ")));
+                String content = products.stream().collect(Collectors.joining(", "));
+                terminal.executeWithPropertiesPrefix("content", t ->t.println("Your shopping list contains: " + content));
                 terminal.println();
             }
         }
