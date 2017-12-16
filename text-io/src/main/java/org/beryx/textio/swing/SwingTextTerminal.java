@@ -483,6 +483,11 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     }
 
     @Override
+    public void abort() {
+        frame.dispose();
+    }
+
+    @Override
     public boolean registerUserInterruptHandler(Consumer<SwingTextTerminal> handler, boolean abortRead) {
         this.userInterruptHandler = handler;
         return true;
