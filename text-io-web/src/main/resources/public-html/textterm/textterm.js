@@ -88,7 +88,7 @@
         var currentLinePromptElem;
         var nextTextTermPairIsCurrentLine = true;
 
-        var action;
+        var action = 'NONE';
         var oldAction = 'NONE';
 
         var oldInputInnerHtml = '';
@@ -300,13 +300,13 @@
                         oldInputInnerHtml = '';
                     }
                     if(action === 'CONTINUE_READ') {
-                        action = oldAction.startsWith('READ') ? oldAction : 'READ';
+                        action = (oldAction && oldAction.startsWith('READ')) ? oldAction : 'READ';
                         logDebug('CONTINUE_READ received. Switching to: ' + action);
                         oldInputInnerHtml = '';
                         inputElem.setAttribute("contenteditable", true);
                         inputElem.focus();
                     }
-                    if(action.startsWith('READ')) {
+                    if(action && action.startsWith('READ')) {
                         if(oldInputInnerHtml) {
                             nextTextTermPairIsCurrentLine = true;
                             createNewTextTermPair("", null, true);
