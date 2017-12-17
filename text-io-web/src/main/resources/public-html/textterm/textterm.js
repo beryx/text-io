@@ -193,6 +193,7 @@
         };
 
         var registerHandlerKeys = function(handlerKeys) {
+            if(!handlerKeys) return;
             logTrace("Registering " + handlerKeys.length + " handlers");
             var handlerCount = handlerKeys.length;
             for(var k = 0; k < handlerCount; k++) {
@@ -316,7 +317,7 @@
                             moveCaretToEnd();
                         }
                     }
-                    if(action.indexOf('READ') !== -1) {
+                    if(action && action.indexOf('READ') !== -1) {
                         logTrace('oldInputInnerHtml cleared');
                         oldInputInnerHtml = '';
                     }
