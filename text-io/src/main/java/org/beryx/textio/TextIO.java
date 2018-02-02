@@ -15,6 +15,7 @@
  */
 package org.beryx.textio;
 
+import java.util.Collection;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -85,5 +86,9 @@ public class TextIO {
 
     public <T> GenericInputReader<T> newGenericInputReader(Function<String, InputReader.ParseResult<T>> parser) {
         return new GenericInputReader<T>(textTerminalSupplier, parser);
+    }
+
+    public <T> CollectionInputReader<T> newCollectionInputReader(Collection<T> collection) {
+        return new CollectionInputReader<T>(textTerminalSupplier, collection);
     }
 }
