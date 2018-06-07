@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -104,6 +105,12 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         boolean superscript;
         String fontFamily = "Courier New";
         int fontSize = DEFAULT_FONT_SIZE;
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(color, bgColor, bold, italic, underline, strikeThrough, subscript,
+                    superscript, fontFamily, fontSize);
+        }
     }
 
 
