@@ -34,10 +34,11 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.beryx.textio.PropertiesConstants.*;
 import static org.beryx.textio.ReadInterruptionStrategy.Action.*;
@@ -106,10 +107,16 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         String fontFamily = "Courier New";
         int fontSize = DEFAULT_FONT_SIZE;
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(color, bgColor, bold, italic, underline, strikeThrough, subscript,
-                    superscript, fontFamily, fontSize);
+        public String getStyleName() {
+            return Stream.of(id(color), id(bgColor), id(bold), id(italic), id(underline),
+                    id(strikeThrough), id(subscript), id(superscript), fontFamily, "" + fontSize)
+                    .collect(Collectors.joining("|"));
+        }
+        private static String id(Color color) {
+            return (color == null) ? "*" : ("" + color.getRGB());
+        }
+        private static String id(boolean b) {
+            return b ? "1" : "0";
         }
     }
 
@@ -545,7 +552,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     }
 
     public String getStyle(StyleData styleData) {
-        String styleName = String.valueOf(styleData.hashCode());
+        String styleName = styleData.getStyleName();
         Style style = document.getStyle(styleName);
         if (style == null) {
             Style defaultStyle = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
