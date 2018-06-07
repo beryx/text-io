@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -92,7 +93,6 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     private final StyledDocument document;
     private final StyleData promptStyleData = new StyleData();
     private final StyleData inputStyleData = new StyleData();
-    private int styleCount = 0;
 
     private static class StyleData {
         Color color;
@@ -105,6 +105,12 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         boolean superscript;
         String fontFamily = "Courier New";
         int fontSize = DEFAULT_FONT_SIZE;
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(color, bgColor, bold, italic, underline, strikeThrough, subscript,
+                    superscript, fontFamily, fontSize);
+        }
     }
 
 
@@ -539,11 +545,12 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     }
 
     public String getStyle(StyleData styleData) {
-        Style defaultStyle = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
-
-        styleCount++;
-        String styleName = "style-" + styleCount;
-        Style style = document.addStyle(styleName, defaultStyle);
+        String styleName = String.valueOf(styleData.hashCode());
+        Style style = document.getStyle(styleName);
+        if (style == null) {
+            Style defaultStyle = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
+            style = document.addStyle(styleName, defaultStyle);
+        }
 
         if(styleData.fontFamily != null) {
             StyleConstants.setFontFamily(style, styleData.fontFamily);
