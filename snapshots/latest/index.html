@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.3">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
 <meta name="author" content="Serban Iordache">
 <title>Text IO</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <link rel="stylesheet" href="./asciidoctor.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
 <link rel="stylesheet" href="./coderay-asciidoctor.css">
 <!-- Histats.com  START  (aync)-->
 <script type="text/javascript">var _Hasync= _Hasync|| [];
@@ -197,7 +197,7 @@ Have a look at the list of
 <i class="fa icon-caution" title="Caution"></i>
 </td>
 <td class="content">
-You need Java 8 or newer and JavaFX in order to use Text-IO.
+You need Java 8 or newer in order to use Text-IO.
 </td>
 </tr>
 </table>
@@ -823,11 +823,11 @@ which are shown in the table below:</p>
 <table id="supported_properties" class="tableblock frame-all grid-all spread">
 <caption class="title">Supported properties</caption>
 <colgroup>
-<col style="width: 21%;">
-<col style="width: 7%;">
-<col style="width: 7%;">
-<col style="width: 7%;">
-<col style="width: 57%;">
+<col style="width: 21.4285%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 7.1428%;">
+<col style="width: 57.1431%;">
 </colgroup>
 <thead>
 <tr>
@@ -1068,7 +1068,7 @@ Default value: <code>Ctrl C</code>.</p></td>
 </table>
 <div class="paragraph">
 <p>The values of the color properties are interpreted using the
-<a href="https://docs.oracle.com/javase/8/javafx/api/javafx/scene/paint/Color.html#web-java.lang.String-">Color.web(String colorString)</a>.
+<a href="https://static.javadoc.io/org.beryx/awt-color-factory/1.0.0/org/beryx/awt/color/ColorFactory.html#web(java.lang.String)">ColorFactory.web(String colorString)</a>.
 method.
 This means that you can specify colors in various ways, such as: <code>red</code>, <code>#aa38e0</code>, <code>0x40A8CC</code>, <code>rgba(112,36,228,0.9)</code>, <code>hsla(270,100%,100%,1.0)</code> etc.</p>
 </div>
@@ -1081,10 +1081,10 @@ Therefore, it tries to map the provided value to the nearest available color.</p
 <a href="javadoc/org/beryx/textio/TextTerminal.html#getProperties--">getProperties()</a>,
 which returns a <a href="javadoc/org/beryx/textio/TerminalProperties.html">TerminalProperties</a> instance.
 Using this TerminalProperties, you can dynamically configure properties by calling the
-<a href="javadoc/org/beryx/textio/TerminalProperties.html#put-java.lang.String-java.lang.Object-">put(String key, Object value)</a> method.
+<a href="javadoc/org/beryx/textio/TerminalProperties.html#put-java.lang.String-java.lang.Object-">'put(String key, Object value)'</a> method.
 Additionally, convenience methods are available for frequently used properties (for example:
 <a href="javadoc/org/beryx/textio/TerminalProperties.html#setInputBold-boolean-">setInputBold(boolean bold)</a> or
-<a href="javadoc/org/beryx/textio/TerminalProperties.html#setPromptColor-javafx.scene.paint.Color-">setPromptColor(Color color)</a>).</p>
+<a href="javadoc/org/beryx/textio/TerminalProperties.html#setPromptColor-java.awt.Color-">setPromptColor(Color color)</a>).</p>
 </div>
 <div class="admonitionblock tip">
 <table>
