@@ -302,6 +302,11 @@ project('text-io') {
       compile 'jline:jline:2.14.5'
       compile 'org.beryx:awt-color-factory:1.0.0'
     }
+    jar {
+        manifest {
+            attributes 'Automatic-Module-Name': 'org.beryx.textio'
+        }
+    }
 }
 
 project('text-io-web') {
@@ -313,6 +318,11 @@ project('text-io-web') {
         compileOnly 'io.ratpack:ratpack-core:1.4.6'
         compileOnly 'io.ratpack:ratpack-session:1.4.6'
         testCompile 'io.ratpack:ratpack-test:1.4.6'
+    }
+    jar {
+        manifest {
+            attributes 'Automatic-Module-Name': 'org.beryx.textio.web'
+        }
     }
 }
 
@@ -331,7 +341,8 @@ project('text-io-demo') {
     }
     jar {
         manifest {
-            attributes 'Main-Class': 'org.beryx.textio.demo.TextIoDemo'
+            attributes 'Main-Class': 'org.beryx.textio.demo.TextIoDemo',
+                    'Automatic-Module-Name': 'org.beryx.textio.demo'
         }
     }
     mainClassName = 'org.beryx.textio.demo.TextIoDemo'
