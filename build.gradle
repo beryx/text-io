@@ -12,6 +12,7 @@ buildscript {
     }
     dependencies {
         classpath 'org.kohsuke:github-api:1.93'
+        classpath "gradle.plugin.com.github.spotbugs:spotbugs-gradle-plugin:1.6.2"
     }
 }
 
@@ -82,7 +83,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'groovy'
 
-    apply plugin: 'findbugs'
+    apply plugin: "com.github.spotbugs"
     apply plugin: 'signing'
     apply plugin: 'com.github.hierynomus.license'
 
@@ -119,7 +120,6 @@ subprojects {
 
     dependencies {
       compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
-      provided 'com.google.code.findbugs:findbugs-annotations:3.0.1'
 
       testCompile "org.codehaus.groovy:groovy-all:$groovyVersion"
       testCompile('org.spockframework:spock-core:1.1-groovy-2.4') {
@@ -133,10 +133,25 @@ subprojects {
     }
 
     sourceSets.main.compileClasspath += configurations.provided
-    findbugs {
+    spotbugs {
+        toolVersion = '3.1.5'
+        sourceSets = [project.sourceSets.main]// check only main classes
+        excludeFilter = file("$rootDir/findbugsExclude.xml")
         effort = "max"
-        excludeFilter = file("$rootProject.projectDir/findbugsExclude.xml")
+        ignoreFailures = false
     }
+
+    spotbugsMain {
+        reports {
+            xml.enabled = false
+            html.enabled = true
+        }
+    }
+
+    spotbugsTest.enabled = false
+
+
+
     jar {
         manifest {
             attributes 'Implementation-Title': "${project.archivesBaseName}",
