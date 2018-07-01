@@ -25,7 +25,6 @@ public class JLineTextTerminalProvider implements TextTerminalProvider {
     public JLineTextTerminal getTextTerminal() {
         if(System.console() == null) return null;
         try {
-            getClass().getClassLoader().loadClass("javafx.scene.paint.Color");
             ConsoleReader reader = new ConsoleReader();
             return new JLineTextTerminal(reader);
         } catch (Exception e) {

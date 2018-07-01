@@ -15,6 +15,7 @@
  */
 package org.beryx.textio.swing;
 
+import org.beryx.awt.color.ColorFactory;
 import org.beryx.textio.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -704,8 +705,7 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
     public static Optional<Color> getColor(String colorName) {
         if(colorName == null || colorName.isEmpty()) return Optional.empty();
         try {
-            javafx.scene.paint.Color fxColor = javafx.scene.paint.Color.web(colorName);
-            return Optional.of(new Color((float)fxColor.getRed(), (float)fxColor.getGreen(), (float)fxColor.getBlue(), (float)fxColor.getOpacity()));
+            return Optional.of(ColorFactory.web(colorName));
         } catch (Exception e) {
             logger.warn("Invalid color: {}", colorName);
             return Optional.empty();

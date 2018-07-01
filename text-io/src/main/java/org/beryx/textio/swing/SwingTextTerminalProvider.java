@@ -26,7 +26,6 @@ public class SwingTextTerminalProvider implements TextTerminalProvider {
     public SwingTextTerminal getTextTerminal() {
         if (isHeadless()) return null;
         try {
-            getClass().getClassLoader().loadClass("javafx.scene.paint.Color");
             return new SwingTextTerminal();
         } catch(Exception e) {
             return null;

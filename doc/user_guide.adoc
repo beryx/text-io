@@ -309,7 +309,7 @@ Default value: `Ctrl C`.
 
 
 The values of the color properties are interpreted using the
-https://docs.oracle.com/javase/8/javafx/api/javafx/scene/paint/Color.html#web-java.lang.String-[Color.web(String colorString)].
+https://static.javadoc.io/org.beryx/awt-color-factory/1.0.0/org/beryx/awt/color/ColorFactory.html#web(java.lang.String)[ColorFactory.web(String colorString)].
 method.
 This means that you can specify colors in various ways, such as: `red`, `#aa38e0`, `0x40A8CC`, `rgba(112,36,228,0.9)`, `hsla(270,100%,100%,1.0)` etc.
 
@@ -323,7 +323,7 @@ Using this TerminalProperties, you can dynamically configure properties by calli
 link:javadoc/org/beryx/textio/TerminalProperties.html#put-java.lang.String-java.lang.Object-['put(String key, Object value)'] method.
 Additionally, convenience methods are available for frequently used properties (for example:
 link:javadoc/org/beryx/textio/TerminalProperties.html#setInputBold-boolean-[setInputBold(boolean bold)] or
-link:javadoc/org/beryx/textio/TerminalProperties.html#setPromptColor-javafx.scene.paint.Color-[setPromptColor(Color color)]).
+link:javadoc/org/beryx/textio/TerminalProperties.html#setPromptColor-java.awt.Color-[setPromptColor(Color color)]).
 
 
 TIP: You can learn how to configure and use terminal properties by looking at the

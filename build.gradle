@@ -201,7 +201,6 @@ subprojects {
             file {
                 whenMerged {
                     def jre = entries.find { it.path.contains 'org.eclipse.jdt.launching.JRE_CONTAINER' }
-                    jre.accessRules.add(new org.gradle.plugins.ide.eclipse.model.AccessRule('0', 'javafx/**'))
                 }
             }
             plusConfigurations << configurations.provided
@@ -286,6 +285,7 @@ gitPublish {
 project('text-io') {
     dependencies {
       compile 'jline:jline:2.14.5'
+      compile 'org.beryx:awt-color-factory:1.0.0'
     }
 }
 

@@ -15,10 +15,11 @@
  */
 package org.beryx.textio.jline;
 
-import javafx.scene.paint.Color;
+import java.awt.Color;
 import jline.console.ConsoleReader;
 import jline.console.CursorBuffer;
 import jline.console.UserInterruptException;
+import org.beryx.awt.color.ColorFactory;
 import org.beryx.textio.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,12 +124,12 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     }
 
     private static double getColorDistance(Color col1, Color col2) {
-        double r1 = col1.getRed();
-        double g1 = col1.getGreen();
-        double b1 = col1.getBlue();
-        double r2 = col2.getRed();
-        double g2 = col2.getGreen();
-        double b2 = col2.getBlue();
+        double r1 = col1.getRed() / 255.0;
+        double g1 = col1.getGreen() / 255.0;
+        double b1 = col1.getBlue() / 255.0;
+        double r2 = col2.getRed() / 255.0;
+        double g2 = col2.getGreen() / 255.0;
+        double b2 = col2.getBlue() / 255.0;
 
         double rmean = (r1 + r2) / 2;
         double dr = r1 - r2;
@@ -139,17 +140,17 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     }
 
     private static String getIndexedColorCode(Color color) {
-        double r = 255 * color.getRed();
-        double g = 255 * color.getGreen();
-        double b = 255 * color.getBlue();
+        double r = color.getRed();
+        double g = color.getGreen();
+        double b = color.getBlue();
         int val = 16 + 36 * mapTo6(r) + 6 * mapTo6(g) + mapTo6(b);
         return "8;5;" + val;
     }
 
     private static String getRGBColorCode(Color color) {
-        int r = (int)(255 * color.getRed());
-        int g = (int)(255 * color.getGreen());
-        int b = (int)(255 * color.getBlue());
+        int r = color.getRed();
+        int g = color.getGreen();
+        int b = color.getBlue();
         return "8;2;" + r + ";" + g + ";" + b;
     }
 
@@ -164,7 +165,7 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
             if(code >= 0) {
                 return Optional.of("" + code);
             }
-            Color color = Color.web(colorName);
+            Color color = ColorFactory.web(colorName);
             return Optional.of(ansiColorMode.getAnsiColorCode(color));
         } catch (Exception e) {
             // the error will be logged below
