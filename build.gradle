@@ -11,7 +11,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'org.kohsuke:github-api:1.90'
+        classpath 'org.kohsuke:github-api:1.93'
     }
 }
 
@@ -24,13 +24,13 @@ plugins {
 
     id 'maven-publish'
     id "com.github.ethankhall.semantic-versioning" version "1.1.0"
-    id "com.github.ben-manes.versions" version "0.13.0"
-    id "com.jfrog.bintray" version "1.7.2"
-    id "org.asciidoctor.convert" version "1.5.3"
-    id "org.ajoberstar.git-publish" version "0.1.0"
-    id "com.github.hierynomus.license" version "0.12.1"
+    id "com.github.ben-manes.versions" version "0.20.0"
+    id "com.jfrog.bintray" version "1.8.3"
+    id "org.asciidoctor.convert" version "1.5.7"
+    id "org.ajoberstar.git-publish" version "1.0.1"
+    id "com.github.hierynomus.license" version "0.14.0"
     id "net.saliman.properties" version "1.4.6"
-    id 'com.github.jk1.dependency-license-report' version '0.3.8'
+    id 'com.github.jk1.dependency-license-report' version '1.1'
 }
 
 project.version.with {
