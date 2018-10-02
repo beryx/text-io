@@ -5,6 +5,10 @@
 - [documentation](http://text-io.beryx.org/snapshots/latest)
 - [javadoc](http://text-io.beryx.org/snapshots/latest/javadoc)
 
+**Release 3.2.1**
+  - [documentation](http://text-io.beryx.org/releases/3.2.1)
+  - [javadoc](http://text-io.beryx.org/releases/3.2.1/javadoc)
+
 **Release 3.2.0**
   - [documentation](http://text-io.beryx.org/releases/3.2.0)
   - [javadoc](http://text-io.beryx.org/releases/3.2.0/javadoc)
