@@ -127,20 +127,46 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         void changeText(String text) throws BadLocationException;
     }
 
+    private static class OffsetAttrs {
+        final int offset;
+        final AttributeSet attrs;
+
+        OffsetAttrs(int offset, AttributeSet attrs) {
+            this.offset = offset;
+            this.attrs = attrs;
+        }
+    }
     private class TerminalDocumentFilter extends DocumentFilter {
         @Override
         public void insertString(DocumentFilter.FilterBypass fb, int offset, String text, AttributeSet attrs) throws BadLocationException {
-            changeText(fb, attrs, offset, text, t -> super.insertString(fb, offset, t, attrs));
+            OffsetAttrs fixed = fixCaretPosition(offset, attrs);
+            changeText(fb, attrs, fixed.offset, text, t -> super.insertString(fb, fixed.offset, t, fixed.attrs));
         }
 
         @Override
         public void replace(DocumentFilter.FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
-            changeText(fb, attrs, offset, text, t -> super.replace(fb, offset, length, t, attrs));
+            OffsetAttrs fixed = fixCaretPosition(offset, attrs);
+            if(fixed.offset == offset) {
+                changeText(fb, attrs, fixed.offset, text, t -> super.replace(fb, fixed.offset, length, t, fixed.attrs));
+            } else {
+                changeText(fb, attrs, fixed.offset, text, t -> super.insertString(fb, fixed.offset, t, fixed.attrs));
+            }
         }
 
         @Override
         public void remove(DocumentFilter.FilterBypass fb, int offset, int length) throws BadLocationException {
-            changeText(fb, null, offset, null, t -> super.remove(fb, offset, length));
+            OffsetAttrs fixed = fixCaretPosition(offset, null);
+            if(offset == fixed.offset) {
+                changeText(fb, null, offset, null, t -> super.remove(fb, offset, length));
+            }
+        }
+
+        private OffsetAttrs fixCaretPosition(int offset, AttributeSet attrs) {
+            if (!isEditAllowedAt(offset) && (readMode || fakeReadMode)) {
+                textPane.setCaretPosition(document.getLength());
+                return new OffsetAttrs(document.getLength(), textPane.getInputAttributes().copyAttributes());
+            }
+            return new OffsetAttrs(offset, attrs);
         }
 
         private void changeText(DocumentFilter.FilterBypass fb, AttributeSet attrs, int offset, String text, TextChanger textChanger) throws BadLocationException {
