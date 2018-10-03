@@ -293,6 +293,46 @@ public class SwingTextTerminal extends AbstractTextTerminal<SwingTextTerminal> {
         return scrollPane;
     }
 
+    public StyledDocument getDocument() {
+        return document;
+    }
+
+    public void appendToInput(String message, boolean preserveCaretPosition) {
+        try {
+            document.insertString(document.getLength(), message, textPane.getInputAttributes().copyAttributes());
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            logger.error("Cannot insert input text", e);
+        }
+        if(!preserveCaretPosition) {
+            textPane.setCaretPosition(document.getLength());
+        }
+    }
+
+    public void replaceInput(String message, boolean preserveCaretPosition) {
+        int oldCaretPosition = textPane.getCaretPosition();
+        try {
+            document.remove(startReadLen, document.getLength() - startReadLen);
+            document.insertString(document.getLength(), message, textPane.getInputAttributes().copyAttributes());
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            logger.error("Cannot insert input text", e);
+        }
+        int newCaretPosition = (preserveCaretPosition && oldCaretPosition <= document.getLength()) ? oldCaretPosition : document.getLength();
+        textPane.setCaretPosition(newCaretPosition);
+    }
+
+    public String getPartialInput() {
+        try {
+            return document.getText(startReadLen, document.getLength() - startReadLen);
+        } catch (BadLocationException e) {
+            logger.error("Failed to retrieve partial input text", e);
+            return "";
+        }
+    }
+
     @Override
     public String read(boolean masking) {
         rawPrint(ZERO_WIDTH_SPACE, inputStyleData);
