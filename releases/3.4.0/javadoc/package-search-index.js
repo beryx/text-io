@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"org.beryx.textio"},{"l":"org.beryx.textio.console"},{"l":"org.beryx.textio.demo"},{"l":"org.beryx.textio.demo.app"},{"l":"org.beryx.textio.jline"},{"l":"org.beryx.textio.mock"},{"l":"org.beryx.textio.swing"},{"l":"org.beryx.textio.system"},{"l":"org.beryx.textio.web"}]
