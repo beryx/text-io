@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 
 /**
  * A reader for enum values.
- * It initializes {@link #possibleValues} with the constants returned by the <tt>values()</tt> method.
+ * It initializes {@link #possibleValues} with the constants returned by the <code>values()</code> method.
  * By default, it uses a numbered list for displaying the possible values.
  */
 @SuppressWarnings("unchecked")

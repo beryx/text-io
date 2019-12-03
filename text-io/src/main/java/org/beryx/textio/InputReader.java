@@ -52,7 +52,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     @FunctionalInterface
     public interface ValueChecker<T> {
         /**
-         * Returns the list of error messages due to constraint violations caused by <tt>val</tt>
+         * Returns the list of error messages due to constraint violations caused by <code>val</code>
          * @param val the value for which constraint violations are checked
          * @param itemName the name of the item corresponding to this value. May be null.
          * @return - the list of error messages or null if no error has been detected.
@@ -321,7 +321,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     }
 
     /**
-     * If no {@link #parseErrorMessagesProvider} exists, this method is used to provide the list of error messages for the input string <tt>s</tt>.
+     * If no {@link #parseErrorMessagesProvider} exists, this method is used to provide the list of error messages for the input string <code>s</code>.
      * It should return a non-empty list of messages.
      */
     protected List<String> getDefaultErrorMessages(String s) {
@@ -329,7 +329,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     }
 
     /**
-     * Provides the list of error messages for the input string <tt>s</tt>.
+     * Provides the list of error messages for the input string <code>s</code>.
      * If a {@link #parseErrorMessagesProvider} exists, it will be used. Otherwise, {@link #getDefaultErrorMessages(String)} will be called.
      */
     protected final List<String> getErrorMessages(String s) {
