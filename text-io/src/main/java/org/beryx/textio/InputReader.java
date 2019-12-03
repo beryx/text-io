@@ -48,6 +48,20 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         List<String> getErrorMessages(String sVal, String itemName);
     }
 
+    /** Functional interface for providing error messages for invalid index */
+    @FunctionalInterface
+    public interface InvalidIndexErrorMessagesProvider {
+        /**
+         * Returns the list of error messages for the given string representation of the value
+         * @param sVal the string representation of the index entered by the user
+         * @param itemName the name of the item corresponding to this value. May be null.
+         * @param minIndex the minimum value allowed for the index
+         * @param maxIndex the maximum value allowed for the index
+         * @return - the list of error messages or null if no error has been detected.
+         */
+        List<String> getErrorMessages(String sVal, String itemName, int minIndex, int maxIndex);
+    }
+
     /** Functional interface for checking value constraints */
     @FunctionalInterface
     public interface ValueChecker<T> {
@@ -109,6 +123,9 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
 
     /** The provider of parse error messages. If null, the {@link #getDefaultErrorMessages(String)} will be used. */
     protected ErrorMessagesProvider parseErrorMessagesProvider;
+
+    /** The provider of invalid index error messages. If null, a default message will be used. */
+    protected InvalidIndexErrorMessagesProvider invalidIndexErrorMessagesProvider;
 
     /** The name of the item corresponding to the value to be read. May be null. */
     protected String itemName;
@@ -242,6 +259,12 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     @SuppressWarnings("unchecked")
     public B withParseErrorMessagesProvider(ErrorMessagesProvider parseErrorMessagesProvider) {
         this.parseErrorMessagesProvider = parseErrorMessagesProvider;
+        return (B)this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public B withInvalidIndexErrorMessagesProvider(InvalidIndexErrorMessagesProvider invalidIndexErrorMessagesProvider) {
+        this.invalidIndexErrorMessagesProvider = invalidIndexErrorMessagesProvider;
         return (B)this;
     }
 
@@ -501,8 +524,12 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
             // Continue the execution. The next statement will print the error message.
         }
         textTerminal.executeWithPropertiesPrefix(PROPS_PREFIX_ERROR_MESSAGE, t -> {
-            textTerminal.print(getDefaultErrorMessage(sVal));
-            textTerminal.println(" Enter a value between 1 and " + possibleValues.size() + ".");
+            if(invalidIndexErrorMessagesProvider != null) {
+                textTerminal.println(invalidIndexErrorMessagesProvider.getErrorMessages(sVal, itemName, 1, possibleValues.size()));
+            } else {
+                textTerminal.print(getDefaultErrorMessage(sVal));
+                textTerminal.println(" Enter a value between 1 and " + possibleValues.size() + ".");
+            }
         });
         textTerminal.println();
         return null;
