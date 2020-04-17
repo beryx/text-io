@@ -16,6 +16,7 @@
 package org.beryx.textio.jline;
 
 import jline.console.ConsoleReader;
+import jline.internal.Configuration;
 import org.beryx.textio.TextTerminalProvider;
 
 /**
@@ -26,6 +27,8 @@ public class JLineTextTerminalProvider implements TextTerminalProvider {
         if(System.console() == null) return null;
         try {
             ConsoleReader reader = new ConsoleReader();
+            boolean expandEvents = Configuration.getBoolean(ConsoleReader.JLINE_EXPAND_EVENTS, false);
+            reader.setExpandEvents(expandEvents);
             return new JLineTextTerminal(reader);
         } catch (Exception e) {
             return null;

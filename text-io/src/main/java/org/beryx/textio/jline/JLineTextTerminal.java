@@ -19,6 +19,7 @@ import java.awt.Color;
 import jline.console.ConsoleReader;
 import jline.console.CursorBuffer;
 import jline.console.UserInterruptException;
+import jline.internal.Configuration;
 import org.beryx.awt.color.ColorFactory;
 import org.beryx.textio.*;
 import org.slf4j.Logger;
@@ -197,7 +198,10 @@ public class JLineTextTerminal extends AbstractTextTerminal<JLineTextTerminal> {
     public static ConsoleReader createReader() {
         try {
             if(System.console() == null) throw new IllegalArgumentException("Console not available.");
-            return new ConsoleReader();
+            ConsoleReader consoleReader = new ConsoleReader();
+            boolean expandEvents = Configuration.getBoolean(ConsoleReader.JLINE_EXPAND_EVENTS, false);
+            consoleReader.setExpandEvents(expandEvents);
+            return consoleReader;
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot create a JLine ConsoleReader.", e);
         }
