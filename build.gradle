@@ -6,13 +6,11 @@ import org.kohsuke.github.*
 buildscript {
     repositories {
         jcenter()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
+        gradlePluginPortal()
     }
     dependencies {
-        classpath 'org.kohsuke:github-api:1.93'
-        classpath "com.github.spotbugs:spotbugs-gradle-plugin:3.0.0"
+        classpath 'org.kohsuke:github-api:1.111'
+        classpath "gradle.plugin.com.github.spotbugs.snom:spotbugs-gradle-plugin:4.0.5"
     }
 }
 
@@ -25,13 +23,13 @@ plugins {
 
     id 'maven-publish'
     id "com.github.ethankhall.semantic-versioning" version "1.1.0"
-    id "com.github.ben-manes.versions" version "0.27.0"
-    id "com.jfrog.bintray" version "1.8.4"
+    id "com.github.ben-manes.versions" version "0.28.0"
+    id "com.jfrog.bintray" version "1.8.5"
     id "org.asciidoctor.convert" version "2.4.0"
-    id "org.ajoberstar.git-publish" version "2.1.2"
+    id "org.ajoberstar.git-publish" version "2.1.3"
     id "com.github.hierynomus.license" version "0.15.0"
     id "net.saliman.properties" version "1.5.1"
-    id 'com.github.jk1.dependency-license-report' version '1.12'
+    id 'com.github.jk1.dependency-license-report' version '1.13'
 }
 
 project.version.with {
@@ -66,7 +64,7 @@ def pomConfig = {
     }
 }
 
-ext.groovyVersion = '2.5.8'
+ext.groovyVersion = '3.0.3'
 
 allprojects {
     group = 'org.beryx'
@@ -119,23 +117,23 @@ subprojects {
     }
 
     dependencies {
-      implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.29'
+      implementation 'org.slf4j:slf4j-api:1.8.0-beta4'
 
       testImplementation "org.codehaus.groovy:groovy-all:$groovyVersion"
-      testImplementation('org.spockframework:spock-core:1.3-groovy-2.5') {
+      testImplementation('org.spockframework:spock-core:2.0-M2-groovy-3.0') {
           exclude module: 'groovy-all'
       }
       testImplementation 'cglib:cglib-nodep:3.3.0'
       testImplementation 'org.objenesis:objenesis:3.1'
-      testImplementation('com.athaydes:spock-reports:1.6.2') { transitive = false}
+      testImplementation('com.athaydes:spock-reports:1.7.1') { transitive = false}
 
-      testImplementation('ch.qos.logback:logback-classic:1.2.3')
+      testImplementation('ch.qos.logback:logback-classic:1.3.0-alpha4')
     }
 
     sourceSets.main.compileClasspath += configurations.provided
     spotbugs {
-        toolVersion = '3.1.12'
-        sourceSets = [project.sourceSets.main]// check only main classes
+        toolVersion = '4.0.2'
+        // sourceSets = [project.sourceSets.main]// check only main classes
         excludeFilter = file("$rootDir/findbugsExclude.xml")
         effort = "max"
         ignoreFailures = false
@@ -315,11 +313,11 @@ project('text-io-web') {
     dependencies {
         implementation project(':text-io')
         implementation 'com.google.code.gson:gson:2.8.6'
-        implementation 'org.apache.commons:commons-lang3:3.9'
+        implementation 'org.apache.commons:commons-lang3:3.10'
         compileOnly 'com.sparkjava:spark-core:2.9.1'
-        compileOnly 'io.ratpack:ratpack-core:1.7.5'
-        compileOnly 'io.ratpack:ratpack-session:1.7.5'
-        testImplementation 'io.ratpack:ratpack-test:1.7.5'
+        compileOnly 'io.ratpack:ratpack-core:1.7.6'
+        compileOnly 'io.ratpack:ratpack-session:1.7.6'
+        testImplementation 'io.ratpack:ratpack-test:1.7.6'
     }
     jar {
         manifest {
@@ -334,10 +332,10 @@ project('text-io-demo') {
         implementation project(':text-io')
         implementation project(':text-io-web')
         implementation 'com.sparkjava:spark-core:2.9.1'
-        implementation 'io.ratpack:ratpack-core:1.7.5'
-        implementation 'io.ratpack:ratpack-session:1.7.5'
+        implementation 'io.ratpack:ratpack-core:1.7.6'
+        implementation 'io.ratpack:ratpack-session:1.7.6'
         implementation 'com.google.code.gson:gson:2.8.6'
-        runtime ('ch.qos.logback:logback-classic:1.2.3')
+        runtime ('ch.qos.logback:logback-classic:1.3.0-alpha4')
     }
     artifacts {
         (System.getenv("TRAVIS") == "true") ? archives(sourcesJar) : archives(sourcesJar, javadocJar)
