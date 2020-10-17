@@ -178,6 +178,20 @@ public interface TextTerminal<T extends TextTerminal<T>> {
     }
 
     /**
+     * Prints a decorated line separator with a character of choice determined by the String parameter.
+     * the length parameter dictates how many characters the decorator should be.
+     * the decorator does not need to be a single character ie : '*' ... it could also be ie '+++' if desired.
+     */
+    default void separateLineWithDecorator(String s, int length) {
+        String separator = s;
+        for (int i = 0; i < length; i++){
+            separator = separator + s;
+        }
+        print(separator);
+        println();
+    }
+
+    /**
      * Prints each message in the list, inserting the line separator string between messages.
      * No separator string is printed after the last message.
      * The messages in the list may contain line separators.
