@@ -178,14 +178,15 @@ public interface TextTerminal<T extends TextTerminal<T>> {
     }
 
     /**
-     * Prints a decorated line separator with a character of choice determined by the String parameter.
-     * the length parameter dictates how many characters the decorator should be.
-     * the decorator does not need to be a single character ie : '*' ... it could also be ie '+++' if desired.
+     * Prints a decorated line separator.
+     * @param decorator the string used to decorate the line.
+     *                  It can consist of a single character (e.g. "*") or a sequence of characters (e.g. "+--").
+     * @param length the number of times the decorator string should be repeated.
      */
-    default void separateLineWithDecorator(String s, int length) {
+    default void separateLineWithDecorator(String decorator, int length) {
         String separator = "";
         for (int i = 0; i < length; i++){
-            separator = separator + s;
+            separator = separator + decorator;
         }
         print(separator);
         println();
