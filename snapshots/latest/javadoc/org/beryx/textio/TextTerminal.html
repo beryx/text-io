@@ -320,10 +320,10 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </tr>
 <tr id="i23" class="rowColor">
 <td class="colFirst"><code>default void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#separateLineWithDecorator(java.lang.String,int)">separateLineWithDecorator</a></span>&#8203;(java.lang.String&nbsp;s,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#separateLineWithDecorator(java.lang.String,int)">separateLineWithDecorator</a></span>&#8203;(java.lang.String&nbsp;decorator,
                          int&nbsp;length)</code></th>
 <td class="colLast">
-<div class="block">Prints a decorated line separator with a character of choice determined by the String parameter.</div>
+<div class="block">Prints a decorated line separator.</div>
 </td>
 </tr>
 <tr id="i24" class="altColor">
@@ -592,11 +592,15 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <ul class="blockList">
 <li class="blockList">
 <h4>separateLineWithDecorator</h4>
-<pre class="methodSignature">default&nbsp;void&nbsp;separateLineWithDecorator&#8203;(java.lang.String&nbsp;s,
+<pre class="methodSignature">default&nbsp;void&nbsp;separateLineWithDecorator&#8203;(java.lang.String&nbsp;decorator,
                                        int&nbsp;length)</pre>
-<div class="block">Prints a decorated line separator with a character of choice determined by the String parameter.
- the length parameter dictates how many characters the decorator should be.
- the decorator does not need to be a single character ie : '*' ... it could also be ie '+++' if desired.</div>
+<div class="block">Prints a decorated line separator.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>decorator</code> - the string used to decorate the line.
+                  It can consist of a single character (e.g. "*") or a sequence of characters (e.g. "+--").</dd>
+<dd><code>length</code> - the number of times the decorator string should be repeated.</dd>
+</dl>
 </li>
 </ul>
 <a id="print(java.util.List)">
