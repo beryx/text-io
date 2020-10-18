@@ -27,7 +27,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":18,"i1":18,"i2":18,"i3":18,"i4":18,"i5":18,"i6":6,"i7":18,"i8":18,"i9":18,"i10":18,"i11":18,"i12":18,"i13":6,"i14":18,"i15":18,"i16":6,"i17":18,"i18":6,"i19":18,"i20":18,"i21":18,"i22":18,"i23":18};
+var data = {"i0":18,"i1":18,"i2":18,"i3":18,"i4":18,"i5":18,"i6":6,"i7":18,"i8":18,"i9":18,"i10":18,"i11":18,"i12":18,"i13":6,"i14":18,"i15":18,"i16":6,"i17":18,"i18":6,"i19":18,"i20":18,"i21":18,"i22":18,"i23":18,"i24":18};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],16:["t5","Default Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -319,6 +319,14 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </td>
 </tr>
 <tr id="i23" class="rowColor">
+<td class="colFirst"><code>default void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#separateLineWithDecorator(java.lang.String,int)">separateLineWithDecorator</a></span>&#8203;(java.lang.String&nbsp;s,
+                         int&nbsp;length)</code></th>
+<td class="colLast">
+<div class="block">Prints a decorated line separator with a character of choice determined by the String parameter.</div>
+</td>
+</tr>
+<tr id="i24" class="altColor">
 <td class="colFirst"><code>default boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setBookmark(java.lang.String)">setBookmark</a></span>&#8203;(java.lang.String&nbsp;bookmark)</code></th>
 <td class="colLast">
@@ -576,6 +584,19 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <h4>println</h4>
 <pre class="methodSignature">default&nbsp;void&nbsp;println&#8203;(java.lang.String&nbsp;message)</pre>
 <div class="block">Prints a message that possibly contains line separators and subsequently prints a line separator.</div>
+</li>
+</ul>
+<a id="separateLineWithDecorator(java.lang.String,int)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>separateLineWithDecorator</h4>
+<pre class="methodSignature">default&nbsp;void&nbsp;separateLineWithDecorator&#8203;(java.lang.String&nbsp;s,
+                                       int&nbsp;length)</pre>
+<div class="block">Prints a decorated line separator with a character of choice determined by the String parameter.
+ the length parameter dictates how many characters the decorator should be.
+ the decorator does not need to be a single character ie : '*' ... it could also be ie '+++' if desired.</div>
 </li>
 </ul>
 <a id="print(java.util.List)">
