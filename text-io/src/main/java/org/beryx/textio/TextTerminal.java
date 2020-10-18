@@ -183,7 +183,7 @@ public interface TextTerminal<T extends TextTerminal<T>> {
      * the decorator does not need to be a single character ie : '*' ... it could also be ie '+++' if desired.
      */
     default void separateLineWithDecorator(String s, int length) {
-        String separator = s;
+        String separator = "";
         for (int i = 0; i < length; i++){
             separator = separator + s;
         }
