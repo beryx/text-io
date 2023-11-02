@@ -27,7 +27,7 @@ public class IntInputReader extends ComparableInputReader<Integer, IntInputReade
 
     @Override
     protected String typeNameWithIndefiniteArticle() {
-        return "an integer";
+        return getMessage ("an_integer");
     }
 
     @Override

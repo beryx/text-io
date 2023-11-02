@@ -27,7 +27,7 @@ public class ShortInputReader extends ComparableInputReader<Short, ShortInputRea
 
     @Override
     protected String typeNameWithIndefiniteArticle() {
-        return "a short";
+        return getMessage ("a_short");
     }
 
     @Override

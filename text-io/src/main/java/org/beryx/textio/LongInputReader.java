@@ -27,7 +27,7 @@ public class LongInputReader extends ComparableInputReader<Long, LongInputReader
 
     @Override
     protected String typeNameWithIndefiniteArticle() {
-        return "a long";
+        return getMessage ("a_long");
     }
 
     @Override

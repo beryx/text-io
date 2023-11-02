@@ -27,7 +27,7 @@ public class FloatInputReader extends ComparableInputReader<Float, FloatInputRea
 
     @Override
     protected String typeNameWithIndefiniteArticle() {
-        return "a float";
+        return getMessage ("a_float");
     }
 
     @Override

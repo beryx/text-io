@@ -27,7 +27,7 @@ public class DoubleInputReader extends ComparableInputReader<Double, DoubleInput
 
     @Override
     protected String typeNameWithIndefiniteArticle() {
-        return "a double";
+        return getMessage ("a_double");
     }
 
     @Override

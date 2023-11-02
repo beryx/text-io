@@ -27,7 +27,7 @@ public class ByteInputReader extends ComparableInputReader<Byte, ByteInputReader
 
     @Override
     protected String typeNameWithIndefiniteArticle() {
-        return "a byte";
+        return getMessage ("a_byte");
     }
 
     @Override
