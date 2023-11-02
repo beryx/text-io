@@ -27,7 +27,7 @@ public class CharInputReader extends ComparableInputReader<Character, CharInputR
 
     @Override
     protected String typeNameWithIndefiniteArticle() {
-        return "a single character";
+        return getMessage ("a_single_character");
     }
 
     @Override

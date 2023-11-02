@@ -56,10 +56,11 @@ public abstract class ComparableInputReader<T extends Comparable<T>, B extends C
     }
 
     private String getStandardMinMaxErrorMessage() {
-        if(minVal != null && maxVal != null) return "Expected " + typeNameWithIndefiniteArticle() + " value between " + minVal + " and " + maxVal + ".";
-        if(minVal != null) return "Expected " + typeNameWithIndefiniteArticle() + " value greater than or equal to " + minVal + ".";
-        if(maxVal != null) return "Expected " + typeNameWithIndefiniteArticle() + " value less than or equal to " + maxVal + ".";
-        return "Expected " + typeNameWithIndefiniteArticle() + " value.";
+
+        if(minVal != null && maxVal != null) return getMessage ("expected_value_between_minVal_and_maxVal", typeNameWithIndefiniteArticle(), minVal, maxVal);
+        if(minVal != null) return getMessage ("expected_value_greater_than_or_equal_to_minVal", typeNameWithIndefiniteArticle(), minVal);
+        if(maxVal != null) return getMessage ("expected_value_less_than_or_equal_to_maxVal", typeNameWithIndefiniteArticle(), maxVal);
+        return getMessage ("expected_value", typeNameWithIndefiniteArticle());
     }
 
     /** In addition to the checks performed by {@link InputReader#checkConfiguration()}, it checks if minVal &lt;= maxVal */

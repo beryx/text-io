@@ -15,13 +15,22 @@
  */
 package org.beryx.textio;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.beryx.textio.i18n.TextIoI18nLanguageCode;
+import org.beryx.textio.i18n.TextIoI18nService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +44,8 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
     private static final Logger logger =  LoggerFactory.getLogger(InputReader.class);
 
     public static final String PROPS_PREFIX_ERROR_MESSAGE = "error";
+
+    private TextIoI18nLanguageCode i18nLanguageCode = null;
 
     /** Functional interface for providing error messages */
     @FunctionalInterface
@@ -167,6 +178,16 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
 
     public InputReader(Supplier<TextTerminal<?>> textTerminalSupplier) {
         this.textTerminalSupplier = textTerminalSupplier;
+    }
+
+    @SuppressWarnings ("unchecked")
+    public B withLanguageCode (TextIoI18nLanguageCode i18nLanguageCode) {
+        this.i18nLanguageCode = i18nLanguageCode;
+        return (B) this;
+    }
+
+    public TextIoI18nLanguageCode getLanguageCode () {
+        return i18nLanguageCode;
     }
 
     @SuppressWarnings("unchecked")
@@ -331,13 +352,13 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
 
     /** Returns a generic error message. */
     protected String getDefaultErrorMessage(String sVal) {
-        StringBuilder errBuilder = new StringBuilder("Invalid value");
+        StringBuilder errBuilder = new StringBuilder (getMessage ("invalid_value"));
         if(valueListMode) {
-            errBuilder.append(" in the comma-separated list");
-            if(itemName != null) errBuilder.append(" of '").append(itemName).append("'");
+            errBuilder.append (" ").append (getMessage ("in_the_comma-separated_list"));
+            if (itemName != null) errBuilder.append (" ").append (getMessage ("of")).append (" '").append (itemName).append ("'");
             if(sVal != null && !sVal.isEmpty()) errBuilder.append(": ").append(sVal);
         } else {
-            if(itemName != null) errBuilder.append(" for '").append(itemName).append("'");
+            if (itemName != null) errBuilder.append (" ").append (getMessage ("or")).append (" '").append (itemName).append ("'");
         }
         errBuilder.append('.');
         return errBuilder.toString();
@@ -501,9 +522,9 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
                     String options = possibleValues.stream()
                             .map(val -> "'" + valueFormatter.apply(val) + "'")
                             .collect(Collectors.joining(", "));
-                    t.println(" Please enter one of: " + options + ".");
+                    t.println (" " + getMessage ("please_enter_one_of", options));
                 } else {
-                    t.println(" Please enter one of the displayed values.");
+                    t.println (" " + getMessage ("please_enter_one_of_the_displayed_values"));
                 }
             });
             textTerminal.println();
@@ -528,7 +549,7 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
                 textTerminal.println(invalidIndexErrorMessagesProvider.getErrorMessages(sVal, itemName, 1, possibleValues.size()));
             } else {
                 textTerminal.print(getDefaultErrorMessage(sVal));
-                textTerminal.println(" Enter a value between 1 and " + possibleValues.size() + ".");
+                textTerminal.println (" " + getMessage ("enter_a_value_between_1_and", possibleValues.size ()));
             }
         });
         textTerminal.println();
@@ -614,12 +635,12 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
                         String[] textLines = optionText.split("\\R", -1);
                         if(textLines.length > 1) {
                             String delimiter = String.format("\n%" + (digits + 4) + "s", "");
-                            optionText = Arrays.stream(textLines).collect(Collectors.joining(delimiter));
+                            optionText = String.join (delimiter, textLines);
                         }
                     }
                     textTerminal.println((isDefault ? "* ": "  ") + optionId + optionText);
                 }
-                textTerminal.print(valueListMode ? "Enter your choices as comma-separated values: " : "Enter your choice: ");
+                textTerminal.print (valueListMode ? getMessage ("enter_your_choices_as_comma_separated_values") + " " : getMessage ("enter_your_choice") + " ");
             }
         }
     }
@@ -630,19 +651,23 @@ public abstract class InputReader<T, B extends InputReader<T, B>> {
         return "()[]{}".indexOf(lastChar) > 0 || Character.isJavaIdentifierPart(lastChar);
     }
 
-    public static <T> ValueChecker<List<T>> nonEmptyListChecker() {
+    public ValueChecker<List<T>> nonEmptyListChecker () {
         return (list, propName) -> {
-            if(list == null || list.isEmpty()) return Collections.singletonList("Expected at least one element.");
+            if (list == null || list.isEmpty ()) return Collections.singletonList (getMessage ("expected_at_least_one_element"));
             else return null;
         };
     }
 
-    public static <T> ValueChecker<List<T>> noDuplicatesChecker() {
+    public ValueChecker<List<T>> noDuplicatesChecker () {
         return (list, propName) -> {
             if(list == null || list.size() < 2) return null;
             Set<T> valueSet = new HashSet<>(list);
-            if(valueSet.size() < list.size()) return Collections.singletonList("Duplicate values are not allowed.");
+            if (valueSet.size () < list.size ()) return Collections.singletonList ("duplicate_values_are_not_allowed");
             return null;
         };
+    }
+
+    protected String getMessage (String messageKey, Object... args) {
+        return TextIoI18nService.getInstance ().getMessage (messageKey, getLanguageCode (), args);
     }
 }

@@ -34,14 +34,14 @@ public class BooleanInputReader extends InputReader<Boolean, BooleanInputReader>
 
     /** Configures the string value that corresponds to <i>true</i>. */
     public BooleanInputReader withTrueInput(String trueInput) {
-        if(trueInput == null || trueInput.trim().isEmpty()) throw new IllegalArgumentException("trueInput is empty");
+        if(trueInput == null || trueInput.trim().isEmpty()) throw new IllegalArgumentException(getMessage ("trueInput_is_empty"));
         this.trueInput = trueInput;
         return this;
     }
 
     /** Configures the string value that corresponds to <i>false</i>. */
     public BooleanInputReader withFalseInput(String falseInput) {
-        if(falseInput == null || falseInput.trim().isEmpty()) throw new IllegalArgumentException("falseInput is empty");
+        if(falseInput == null || falseInput.trim().isEmpty()) throw new IllegalArgumentException(getMessage ("falseInput_is_empty"));
         this.falseInput = falseInput;
         return this;
     }
@@ -49,7 +49,7 @@ public class BooleanInputReader extends InputReader<Boolean, BooleanInputReader>
     @Override
     protected List<String> getDefaultErrorMessages(String s) {
         List<String> errList = super.getDefaultErrorMessages(s);
-        errList.add("Expected: " + trueInput + " / " + falseInput);
+        errList.add(getMessage ("expected_boolean", trueInput, falseInput));
         return errList;
     }
 

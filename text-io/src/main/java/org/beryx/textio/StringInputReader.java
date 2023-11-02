@@ -57,7 +57,7 @@ public class StringInputReader extends InputReader<String, StringInputReader> {
     }
 
     public StringInputReader withIgnoreCase() {
-        return withEqualsFunc((s1, s2) -> s1.equalsIgnoreCase(s2));
+        return withEqualsFunc (String::equalsIgnoreCase);
     }
 
     @Override
@@ -74,14 +74,14 @@ public class StringInputReader extends InputReader<String, StringInputReader> {
 
     protected List<String> getLengthValidationErrors(String s) {
         int len = (s == null) ? 0 : s.length();
-        IntFunction<String> chr = l -> l + " character" + ((l > 1) ? "s." : ".");
-        if(minLength > 0 && minLength > len) return Collections.singletonList("Expected a string with at least " + chr.apply(minLength));
-        if(maxLength > 0 && maxLength < len) return Collections.singletonList("Expected a string with at most " + chr.apply(maxLength));
+        IntFunction<String> chr = l -> l + " " + getMessage ("character") + ((l > 1) ? "s." : ".");
+        if (minLength > 0 && minLength > len) return Collections.singletonList (getMessage ("expected_a_string_with_at_least", chr.apply (minLength)));
+        if (maxLength > 0 && maxLength < len) return Collections.singletonList (getMessage ("expected_a_string_with_at_most", chr.apply (maxLength)));
         return null;
     }
 
     protected List<String> getPatternValidationErrors(String s) {
-        if((pattern != null) && !pattern.matcher(s).matches()) return Collections.singletonList("Expected format: " + pattern.pattern());
+        if ((pattern != null) && !pattern.matcher (s).matches ()) return Collections.singletonList (getMessage ("expected_format", pattern.pattern ()));
         return null;
     }
 }
